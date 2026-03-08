@@ -4,678 +4,266 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AUGUR XRPL</title>
-  <meta name="description" content="AUGUR XRPL reads public XRPL wallets and produces plain-English statements. Read-only. No keys. No custody." />
-  <meta name="theme-color" content="#0b0f16" />
-  <meta property="og:title" content="AUGUR XRPL" />
-  <meta property="og:description" content="Chain intel for public XRPL wallets. Read-only by design." />
-  <meta property="og:url" content="https://augurxrpl.com" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-
+  <meta name="description" content="AUGUR reads public XRPL wallets and turns ledger data into plain-English statements." />
   <style>
     :root{
-      --bg:#070a10;
-      --bg2:#0b0f16;
-      --card:rgba(255,255,255,.04);
-      --card2:rgba(255,255,255,.06);
-      --border:rgba(160,190,255,.16);
-      --border2:rgba(160,190,255,.22);
-      --text:#e9eef7;
-      --muted:rgba(233,238,247,.72);
-      --muted2:rgba(233,238,247,.55);
-      --brand:#7ad3ff;
-      --brand2:#b9c7ff;
-      --ok:#4ade80;
-      --warn:#fbbf24;
+      --bg:#0a0f16;
+      --panel:#111826;
+      --panel2:#0d1420;
+      --text:#edf3ff;
+      --muted:rgba(237,243,255,.72);
+      --line:rgba(140,170,220,.18);
+      --accent:#7dd3fc;
+      --good:#4ade80;
       --bad:#fb7185;
-      --shadow: 0 18px 44px rgba(0,0,0,.45);
-      --radius: 18px;
-      --radius2: 22px;
-      --max: 1120px;
     }
-
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text);
-      background:
-        radial-gradient(1200px 700px at 15% 10%, rgba(122,211,255,.16), transparent 55%),
-        radial-gradient(900px 600px at 85% 20%, rgba(185,199,255,.12), transparent 55%),
-        radial-gradient(1100px 900px at 50% 95%, rgba(122,211,255,.10), transparent 60%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-      overflow-x:hidden;
-    }
-
-    a{color:inherit; text-decoration:none}
-    a:hover{opacity:.92}
-
-    .container{max-width:var(--max); margin:0 auto; padding:0 18px}
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(12px);
-      background: rgba(7,10,16,.62);
-      border-bottom:1px solid rgba(160,190,255,.10);
-    }
-    .topbar-inner{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px 0;
-      gap:14px;
-    }
-    .brandmark{display:flex; align-items:center; gap:10px}
-    .logo{
-      width:34px; height:34px; border-radius:12px;
-      background: linear-gradient(135deg, rgba(122,211,255,.26), rgba(185,199,255,.20));
-      border:1px solid rgba(160,190,255,.18);
-      box-shadow: 0 10px 26px rgba(0,0,0,.35);
-      position:relative;
-      overflow:hidden;
-    }
-    .logo:before{
-      content:"";
-      position:absolute; inset:-20%;
-      background: radial-gradient(circle at 30% 30%, rgba(122,211,255,.65), transparent 48%),
-                  radial-gradient(circle at 70% 70%, rgba(185,199,255,.55), transparent 52%);
-      transform: rotate(18deg);
-      opacity:.9;
-    }
-    .brandtext{display:flex; flex-direction:column; line-height:1.05}
-    .brandtext b{letter-spacing:.08em; font-size:12px; color:var(--brand2); text-transform:uppercase}
-    .brandtext span{font-size:14px; color:var(--muted)}
-
-    .nav{display:flex; gap:14px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
-    .nav a{
-      font-size:13px; color:var(--muted);
-      padding:8px 10px; border-radius:12px;
-      border:1px solid transparent;
-    }
-    .nav a:hover{color:var(--text); border-color:rgba(160,190,255,.16); background:rgba(255,255,255,.03)}
-
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      padding:10px 14px;
-      border-radius:14px;
-      border:1px solid rgba(160,190,255,.20);
-      background: rgba(122,211,255,.10);
-      color:var(--text);
-      font-size:14px;
-      box-shadow: 0 10px 24px rgba(0,0,0,.30);
-      white-space:nowrap;
-    }
-    .btn:hover{border-color:rgba(160,190,255,.30); background: rgba(122,211,255,.14)}
-    .btn.secondary{background:rgba(255,255,255,.03); border-color:rgba(160,190,255,.16); box-shadow:none}
-    .btn.secondary:hover{background:rgba(255,255,255,.05)}
-    .btn.small{padding:8px 12px; font-size:13px; border-radius:12px}
-
-    .hero{
-      padding:54px 0 26px;
-    }
-    .hero-grid{
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap:18px;
-      align-items:stretch;
-    }
-    @media (max-width: 980px){
-      .hero-grid{grid-template-columns:1fr}
-    }
-
-    .hero-card{
-      border:1px solid rgba(160,190,255,.16);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border-radius: var(--radius2);
-      padding:26px;
-      box-shadow: var(--shadow);
-      position:relative;
-      overflow:hidden;
-    }
-    .hero-card:after{
-      content:"";
-      position:absolute; inset:-120px -140px auto auto;
-      width:320px; height:320px;
-      background: radial-gradient(circle, rgba(122,211,255,.22), transparent 62%);
-      transform: rotate(14deg);
-      pointer-events:none;
-    }
-
-    .tag{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 12px;
-      border-radius:999px;
-      border:1px solid rgba(160,190,255,.20);
-      background: rgba(255,255,255,.03);
-      color:var(--brand2);
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-    }
-    .tag i{
-      width:8px; height:8px; border-radius:999px;
-      background: rgba(122,211,255,.85);
-      box-shadow: 0 0 18px rgba(122,211,255,.55);
-      display:inline-block;
-    }
-
-    h1{
-      margin:14px 0 10px;
-      font-size:46px;
-      line-height:1.05;
-      letter-spacing:-.02em;
-    }
-    @media (max-width: 560px){
-      h1{font-size:36px}
-    }
-
-    .lead{
-      margin:0;
-      color:var(--muted);
-      font-size:16px;
-      line-height:1.65;
-      max-width:70ch;
-    }
-
-    .hero-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
-    .hero-metrics{display:flex; gap:12px; flex-wrap:wrap; margin-top:18px}
-    .metric{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(160,190,255,.12);
-      background: rgba(255,255,255,.03);
-      min-width:160px;
-    }
-    .metric b{display:block; font-size:13px; color:var(--text)}
-    .metric span{display:block; font-size:12px; color:var(--muted2); margin-top:2px}
-
-    .side-card{
-      border:1px solid rgba(160,190,255,.14);
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius2);
-      padding:18px;
-      box-shadow: 0 14px 34px rgba(0,0,0,.38);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .side-title{
-      display:flex; align-items:center; justify-content:space-between; gap:10px
-    }
-    .side-title b{font-size:14px; letter-spacing:.12em; text-transform:uppercase; color:var(--brand2)}
-    .pill{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(160,190,255,.18);
-      background: rgba(255,255,255,.03);
-      color:var(--muted);
-      white-space:nowrap;
-    }
-
-    .status-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-    .status-item{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid rgba(160,190,255,.12);
-      background: rgba(255,255,255,.03);
-    }
-    .status-left{display:flex; flex-direction:column; gap:2px}
-    .status-left b{font-size:13px}
-    .status-left span{font-size:12px; color:var(--muted2)}
-    .dot{
-      width:10px; height:10px; border-radius:999px;
-      background: rgba(233,238,247,.22);
-      box-shadow:none;
-      flex:0 0 auto;
-    }
-    .dot.ok{background: rgba(74,222,128,.95); box-shadow: 0 0 16px rgba(74,222,128,.35)}
-    .dot.warn{background: rgba(251,191,36,.95); box-shadow: 0 0 16px rgba(251,191,36,.25)}
-    .dot.bad{background: rgba(251,113,133,.95); box-shadow: 0 0 16px rgba(251,113,133,.25)}
-
-    .section{padding:26px 0}
-    .section h2{
-      font-size:22px;
-      margin:0 0 10px;
-      letter-spacing:-.01em;
-    }
-    .section p{margin:0; color:var(--muted); line-height:1.7}
-
-    .grid3{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-      margin-top:14px;
-    }
-    @media (max-width: 980px){
-      .grid3{grid-template-columns:1fr}
-    }
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#08101a 0%,#0a0f16 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--text);text-decoration:none}
+    .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 72px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    .brand{font-weight:900;letter-spacing:.16em}
+    .nav{display:flex;gap:16px;flex-wrap:wrap}
+    .hero{padding:34px 0 22px}
+    h1{margin:0 0 12px;font-size:clamp(34px,7vw,64px);line-height:1.02}
+    .sub{max-width:760px;font-size:clamp(17px,2.2vw,22px);line-height:1.5;color:var(--muted);margin:0 0 24px}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
-      border:1px solid rgba(160,190,255,.14);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border-radius: var(--radius);
-      padding:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 18px 50px rgba(0,0,0,.24);
     }
-    .card b{display:block; margin-bottom:6px}
-    .card p{margin:0; color:var(--muted); font-size:14px; line-height:1.7}
-
-    .how{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-      margin-top:14px;
+    .eyebrow{display:inline-block;padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+    .try-title{font-size:24px;font-weight:900;margin:0 0 8px}
+    .muted{color:var(--muted)}
+    .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    input{
+      flex:1 1 520px;
+      min-width:260px;
+      background:#0a1220;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px 14px;
+      font-size:15px;
+      outline:none;
     }
-    @media (max-width: 980px){
-      .how{grid-template-columns:1fr}
-    }
-    .step{
-      border:1px solid rgba(160,190,255,.14);
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius);
-      padding:16px;
-    }
-    .step .num{
-      display:inline-flex; align-items:center; justify-content:center;
-      width:30px; height:30px; border-radius:12px;
-      background: rgba(122,211,255,.14);
-      border:1px solid rgba(160,190,255,.18);
-      color:var(--brand2);
-      font-weight:700;
-      margin-bottom:10px;
-    }
-    .step b{display:block; margin-bottom:6px}
-    .step p{margin:0; color:var(--muted); font-size:14px; line-height:1.7}
-
-    .roadmap{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-      margin-top:14px;
-    }
-    @media (max-width: 980px){
-      .roadmap{grid-template-columns:1fr}
-    }
-
-    .faq{margin-top:14px}
-    details{
-      border:1px solid rgba(160,190,255,.14);
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius);
-      padding:12px 14px;
-      margin-bottom:10px;
-    }
-    summary{
+    button{
+      border:0;
+      border-radius:14px;
+      padding:16px 18px;
+      font-size:15px;
+      font-weight:800;
       cursor:pointer;
-      list-style:none;
-      font-weight:650;
+      background:var(--accent);
+      color:#06111b;
     }
-    summary::-webkit-details-marker{display:none}
-    details p{margin:10px 0 0; color:var(--muted); font-size:14px; line-height:1.7}
-
-    .footer{
-      padding:30px 0 40px;
-      border-top:1px solid rgba(160,190,255,.10);
-      margin-top:18px;
-      color:var(--muted2);
-      font-size:12px;
+    .quick{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .chip{
+      border:1px solid var(--line);
+      background:#0b1320;
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
     }
-    .footer-grid{
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:14px;
-      align-items:center;
+    .out{
+      margin-top:16px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--panel2);
+      padding:16px;
+      min-height:210px;
+      white-space:pre-wrap;
+      line-height:1.6;
+      color:var(--text);
     }
-    @media (max-width: 680px){
-      .footer-grid{grid-template-columns:1fr}
+    .state{margin-top:10px;font-size:14px;color:var(--muted)}
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .side h3,.section h2{margin:0 0 10px}
+    .list{display:grid;gap:10px}
+    .item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:rgba(255,255,255,.02);
     }
-
-    .footer a{color:var(--muted); border-bottom:1px solid rgba(160,190,255,.12)}
-    .footer a:hover{color:var(--text)}
-    .mutedline{color:var(--muted2); margin-top:8px}
-    .kbd{
+    .section{margin-top:18px}
+    .k{
       display:inline-block;
-      padding:2px 8px;
+      padding:4px 8px;
+      border:1px solid var(--line);
       border-radius:10px;
-      border:1px solid rgba(160,190,255,.18);
-      background: rgba(255,255,255,.03);
-      color: rgba(233,238,247,.72);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
+      background:rgba(255,255,255,.03);
+      font-size:13px;
     }
+    footer{margin-top:26px;color:var(--muted);font-size:14px}
   </style>
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="container">
-      <div class="topbar-inner">
-        <div class="brandmark">
-          <div class="logo" aria-hidden="true"></div>
-          <div class="brandtext">
-            <b>AUGUR XRPL</b>
-            <span>Chain intel for public wallets</span>
-          </div>
-        </div>
-
-        <nav class="nav" aria-label="Primary">
-          <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#status">Status</a>
-          <a href="#roadmap">Roadmap</a>
-          <a href="#faq">FAQ</a>
-          <a class="btn small secondary" href="https://github.com/augurxrpl/augur">GitHub</a>
-          <a class="btn small" href="https://api.augurxrpl.com/health">API health</a>
-        </nav>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">AUGUR</div>
+      <div class="nav">
+        <a href="https://api.augurxrpl.com/health" target="_blank" rel="noopener">API Health</a>
+        <a href="https://houseofcauliman.com" target="_blank" rel="noopener">House of Cauliman</a>
       </div>
     </div>
-  </header>
 
-  <main>
     <section class="hero">
-      <div class="container">
-        <div class="hero-grid">
-          <div class="hero-card">
-            <span class="tag"><i></i> Read-only. Public data. Zero custody.</span>
-            <h1>Plain-English statements from XRPL wallets</h1>
-            <p class="lead">
-              AUGUR reads public XRPL data and produces clear, verifiable summaries you can act on.
-              No wallet connection required for viewing. No keys. No custody. Built like infrastructure.
-            </p>
-
-            <div class="hero-actions">
-              <a class="btn" href="#status">Check live status</a>
-              <a class="btn secondary" href="https://api.augurxrpl.com/">API root</a>
-              <a class="btn secondary" href="https://github.com/augurxrpl/augur-site">Site repo</a>
-            </div>
-
-            <div class="hero-metrics">
-              <div class="metric">
-                <b>Security model</b>
-                <span>Read-only by design</span>
-              </div>
-              <div class="metric">
-                <b>Data scope</b>
-                <span>Public XRPL wallets</span>
-              </div>
-              <div class="metric">
-                <b>Output</b>
-                <span>Plain-English statements</span>
-              </div>
-            </div>
-
-            <p class="mutedline">
-              Operator note: API is live at <span class="kbd">api.augurxrpl.com</span>
-            </p>
-          </div>
-
-          <aside class="side-card" id="status">
-            <div class="side-title">
-              <b>Live status</b>
-              <span class="pill" id="statusUpdated">Checking now</span>
-            </div>
-
-            <div class="status-grid" role="status" aria-live="polite">
-              <div class="status-item">
-                <div class="status-left">
-                  <b>API root</b>
-                  <span>GET https://api.augurxrpl.com/</span>
-                </div>
-                <span class="dot" id="dotRoot" aria-hidden="true"></span>
-              </div>
-
-              <div class="status-item">
-                <div class="status-left">
-                  <b>Health</b>
-                  <span>GET https://api.augurxrpl.com/health</span>
-                </div>
-                <span class="dot" id="dotHealth" aria-hidden="true"></span>
-              </div>
-
-              <div class="status-item">
-                <div class="status-left">
-                  <b>Extras health</b>
-                  <span>GET https://api.augurxrpl.com/extras/health</span>
-                </div>
-                <span class="dot" id="dotExtras" aria-hidden="true"></span>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:6px">
-              <b>What you get</b>
-              <p>
-                A stable read layer that turns on-chain events into understandable signals.
-                Build monitoring, dashboards, alerts, and public proof pages on top.
-              </p>
-            </div>
-
-            <div class="hero-actions" style="margin-top:6px">
-              <a class="btn secondary" href="https://api.augurxrpl.com/health">Open health JSON</a>
-              <a class="btn secondary" href="https://github.com/augurxrpl/augur">Open core repo</a>
-            </div>
-          </aside>
-        </div>
-      </div>
+      <div class="eyebrow">XRPL • Read Only • Plain English</div>
+      <h1>Read public XRPL wallets in plain English.</h1>
+      <p class="sub">
+        AUGUR reads public wallet data and turns it into a simple statement you can actually understand.
+        No wallet connection. No keys. No custody.
+      </p>
     </section>
 
-    <section class="section" id="how">
-      <div class="container">
-        <h2>How it works</h2>
-        <p>
-          AUGUR reads public ledger data, normalizes it, then outputs plain-English statements that map to verifiable facts.
-          The architecture stays simple and safe so it can scale without custody risk.
-        </p>
+    <section class="grid">
+      <div class="card">
+        <h2 class="try-title">Try it</h2>
+        <p class="muted">Paste an XRPL address and AUGUR will read public ledger data and return a readable wallet statement.</p>
 
-        <div class="how">
-          <div class="step">
-            <div class="num">1</div>
-            <b>Read public XRPL data</b>
-            <p>
-              Wallet addresses are public. AUGUR reads what the ledger exposes and does not request keys.
-            </p>
-          </div>
+        <div class="form-row">
+          <input
+            id="addr"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="Enter an XRPL address"
+            value="rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
+          />
+          <button id="runBtn">Read wallet</button>
+        </div>
 
-          <div class="step">
-            <div class="num">2</div>
-            <b>Normalize and classify</b>
-            <p>
-              Events get structured into consistent categories so the output stays predictable and useful.
-            </p>
-          </div>
+        <div class="quick">
+          <button class="chip" data-address="rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe">Load example</button>
+          <button class="chip" data-address="">Clear</button>
+        </div>
 
-          <div class="step">
-            <div class="num">3</div>
-            <b>Produce statements</b>
-            <p>
-              The output is plain-English, easy to share, and backed by data you can verify.
-            </p>
-          </div>
+        <div id="state" class="state">Ready.</div>
+        <div id="output" class="out">Your wallet statement will appear here.</div>
+      </div>
 
-          <div class="step">
-            <div class="num">4</div>
-            <b>Expose via API</b>
-            <p>
-              Apps, dashboards, and operators consume the API. The site stays light and fast.
-            </p>
+      <div class="side">
+        <div class="card">
+          <h3>Who it’s for</h3>
+          <div class="list">
+            <div class="item">People holding or managing XRPL wallets</div>
+            <div class="item">Builders who want fast public-wallet context</div>
+            <div class="item">Anyone who wants ledger data without deciphering raw fields</div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="section" id="features">
-      <div class="container">
-        <h2>Features</h2>
-        <p>
-          Built for operators and power users, without sacrificing usability.
-        </p>
-
-        <div class="grid3">
-          <div class="card">
-            <b>Read-only by design</b>
-            <p>No custody. No keys. No wallet connection required for viewing.</p>
+        <div class="card section">
+          <h3>What AUGUR never does</h3>
+          <div class="list">
+            <div class="item">It never asks for your secret key</div>
+            <div class="item">It never takes custody of funds</div>
+            <div class="item">It never connects to your wallet to move assets</div>
           </div>
-          <div class="card">
-            <b>Plain-English output</b>
-            <p>Statements are written to be understood, shared, and verified.</p>
-          </div>
-          <div class="card">
-            <b>Stable health surface</b>
-            <p>Clear endpoints for uptime checks and automated monitoring.</p>
-          </div>
-          <div class="card">
-            <b>XRPL native</b>
-            <p>Designed around XRPL mechanics, not generic chain assumptions.</p>
-          </div>
-          <div class="card">
-            <b>Operator-first</b>
-            <p>Simple deployment, predictable behavior, production safe defaults.</p>
-          </div>
-          <div class="card">
-            <b>Expandable</b>
-            <p>XRPL first, with a structure that can grow when it is earned.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="roadmap">
-      <div class="container">
-        <h2>Roadmap</h2>
-        <p>
-          Tight scope. Real shipping. No noise.
-        </p>
-
-        <div class="roadmap">
-          <div class="card">
-            <b>Phase 1</b>
-            <p>Public API hardening, statements v1, monitored uptime, clean docs.</p>
-          </div>
-          <div class="card">
-            <b>Phase 2</b>
-            <p>Account registry flows, classification expansion, export formats, basic UI.</p>
-          </div>
-          <div class="card">
-            <b>Phase 3</b>
-            <p>Indexing layer, richer analytics, optional alerts, ecosystem integrations.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="faq">
-      <div class="container">
-        <h2>FAQ</h2>
-        <p>
-          Straight answers. No fluff.
-        </p>
-
-        <div class="faq">
-          <details>
-            <summary>Does AUGUR require my wallet to connect</summary>
-            <p>No. Viewing and reading are based on public addresses. No wallet connect is needed for the read layer.</p>
-          </details>
-
-          <details>
-            <summary>Does AUGUR ever handle keys</summary>
-            <p>No. The design goal is read-only intelligence from public data, with zero custody.</p>
-          </details>
-
-          <details>
-            <summary>What is the API endpoint</summary>
-            <p>Use <span class="kbd">https://api.augurxrpl.com</span>. Health checks are at <span class="kbd">/health</span> and <span class="kbd">/extras/health</span>.</p>
-          </details>
-
-          <details>
-            <summary>Can this expand beyond XRPL later</summary>
-            <p>Yes. XRPL is the focus. Expansion happens only after XRPL is locked and battle-tested.</p>
-          </details>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <div class="container">
-        <div class="hero-card" style="padding:18px; box-shadow:none">
-          <h2 style="margin:0 0 10px">Build with AUGUR</h2>
-          <p style="margin:0; color:var(--muted)">
-            If you build tools, dashboards, or ecosystem utilities, the read layer is live and ready.
-            Start with the health endpoints, then build your first statement workflow.
-          </p>
-          <div class="hero-actions" style="margin-top:14px">
-            <a class="btn" href="https://api.augurxrpl.com/health">Open API health</a>
-            <a class="btn secondary" href="https://github.com/augurxrpl/augur">Read the code</a>
-            <a class="btn secondary" href="https://api.augurxrpl.com/">API root</a>
-          </div>
-        </div>
+      <div class="card">
+        <h2>What AUGUR is</h2>
+        <p class="muted">
+          A chain oracle layer that reads public wallet data and returns plain-English statements.
+          Public data only. Read-only by design.
+        </p>
+        <p>
+          <span class="k">No keys</span>
+          <span class="k">No custody</span>
+          <span class="k">Public ledger only</span>
+          <span class="k">XRPL first</span>
+        </p>
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="container">
-        <div class="footer-grid">
-          <div>
-            <div><b style="color:var(--text)">AUGUR XRPL</b> <span style="color:var(--muted2)">Read-only chain intel</span></div>
-            <div class="mutedline">© <span id="y"></span> AUGUR XRPL</div>
-          </div>
-          <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end">
-            <a href="https://api.augurxrpl.com/">API</a>
-            <a href="https://api.augurxrpl.com/health">Health</a>
-            <a href="https://github.com/augurxrpl/augur">Core</a>
-            <a href="https://github.com/augurxrpl/augur-site">Site</a>
-          </div>
-        </div>
-      </div>
+    <footer>
+      AUGUR is read-only infrastructure for public ledger intelligence.
     </footer>
-  </main>
+  </div>
 
   <script>
-    const setDot = (id, state) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.remove("ok","warn","bad");
-      if (state) el.classList.add(state);
-    };
+    const addrEl = document.getElementById('addr');
+    const outEl = document.getElementById('output');
+    const stateEl = document.getElementById('state');
+    const runBtn = document.getElementById('runBtn');
 
-    const setUpdated = (txt) => {
-      const el = document.getElementById("statusUpdated");
-      if (el) el.textContent = txt;
-    };
+    function setState(text, cls = '') {
+      stateEl.className = 'state ' + cls;
+      stateEl.textContent = text;
+    }
 
-    const ping = async (url, dotId) => {
-      const t0 = performance.now();
-      try{
-        const r = await fetch(url, { cache: "no-store" });
-        const ms = Math.round(performance.now() - t0);
-        if (!r.ok){
-          setDot(dotId, "bad");
-          return { ok:false, ms };
-        }
-        setDot(dotId, "ok");
-        return { ok:true, ms };
-      }catch(_e){
-        setDot(dotId, "bad");
-        return { ok:false, ms: null };
+    function renderResult(data) {
+      if (!data || !data.ok) {
+        outEl.textContent = (data && data.error) ? data.error : 'Request failed.';
+        setState('Request failed.', 'bad');
+        return;
       }
-    };
 
-    const run = async () => {
-      setUpdated("Checking now");
-      const res = await Promise.all([
-        ping("https://api.augurxrpl.com/", "dotRoot"),
-        ping("https://api.augurxrpl.com/health", "dotHealth"),
-        ping("https://api.augurxrpl.com/extras/health", "dotExtras"),
-      ]);
-      const okCount = res.filter(x => x.ok).length;
-      const t = new Date();
-      const stamp = t.toUTCString().replace("GMT","UTC");
-      setUpdated(okCount === 3 ? `All green · ${stamp}` : `Partial · ${stamp}`);
-      document.getElementById("y").textContent = new Date().getFullYear();
-    };
+      const lines = [];
+      lines.push(`Address: ${data.address}`);
+      lines.push(`Network: ${data.network}`);
+      lines.push(`Balance: ${data.balanceXRP} XRP`);
+      lines.push(`Sequence: ${data.sequence}`);
+      lines.push(`OwnerCount: ${data.ownerCount}`);
+      lines.push(`Trustlines: ${data.trustlines}`);
+      lines.push(`Recent transactions sampled: ${data.recentTxCount}`);
+      lines.push('');
+      if (Array.isArray(data.statement)) {
+        for (const s of data.statement) lines.push(`• ${s}`);
+      }
+      outEl.textContent = lines.join('\n');
+      setState('Wallet read complete.', 'good');
+    }
 
-    run();
-    setInterval(run, 30000);
+    async function run() {
+      const address = addrEl.value.trim();
+      if (!address) {
+        outEl.textContent = 'Enter an XRPL address.';
+        setState('Missing address.', 'bad');
+        return;
+      }
+
+      setState('Reading wallet...');
+      outEl.textContent = 'Loading...';
+
+      try {
+        const url = `https://api.augurxrpl.com/api/statement?address=${encodeURIComponent(address)}`;
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
+        renderResult(data);
+      } catch (err) {
+        outEl.textContent = 'Could not reach AUGUR API.';
+        setState('Network error.', 'bad');
+      }
+    }
+
+    runBtn.addEventListener('click', run);
+
+    addrEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') run();
+    });
+
+    document.querySelectorAll('.chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        addrEl.value = btn.dataset.address || '';
+        if (addrEl.value) run();
+        else {
+          outEl.textContent = 'Your wallet statement will appear here.';
+          setState('Ready.');
+        }
+      });
+    });
   </script>
 </body>
 </html>
