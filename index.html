@@ -139,6 +139,7 @@
             value="rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
           />
           <button id="runBtn">Read wallet</button>
+          <button id="classifyBtn">Classify wallet</button>
         </div>
 
         <div class="quick">
@@ -226,6 +227,53 @@
       setState('Wallet read complete.', 'good');
     }
 
+    function renderClassification(data) {
+      if (!data || !data.ok) {
+        outEl.textContent = (data && data.error) ? data.error : 'Request failed.';
+        setState('Request failed.', 'bad');
+        return;
+      }
+
+      const lines = [];
+      lines.push(`Address: ${data.address}`);
+      lines.push(`Classification: ${data.classification}`);
+      lines.push(`Confidence: ${data.confidence}%`);
+      lines.push(`Activity Level: ${data.activityLevel}`);
+      lines.push('');
+      lines.push(`Balance: ${data.signals.balanceXRP} XRP`);
+      lines.push(`Trustlines: ${data.signals.trustlines}`);
+      lines.push(`OwnerCount: ${data.signals.ownerCount}`);
+      lines.push(`Recent transactions sampled: ${data.signals.recentTxCount}`);
+      lines.push('');
+      if (Array.isArray(data.summary)) {
+        for (const s of data.summary) lines.push(`• ${s}`);
+      }
+      outEl.textContent = lines.join('\n');
+      setState('Wallet classification complete.', 'good');
+    }
+
+    async function classify() {
+      const address = addrEl.value.trim();
+      if (!address) {
+        outEl.textContent = 'Enter an XRPL address.';
+        setState('Missing address.', 'bad');
+        return;
+      }
+
+      setState('Classifying wallet...');
+      outEl.textContent = 'Loading...';
+
+      try {
+        const url = `https://api.augurxrpl.com/api/classification?address=${encodeURIComponent(address)}`;
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
+        renderClassification(data);
+      } catch (err) {
+        outEl.textContent = 'Could not reach AUGUR API.';
+        setState('Network error.', 'bad');
+      }
+    }
+
     async function run() {
       const address = addrEl.value.trim();
       if (!address) {
@@ -249,6 +297,7 @@
     }
 
     runBtn.addEventListener('click', run);
+    classifyBtn.addEventListener('click', classify);
 
     addrEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') run();
