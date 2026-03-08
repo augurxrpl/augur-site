@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://augurxrpl.com/sitemap.xml
