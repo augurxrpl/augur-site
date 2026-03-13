@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AUGUR | XRPL Wallet Intelligence</title>
+  <meta name="description" content="AUGUR reads public XRPL wallets and explains what they are doing in plain English. Read wallet behavior, issuer state, activity, and risk from public ledger data only." />
+  <style>
+    :root{
+      --bg:#0b1020;
+      --bg-2:#11192b;
+      --panel:#131c31;
+      --panel-2:#17233d;
+      --line:#22314f;
+      --line-soft:rgba(130,160,220,.14);
+      --text:#edf3ff;
+      --muted:#9aa8c7;
+      --blue:#5ba7ff;
+      --blue-2:#7fc3ff;
+      --green:#34d399;
+      --amber:#fbbf24;
+      --red:#fb7185;
+      --shadow:0 20px 50px rgba(0,0,0,.28);
+      --radius:20px;
+      --radius-sm:14px;
+      --max:1280px;
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:
+        radial-gradient(circle at top left, rgba(91,167,255,.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(52,211,153,.07), transparent 24%),
+        linear-gradient(180deg,#09101d 0%, #0b1020 100%);
+      color:var(--text);
+      font:16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    a{color:var(--text);text-decoration:none}
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 20px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(12px);
+      background:rgba(9,16,29,.78);
+      border-bottom:1px solid rgba(130,160,220,.10);
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      min-height:72px;
+      gap:16px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+
+    .brand-mark{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg,#16325f,#0f2346);
+      border:1px solid rgba(127,195,255,.22);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 8px 30px rgba(0,0,0,.28);
+      color:var(--blue-2);
+      font-size:15px;
+    }
+
+    .brand-copy small{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .brand-copy span{
+      display:block;
+      font-size:18px;
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .nav-links a{color:var(--muted)}
+    .nav-links a:hover{color:var(--text)}
+
+    .nav-cta{
+      padding:10px 14px;
+      border-radius:12px;
+      background:linear-gradient(180deg,#1a3867,#143159);
+      border:1px solid rgba(127,195,255,.24);
+      color:#fff;
+      font-weight:700;
+    }
+
+    .hero{
+      padding:48px 0 24px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:24px;
+      align-items:stretch;
+    }
+
+    .hero-card,
+    .panel{
+      background:linear-gradient(180deg,rgba(20,29,50,.96),rgba(16,24,42,.96));
+      border:1px solid var(--line-soft);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-card{
+      padding:34px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(127,195,255,.18);
+      background:rgba(91,167,255,.08);
+      color:var(--blue-2);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:18px 0 14px;
+      font-size:48px;
+      line-height:1.04;
+      letter-spacing:-1.3px;
+      max-width:780px;
+    }
+
+    .lede{
+      color:var(--muted);
+      font-size:18px;
+      max-width:760px;
+      margin:0 0 24px;
+    }
+
+    .search{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:18px 0 18px;
+    }
+
+    .search input{
+      flex:1 1 420px;
+      min-width:280px;
+      height:56px;
+      border-radius:16px;
+      border:1px solid rgba(130,160,220,.14);
+      background:rgba(6,11,21,.72);
+      color:var(--text);
+      padding:0 18px;
+      outline:none;
+      font-size:15px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    .search input:focus{
+      border-color:rgba(91,167,255,.45);
+      box-shadow:0 0 0 4px rgba(91,167,255,.12);
+    }
+
+    .btn{
+      height:56px;
+      padding:0 20px;
+      border-radius:16px;
+      border:0;
+      cursor:pointer;
+      font-weight:800;
+      font-size:14px;
+      letter-spacing:.2px;
+      transition:transform .15s ease, opacity .15s ease, background .15s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .btn-primary{
+      color:#fff;
+      background:linear-gradient(180deg,#2891ff,#1876d8);
+      box-shadow:0 12px 28px rgba(24,118,216,.26);
+    }
+
+    .btn-secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(130,160,220,.16);
+    }
+
+    .trust{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:6px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(130,160,220,.12);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .hero-side{
+      padding:22px;
+      display:grid;
+      gap:14px;
+      grid-template-rows:auto auto 1fr;
+    }
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .mini{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(130,160,220,.12);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .mini .label{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.6px;
+      font-weight:800;
+    }
+
+    .mini .value{
+      margin-top:8px;
+      font-size:24px;
+      font-weight:800;
+    }
+
+    .hero-note{
+      background:linear-gradient(180deg,rgba(91,167,255,.08),rgba(91,167,255,.04));
+      border:1px solid rgba(91,167,255,.14);
+      border-radius:18px;
+      padding:18px;
+    }
+
+    .hero-note h3{
+      margin:0 0 10px;
+      font-size:18px;
+    }
+
+    .hero-note p{
+      margin:0;
+      color:var(--muted);
+    }
+
+    .status{
+      margin-top:12px;
+      min-height:24px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .status.good{color:var(--green)}
+    .status.warn{color:var(--amber)}
+    .status.bad{color:var(--red)}
+
+    .section{
+      padding:10px 0 26px;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin:8px 0 18px;
+    }
+
+    .section-head h2{
+      margin:0;
+      font-size:26px;
+      letter-spacing:-.4px;
+    }
+
+    .section-head p{
+      margin:0;
+      color:var(--muted);
+    }
+
+    .stats-row{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+    }
+
+    .stat{
+      padding:20px;
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line-soft);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .stat .k{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      font-weight:800;
+    }
+
+    .stat .v{
+      margin-top:10px;
+      font-size:28px;
+      font-weight:800;
+    }
+
+    .stat .s{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    #reportWrap{display:none}
+    #reportWrap.show{display:block}
+
+    .grid-main{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      margin-top:16px;
+    }
+
+    .card{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line-soft);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .card h3{
+      margin:0 0 14px;
+      font-size:18px;
+      letter-spacing:-.2px;
+    }
+
+    .report-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .wallet-line{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .kbd{
+      font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      color:#dfe9ff;
+      padding:8px 10px;
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(130,160,220,.12);
+      word-break:break-all;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.5px;
+      border:1px solid rgba(130,160,220,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+    }
+
+    .badge.blue{
+      background:rgba(91,167,255,.10);
+      color:var(--blue-2);
+      border-color:rgba(91,167,255,.18);
+    }
+
+    .badge.green{
+      background:rgba(52,211,153,.10);
+      color:var(--green);
+      border-color:rgba(52,211,153,.18);
+    }
+
+    .badge.amber{
+      background:rgba(251,191,36,.10);
+      color:var(--amber);
+      border-color:rgba(251,191,36,.18);
+    }
+
+    .badge.red{
+      background:rgba(251,113,133,.10);
+      color:var(--red);
+      border-color:rgba(251,113,133,.18);
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .metric{
+      padding:16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(130,160,220,.10);
+    }
+
+    .metric .label{
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      font-weight:800;
+    }
+
+    .metric .value{
+      margin-top:8px;
+      font-size:24px;
+      font-weight:800;
+    }
+
+    .metric .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .stack{
+      display:grid;
+      gap:16px;
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+
+    .list li{
+      padding:14px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(130,160,220,.10);
+      color:var(--text);
+    }
+
+    .list li small{
+      display:block;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .flag-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .empty{
+      color:var(--muted);
+      padding:14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px dashed rgba(130,160,220,.12);
+    }
+
+    .signal-table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:16px;
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(130,160,220,.10);
+    }
+
+    .signal-table th,
+    .signal-table td{
+      padding:14px 12px;
+      border-bottom:1px solid rgba(130,160,220,.08);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+
+    .signal-table th{
+      color:#dfe9ff;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      background:rgba(255,255,255,.03);
+    }
+
+    .signal-table td{
+      color:var(--muted);
+    }
+
+    .signal-table td strong{
+      color:var(--text);
+    }
+
+    .signal-table tr:last-child td{
+      border-bottom:0;
+    }
+
+    .footer{
+      padding:34px 0 46px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .footer-inner{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      padding-top:22px;
+      border-top:1px solid rgba(130,160,220,.10);
+    }
+
+    .footer-links{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .footer-links a{
+      color:var(--muted);
+    }
+
+    .footer-links a:hover{
+      color:var(--text);
+    }
+
+    @media (max-width:1080px){
+      .hero-grid,
+      .grid-main,
+      .stats-row{
+        grid-template-columns:1fr;
+      }
+
+      .summary-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      h1{
+        font-size:40px;
+      }
+    }
+
+    @media (max-width:680px){
+      .wrap{
+        padding:0 14px;
+      }
+
+      .hero{
+        padding:30px 0 20px;
+      }
+
+      .hero-card,
+      .hero-side,
+      .card,
+      .stat{
+        padding:18px;
+      }
+
+      .summary-grid,
+      .mini-grid{
+        grid-template-columns:1fr;
+      }
+
+      h1{
+        font-size:34px;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .search input,
+      .btn{
+        width:100%;
+      }
+
+      .search{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+
+      .section-head{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      .report-title{
+        align-items:flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="nav">
+        <a class="brand" href="/">
+          <div class="brand-mark">A</div>
+          <div class="brand-copy">
+            <small>XRPL Intelligence</small>
+            <span>AUGUR</span>
+          </div>
+        </a>
+
+        <div class="nav-links">
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/developers.html">Developers</a>
+                              <a class="nav-cta" href="#analyze">Wallet Lookup</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow">Live XRPL Wallet Intelligence</div>
+          <h1>AUGUR reads public XRPL wallets and explains what they’re doing in plain English.</h1>
+          <p class="lede">
+            Analyze wallet behavior, issuer state, activity, and risk using public XRPL ledger data only.
+            No wallet connection. No keys. No custody.
+          </p>
+
+          <div id="analyze" class="search">
+            <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
+            <button id="analyzeBtn" class="btn btn-primary" type="button">Analyze Wallet</button>
+            <button id="exampleBtn" class="btn btn-secondary" type="button">Try Example</button>
+          </div>
+
+          <div class="trust">
+            <span class="pill">Public ledger only</span>
+            <span class="pill">Read-only</span>
+            <span class="pill">Issuer detection</span>
+            <span class="pill">Blackhole detection</span>
+            <span class="pill">No wallet connection</span>
+          </div>
+
+          <div id="status" class="status">Enter a wallet and run a live report.</div>
+        </div>
+
+        <div class="hero-card hero-side">
+          <div class="mini-grid">
+            <div class="mini">
+              <div class="label">Core Output</div>
+              <div class="value">Report</div>
+            </div>
+            <div class="mini">
+              <div class="label">Network</div>
+              <div class="value">XRPL</div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini">
+              <div class="label">Signals</div>
+              <div class="value">Identity</div>
+            </div>
+            <div class="mini">
+              <div class="label">Focus</div>
+              <div class="value">Risk</div>
+            </div>
+          </div>
+
+          <div class="hero-note">
+            <h3>What AUGUR does</h3>
+            <p>
+              AUGUR turns public XRPL ledger data into a structured wallet intelligence report with classification,
+              plain-English interpretation, activity context, issuer-state detection, and risk flags.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="k">Classification</div>
+          <div class="v">Wallet Type</div>
+          <div class="s">Identity-first wallet profiling from public ledger behavior.</div>
+        </div>
+        <div class="stat">
+          <div class="k">Issuer State</div>
+          <div class="v">Blackhole Aware</div>
+          <div class="s">Detects top-tier issuer-state signals before generic behavior labels.</div>
+        </div>
+        <div class="stat">
+          <div class="k">Activity</div>
+          <div class="v">Live Read</div>
+          <div class="s">Recent transaction sampling and trustline context from live XRPL data.</div>
+        </div>
+        <div class="stat">
+          <div class="k">Risk</div>
+          <div class="v">Readable Flags</div>
+          <div class="s">Structured risk notes surfaced in plain English.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reportSection" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Wallet Intelligence Report</h2>
+          <p>XRPL • Public Ledger Analysis • Generated Live</p>
+        </div>
+      </div>
+
+      <div id="reportWrap">
+        <div class="grid-main">
+          <div class="card">
+            <div class="report-title">
+              <div>
+                <h3 id="reportHeading">Report Summary</h3>
+                <div class="wallet-line">
+                  <span id="walletAddress" class="kbd"></span>
+                  <span id="classificationBadge" class="badge blue"></span>
+                  <span id="confidenceBadge" class="badge"></span>
+                  <span id="activityBadge" class="badge"></span>
+                  <span id="riskBadge" class="badge"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-grid">
+              <div class="metric">
+                <div class="label">Balance</div>
+                <div id="metricBalance" class="value">-</div>
+                <div class="sub">XRP</div>
+              </div>
+              <div class="metric">
+                <div class="label">Trustlines</div>
+                <div id="metricTrustlines" class="value">-</div>
+                <div class="sub">Issuer and token surface</div>
+              </div>
+              <div class="metric">
+                <div class="label">Owner Count</div>
+                <div id="metricOwnerCount" class="value">-</div>
+                <div class="sub">On-ledger objects</div>
+              </div>
+              <div class="metric">
+                <div class="label">Recent TX</div>
+                <div id="metricRecentTx" class="value">-</div>
+                <div class="sub">Sampled window</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <h3>Identity Signals</h3>
+              <div id="identitySignals" class="flag-row"></div>
+            </div>
+
+            <div class="card">
+              <h3>Risk Overview</h3>
+              <div id="riskFlags" class="flag-row"></div>
+              <div id="riskNotes" style="margin-top:14px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-main" style="margin-top:18px">
+          <div class="card">
+            <h3>Plain-English Statement</h3>
+            <ul id="statementList" class="list"></ul>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <h3>Account Flags</h3>
+              <ul id="accountFlagsList" class="list"></ul>
+            </div>
+            <div class="card">
+              <h3>Activity Summary</h3>
+              <ul id="activityList" class="list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <h3>Signal Details</h3>
+          <div style="overflow:auto">
+            <table class="signal-table">
+              <thead>
+                <tr>
+                  <th>Signal</th>
+                  <th>Category</th>
+                  <th>Value</th>
+                  <th>Interpretation</th>
+                </tr>
+              </thead>
+              <tbody id="signalsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="emptyState" class="card">
+        <h3 style="margin:0 0 8px">No report loaded yet</h3>
+        <p style="margin:0;color:var(--muted)">
+          Enter an XRPL wallet address above and run a live AUGUR report.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>AUGUR • XRPL wallet intelligence from public ledger data</div>
+        <div class="footer-links">
+                            </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const API_BASE = "https://api.augurxrpl.com";
+    const EXAMPLE_WALLET = "rwCq6TENSo3Hh9LKipXnLaxaeXBXKubqki";
+
+    const walletInput = document.getElementById("walletInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const exampleBtn = document.getElementById("exampleBtn");
+    const statusEl = document.getElementById("status");
+    const reportWrap = document.getElementById("reportWrap");
+    const emptyState = document.getElementById("emptyState");
+
+    const walletAddress = document.getElementById("walletAddress");
+    const classificationBadge = document.getElementById("classificationBadge");
+    const confidenceBadge = document.getElementById("confidenceBadge");
+    const activityBadge = document.getElementById("activityBadge");
+    const riskBadge = document.getElementById("riskBadge");
+
+    const metricBalance = document.getElementById("metricBalance");
+    const metricTrustlines = document.getElementById("metricTrustlines");
+    const metricOwnerCount = document.getElementById("metricOwnerCount");
+    const metricRecentTx = document.getElementById("metricRecentTx");
+
+    const identitySignals = document.getElementById("identitySignals");
+    const riskFlags = document.getElementById("riskFlags");
+    const riskNotes = document.getElementById("riskNotes");
+    const statementList = document.getElementById("statementList");
+    const accountFlagsList = document.getElementById("accountFlagsList");
+    const activityList = document.getElementById("activityList");
+    const signalsBody = document.getElementById("signalsBody");
+
+    function setStatus(text, type = "") {
+      statusEl.className = "status" + (type ? " " + type : "");
+      statusEl.textContent = text;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatValue(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      if (typeof value === "boolean") return value ? "True" : "False";
+      return String(value);
+    }
+
+    function badgeClassForRisk(level) {
+      if (level === "Low") return "badge green";
+      if (level === "Moderate") return "badge amber";
+      return "badge red";
+    }
+
+    function badgeClassForActivity(level) {
+      if (level === "High") return "badge blue";
+      if (level === "Medium") return "badge amber";
+      return "badge";
+    }
+
+    function renderFlagPills(target, items, emptyText, type = "") {
+      if (!items || !items.length) {
+        target.innerHTML = `<div class="empty">${escapeHtml(emptyText)}</div>`;
+        return;
+      }
+
+      target.innerHTML = items.map((item) => {
+        const cls = type ? `badge ${type}` : "badge";
+        return `<span class="${cls}">${escapeHtml(item)}</span>`;
+      }).join("");
+    }
+
+    function renderList(target, items, emptyText) {
+      if (!items || !items.length) {
+        target.innerHTML = `<li class="empty">${escapeHtml(emptyText)}</li>`;
+        return;
+      }
+
+      target.innerHTML = items.map((item) => {
+        if (typeof item === "string") {
+          return `<li>${escapeHtml(item)}</li>`;
+        }
+
+        const line = item.line || item.label || "";
+        const sub = item.sub || item.note || "";
+        return `<li>${escapeHtml(line)}${sub ? `<small>${escapeHtml(sub)}</small>` : ""}</li>`;
+      }).join("");
+    }
+
+    function renderSignals(signals) {
+      if (!signals || !signals.length) {
+        signalsBody.innerHTML = `<tr><td colspan="4" class="empty">No signal data available.</td></tr>`;
+        return;
+      }
+
+      signalsBody.innerHTML = signals.map((signal) => `
+        <tr>
+          <td><strong>${escapeHtml(signal.label || signal.key)}</strong></td>
+          <td>${escapeHtml(signal.category)}</td>
+          <td>${escapeHtml(formatValue(signal.value))}</td>
+          <td>${escapeHtml(signal.interpretation || "")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderReport(data) {
+      emptyState.style.display = "none";
+      reportWrap.classList.add("show");
+
+      walletAddress.textContent = data.address || "—";
+
+      classificationBadge.className = "badge blue";
+      classificationBadge.textContent = data.classification || "Unknown";
+
+      confidenceBadge.className = "badge";
+      confidenceBadge.textContent = `Confidence ${formatValue(data.confidence)}`;
+
+      activityBadge.className = badgeClassForActivity(data.activityLevel);
+      activityBadge.textContent = `Activity ${formatValue(data.activityLevel)}`;
+
+      const riskLevel = data.risk?.level || "Unknown";
+      riskBadge.className = badgeClassForRisk(riskLevel);
+      riskBadge.textContent = `Risk ${formatValue(riskLevel)}`;
+
+      metricBalance.textContent = formatValue(data.balanceXRP);
+      metricTrustlines.textContent = formatValue(data.trustlines);
+      metricOwnerCount.textContent = formatValue(data.ownerCount);
+      metricRecentTx.textContent = formatValue(data.recentTxCount);
+
+      renderFlagPills(
+        identitySignals,
+        data.identitySignals && data.identitySignals.length ? data.identitySignals : [
+          data.blackholeStatus ? "blackholeStatus" : "",
+          data.issuerLike ? "issuerLike" : ""
+        ].filter(Boolean),
+        "No strong identity signals surfaced for this wallet yet.",
+        "blue"
+      );
+
+      renderFlagPills(
+        riskFlags,
+        data.risk?.flags || [],
+        "No explicit risk flags were returned for this report.",
+        data.risk?.level === "Low" ? "green" : data.risk?.level === "Moderate" ? "amber" : "red"
+      );
+
+      renderList(
+        riskNotes,
+        (data.risk?.notes || []).map((note) => ({ line: note })),
+        "No additional risk notes."
+      );
+
+      renderList(
+        statementList,
+        (data.statement || []).map((line) => ({ line })),
+        "No plain-English statement returned."
+      );
+
+      const accountFlagItems = [
+        { line: `Master key disabled: ${data.accountFlags?.masterKeyDisabled ? "True" : "False"}` },
+        { line: `RegularKey: ${data.accountFlags?.regularKey || "None"}` },
+        { line: `RegularKey looks blackholed: ${data.accountFlags?.regularKeyLooksBlackholed ? "True" : "False"}` }
+      ];
+
+      renderList(accountFlagsList, accountFlagItems, "No account flag data.");
+
+      const activityItems = [
+        { line: `Activity level: ${data.activity?.level || data.activityLevel || "—"}` },
+        { line: `Sampled recent transactions: ${formatValue(data.activity?.sampledRecentTransactions ?? data.recentTxCount)}` },
+        ...((data.activity?.summary || []).map((line) => ({ line })))
+      ];
+
+      renderList(activityList, activityItems, "No activity summary available.");
+      renderSignals(data.signals || []);
+
+      document.getElementById("reportSection").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    async function analyzeWallet() {
+      const address = walletInput.value.trim();
+
+      if (!address) {
+        setStatus("Enter an XRPL wallet address first.", "warn");
+        walletInput.focus();
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      exampleBtn.disabled = true;
+      setStatus("Running live AUGUR report...");
+      analyzeBtn.textContent = "Analyzing...";
+
+      try {
+        const url = `${API_BASE}/api/report?address=${encodeURIComponent(address)}`;
+        const res = await fetch(url, {
+          headers: { "Accept": "application/json" }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Failed to load report");
+        }
+
+        renderReport(data);
+        setStatus(`Live report loaded for ${address}.`, "good");
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || "Failed to load report.", "bad");
+      } finally {
+        analyzeBtn.disabled = false;
+        exampleBtn.disabled = false;
+        analyzeBtn.textContent = "Analyze Wallet";
+      }
+    }
+
+    analyzeBtn.addEventListener("click", analyzeWallet);
+
+    walletInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") analyzeWallet();
+    });
+
+    exampleBtn.addEventListener("click", () => {
+      walletInput.value = EXAMPLE_WALLET;
+      analyzeWallet();
+    });
+  </script>
+</body>
+</html>
