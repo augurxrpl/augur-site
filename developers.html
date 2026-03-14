@@ -147,6 +147,36 @@
       box-shadow:var(--glow);
     }
 
+.mobile-nav{
+  display:none;
+  width:100%;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(118,156,228,.10);
+}
+
+.mobile-nav a{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 8px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--muted);
+  background:rgba(255,255,255,.04);
+  font-size:13px;
+  font-weight:700;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active{
+  color:var(--text);
+  background:rgba(118,156,228,.12);
+}
+
     .hero{
       padding:34px 0 20px;
     }
@@ -395,13 +425,14 @@
       }
     }
 
-    @media (max-width:760px){
-      .wrap{padding:0 14px}
-      .nav-links{display:none}
-      .hero-card,.card{padding:18px}
-      h1{font-size:32px}
-      .brand-copy span{font-size:18px}
-    }
+@media (max-width:760px){
+  .wrap{padding:0 14px}
+  .nav-links{display:none}
+  .mobile-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero-card,.card{padding:18px}
+  h1{font-size:32px}
+  .brand-copy span{font-size:18px}
+}
   </style>
 </head>
 <body>
@@ -421,6 +452,14 @@
           <a class="nav-link" href="/wallet/">Wallet Search</a>
           <a class="nav-link" href="/pricing.html">Pricing</a>
           <a class="nav-link active" href="/developers.html">Developers</a>
+        </div>
+
+        <div class="mobile-nav">
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a href="/pricing.html">Pricing</a>
+          <a class="active" href="/developers.html">Developers</a>
+        </div>
         </div>
       </div>
     </div>

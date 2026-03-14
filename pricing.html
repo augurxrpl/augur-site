@@ -148,6 +148,36 @@
       box-shadow:var(--glow);
     }
 
+.mobile-nav{
+  display:none;
+  width:100%;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(118,156,228,.10);
+}
+
+.mobile-nav a{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 8px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--muted);
+  background:rgba(255,255,255,.04);
+  font-size:13px;
+  font-weight:700;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active{
+  color:var(--text);
+  background:rgba(118,156,228,.12);
+}
+
     .hero{
       padding:34px 0 20px;
     }
@@ -515,6 +545,7 @@
     @media (max-width:760px){
       .wrap{padding:0 14px}
       .nav-links{display:none}
+      .mobile-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
       .hero-card,.plan,.matrix-card,.card{padding:18px}
       h1{font-size:32px}
       .brand-copy span{font-size:18px}
@@ -540,6 +571,14 @@
           <a class="nav-link active" href="/pricing.html">Pricing</a>
           <a class="nav-link" href="/developers.html">Developers</a>
         </div>
+
+        <div class="mobile-nav">
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a class="active" href="/pricing.html">Pricing</a>
+          <a href="/developers.html">Developers</a>
+        </div>
+        </div>
       </div>
     </div>
   </div>
@@ -548,7 +587,7 @@
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">AUGUR Plans</div>
-        <h1>Free for basic wallet reads. Pro for serious XRPL intelligence. Developer for API access.</h1>
+        <h1>Free to start. Starter at $19. Pro at $49. Developer for API access.</h1>
         <p class="lede">
           AUGUR starts with public wallet intelligence and expands into watchlists, alerts, issuer tracking,
           saved reports, smart dashboards, and developer access. The backend is already live. These plans define the product shape.
@@ -592,20 +631,38 @@
 
         <div class="plan featured">
           <span class="tag blue">Recommended</span>
+          <h3>Starter</h3>
+          <p>For serious users who want more depth without jumping straight to full Pro.</p>
+          <div class="price">
+            <div class="num">$19</div>
+            <div class="term">/ month</div>
+          </div>
+          <div class="price-note">The clean bridge between free and full intelligence.</div>
+          <button class="btn btn-primary" type="button">Best Entry Tier</button>
+          <ul class="feature-list">
+            <li>Full report view<small>Get the full report surface instead of the trimmed public layer.</small></li>
+            <li>Expanded signal detail<small>More context on behavior, issuer state, and risk.</small></li>
+            <li>Higher usage limits<small>Built for repeat checks and actual workflow use.</small></li>
+            <li>Basic saved reports<small>Keep important reads instead of treating every lookup like a one-off.</small></li>
+            <li>Cleaner dashboard access<small>Better platform utility without needing the full power tier.</small></li>
+          </ul>
+        </div>
+        <div class="plan">
+          <span class="tag">Pro</span>
           <h3>Pro</h3>
           <p>For serious XRPL users, traders, builders, token teams, and researchers.</p>
           <div class="price">
             <div class="num">$49</div>
-            <div class="term">/ month target</div>
+            <div class="term">/ month</div>
           </div>
-          <div class="price-note">Best value tier for platform intelligence and workflow retention.</div>
-          <button class="btn btn-primary" type="button">Best Product Fit</button>
+          <div class="price-note">Full intelligence tier for platform retention and workflow value.</div>
+          <button class="btn btn-secondary" type="button">Full Intelligence</button>
           <ul class="feature-list">
-            <li>Full wallet intelligence reports<small>Full signal breakdowns, deeper risk notes, issuer-state context, and premium dashboards.</small></li>
-            <li>Saved reports and search history<small>Build a usable workspace instead of a one-off lookup tool.</small></li>
+            <li>Saved reports and history<small>Build a usable workspace instead of a one-off lookup tool.</small></li>
             <li>Watchlists and alerts<small>Track wallets, issuer changes, risk shifts, and notable movement.</small></li>
             <li>Blackholed issuer explorer<small>Very AUGUR. Very defensible. Very useful.</small></li>
             <li>Whale and notable wallet panels<small>Make the dashboard feel like a real intelligence terminal.</small></li>
+            <li>Premium dashboard access<small>More visibility into important signals and platform views.</small></li>
           </ul>
         </div>
 
@@ -645,6 +702,7 @@
               <tr>
                 <th>Feature</th>
                 <th>Free</th>
+                <th>Starter</th>
                 <th>Pro</th>
                 <th>Developer</th>
               </tr>
@@ -655,9 +713,11 @@
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
+                <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Classification + statement</strong><br />Readable wallet intelligence</td>
+                <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
@@ -667,10 +727,12 @@
                 <td class="mid">Limited</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
+                <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Advanced risk notes</strong><br />Stronger intelligence surface</td>
                 <td class="mid">Limited</td>
+                <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
@@ -679,21 +741,25 @@
                 <td class="mid">Basic</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
+                <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Saved reports</strong><br />Retention and workflow value</td>
                 <td class="no">No</td>
+                <td class="mid">Basic</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Watchlists</strong><br />Track notable wallets and issuers</td>
                 <td class="no">No</td>
+                <td class="no">No</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Alerts</strong><br />Wallet movement and risk triggers</td>
+                <td class="no">No</td>
                 <td class="no">No</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
@@ -751,6 +817,7 @@
           <h3>Who these plans are for</h3>
           <ul class="list">
             <li>Free<small>Curious users, casual XRPL users, people learning what AUGUR does.</small></li>
+            <li>Starter<small>Users who want real utility, better limits, and fuller reports without jumping straight to Pro.</small></li>
             <li>Pro<small>Serious users, traders, researchers, builders, token teams, ecosystem operators.</small></li>
             <li>Developer<small>Dashboards, bots, analytics products, internal tools, data workflows, and XRPL infrastructure users.</small></li>
             <li>Later expansion<small>Team, enterprise, issuer intelligence packages, custom data products.</small></li>
@@ -763,8 +830,9 @@
       <div class="footer-inner">
         <div>AUGUR Pricing • XRPL intelligence product structure</div>
         <div class="footer-links">
-          <a href="/">Wallet Search</a>
-          <a href="/dashboard/">Dashboard</a>
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a href="/developers.html">Developers</a>
           <a href="https://api.augurxrpl.com/api/health" target="_blank" rel="noopener">API Health</a>
         </div>
       </div>

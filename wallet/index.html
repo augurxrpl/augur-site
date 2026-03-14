@@ -119,6 +119,33 @@
     .nav-links a{color:var(--muted)}
     .nav-links a:hover{color:var(--text)}
 
+    .mobile-nav{
+      display:none;
+      width:100%;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+      padding-top:12px;
+      border-top:1px solid rgba(118,156,228,.10);
+    }
+
+    .mobile-nav a{
+      min-height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 8px;
+      border-radius:12px;
+      text-decoration:none;
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .mobile-nav a:hover,
+    .mobile-nav a.active{color:var(--text);background:rgba(118,156,228,.12)}
+
     .nav-cta{
       padding:10px 14px;
       border-radius:12px;
@@ -645,18 +672,8 @@
       h1{
         font-size:34px;
       }
-
-      .nav-links{
-        display:flex;
-        width:100%;
-        overflow:auto;
-        padding-bottom:4px;
-        scrollbar-width:none;
-      }
-
-      .nav-links::-webkit-scrollbar{
-        display:none;
-      }
+      .nav-links{display:none}
+      .mobile-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 
       .nav-links a,
       .nav-link,
@@ -702,7 +719,14 @@
           <a href="/wallet/">Wallet Search</a>
           <a href="/pricing.html">Pricing</a>
           <a href="/developers.html">Developers</a>
-                              <a class="nav-cta" href="#analyze">Wallet Lookup</a>
+        </div>
+
+        <div class="mobile-nav">
+          <a href="/">Dashboard</a>
+          <a class="active" href="/wallet/">Wallet Search</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="/developers.html">Developers</a>
+        </div>
         </div>
       </div>
     </div>
