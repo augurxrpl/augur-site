@@ -4,109 +4,118 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AUGUR Pricing | XRPL Intelligence Plans</title>
-  <meta name="description" content="AUGUR pricing for Free, Starter, Pro, and Developer plans. XRPL wallet intelligence, issuer-state detection, watchlists, alerts, reports, and API access." />
+  <meta name="description" content="AUGUR pricing for Free, Pro, and Developer plans. XRPL wallet intelligence, issuer-state detection, watchlists, alerts, reports, and API access." />
   <style>
     :root{
-      --bg:#060b14;
-      --panel:#0d1524;
-      --panel-2:#111c31;
-      --line:rgba(118,156,228,.14);
-      --line-2:rgba(118,156,228,.10);
-      --text:#eef4ff;
-      --muted:#9fb0d0;
-      --soft:#7f92b6;
-      --blue:#59a6ff;
-      --blue-2:#2d6cdf;
-      --green:#4ee39a;
-      --amber:#ffcc66;
-      --shadow:0 24px 80px rgba(0,0,0,.36);
-      --glow:0 0 0 1px rgba(87,166,255,.14), 0 0 28px rgba(45,108,223,.10);
+      --bg:#060b16;
+      --bg-2:#09111f;
+      --panel:#0e1729;
+      --panel-2:#13203a;
+      --line:rgba(108,145,214,.18);
+      --line-soft:rgba(108,145,214,.10);
+      --text:#edf3ff;
+      --muted:#97a9cc;
+      --blue:#57a6ff;
+      --blue-2:#8bcbff;
+      --green:#34d399;
+      --amber:#fbbf24;
+      --red:#fb7185;
+      --shadow:0 18px 60px rgba(0,0,0,.32);
+      --glow:0 0 0 1px rgba(87,166,255,.10), 0 0 30px rgba(87,166,255,.08);
       --radius:22px;
+      --radius-sm:14px;
+      --max:1360px;
     }
 
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
+
+    html,body{
       margin:0;
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:
-        radial-gradient(circle at top, rgba(56,104,198,.18), transparent 30%),
-        linear-gradient(180deg, #09111f 0%, var(--bg) 100%);
+      padding:0;
       color:var(--text);
+      font:16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(87,166,255,.14), transparent 22%),
+        radial-gradient(circle at 85% 0%, rgba(52,211,153,.08), transparent 20%),
+        linear-gradient(180deg,#040812 0%, #07101d 100%);
+      min-height:100vh;
     }
 
-    a{
-      color:inherit;
-      text-decoration:none;
-    }
+    a{color:inherit;text-decoration:none}
 
     .wrap{
-      width:min(1180px, calc(100% - 32px));
+      max-width:var(--max);
       margin:0 auto;
+      padding:0 18px;
     }
 
     .topbar{
       position:sticky;
       top:0;
       z-index:50;
-      backdrop-filter:blur(16px);
-      background:rgba(6,11,20,.78);
-      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(14px);
+      background:rgba(5,11,21,.84);
+      border-bottom:1px solid rgba(118,156,228,.12);
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
     }
 
     .nav{
-      min-height:78px;
+      min-height:74px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:18px;
+      gap:16px;
       flex-wrap:wrap;
     }
 
     .brand{
       display:flex;
       align-items:center;
-      gap:12px;
-      min-width:0;
+      gap:14px;
+      font-weight:900;
+      letter-spacing:.4px;
     }
 
     .brand-mark{
-      width:40px;
-      height:40px;
-      border-radius:12px;
+      width:42px;
+      height:42px;
+      border-radius:14px;
       display:grid;
       place-items:center;
-      background:linear-gradient(180deg, rgba(32,63,117,.92), rgba(16,30,57,.96));
-      border:1px solid rgba(89,166,255,.20);
-      box-shadow:var(--glow);
-      flex:0 0 auto;
+      color:var(--blue-2);
+      background:linear-gradient(180deg,#12305e,#0b1f44);
+      border:1px solid rgba(139,203,255,.22);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 26px rgba(0,0,0,.32);
+      font-size:16px;
+      font-weight:900;
     }
 
     .brand-mark img{
-      width:24px;
-      height:24px;
-      display:block;
+      width:100%;
+      height:100%;
       object-fit:contain;
+      padding:6px;
+      display:block;
     }
 
     .brand-copy{
       display:flex;
       flex-direction:column;
-      line-height:1.05;
+      gap:2px;
     }
 
     .brand-copy small{
-      color:var(--soft);
+      color:var(--muted);
       font-size:11px;
-      font-weight:700;
-      letter-spacing:.18em;
+      letter-spacing:.9px;
       text-transform:uppercase;
+      font-weight:700;
     }
 
     .brand-copy span{
       font-size:22px;
+      letter-spacing:.8px;
       font-weight:900;
-      letter-spacing:.04em;
     }
 
     .nav-links{
@@ -139,36 +148,6 @@
       box-shadow:var(--glow);
     }
 
-    .mobile-nav{
-      display:none;
-      width:100%;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:8px;
-      padding-top:12px;
-      border-top:1px solid rgba(118,156,228,.10);
-    }
-
-    .mobile-nav a{
-      min-height:42px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:0 8px;
-      border-radius:12px;
-      text-decoration:none;
-      color:var(--muted);
-      background:rgba(255,255,255,.04);
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .mobile-nav a:hover,
-    .mobile-nav a.active{
-      color:var(--text);
-      background:rgba(118,156,228,.12);
-    }
-
     .hero{
       padding:34px 0 20px;
     }
@@ -176,322 +155,339 @@
     .hero-card{
       background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
       border:1px solid var(--line);
+      border-radius:24px;
       box-shadow:var(--shadow);
-      border-radius:var(--radius);
-      padding:24px;
+      padding:30px;
     }
 
     .eyebrow{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      color:var(--blue);
-      font-weight:800;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(87,166,255,.08);
+      border:1px solid rgba(87,166,255,.14);
+      color:var(--blue-2);
       font-size:12px;
-      letter-spacing:.16em;
       text-transform:uppercase;
-      margin-bottom:14px;
+      letter-spacing:.8px;
+      font-weight:900;
     }
 
-    h1,h2,h3,p{margin:0}
-
     h1{
-      font-size:48px;
+      margin:16px 0 10px;
+      font-size:44px;
       line-height:1.02;
-      letter-spacing:-.03em;
+      letter-spacing:-1.2px;
       max-width:900px;
     }
 
     .lede{
-      margin-top:14px;
-      max-width:860px;
+      margin:0;
       color:var(--muted);
-      font-size:17px;
-      line-height:1.66;
+      font-size:18px;
+      max-width:920px;
     }
 
     .trust{
-      margin-top:18px;
       display:flex;
       flex-wrap:wrap;
       gap:10px;
+      margin-top:18px;
     }
 
     .pill{
-      padding:10px 12px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      color:#dbe8ff;
-      background:rgba(255,255,255,.04);
-      border:1px solid var(--line-2);
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
     }
 
     .section{
-      padding:14px 0 0;
+      padding:18px 0 28px;
     }
 
     .section-head{
       display:flex;
+      align-items:end;
       justify-content:space-between;
-      align-items:flex-end;
-      gap:18px;
-      margin-bottom:14px;
+      gap:16px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
     }
 
     .section-head h2{
+      margin:0;
       font-size:28px;
-      letter-spacing:-.02em;
+      letter-spacing:-.6px;
     }
 
     .section-head p{
-      margin-top:6px;
+      margin:0;
       color:var(--muted);
-      line-height:1.6;
     }
 
     .plan-grid{
       display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:14px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:18px;
     }
 
     .plan{
-      background:linear-gradient(180deg,rgba(16,26,45,.96),rgba(10,16,29,.96));
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:22px;
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line-soft);
+      border-radius:24px;
       box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      min-height:100%;
+      padding:24px;
+      position:relative;
+      overflow:hidden;
     }
 
     .plan.featured{
       border-color:rgba(87,166,255,.28);
       box-shadow:var(--shadow), var(--glow);
+      transform:translateY(-2px);
     }
 
     .tag{
       display:inline-flex;
       align-items:center;
-      width:max-content;
-      padding:8px 10px;
+      gap:8px;
+      padding:8px 12px;
       border-radius:999px;
-      font-size:11px;
+      font-size:12px;
       font-weight:900;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#dfe9ff;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line-2);
-      margin-bottom:14px;
+      letter-spacing:.5px;
+      border:1px solid rgba(118,156,228,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      width:max-content;
     }
 
     .tag.blue{
-      color:#dcebff;
-      background:rgba(49,108,214,.18);
-      border-color:rgba(89,166,255,.20);
+      background:rgba(87,166,255,.10);
+      color:var(--blue-2);
+      border-color:rgba(87,166,255,.18);
     }
 
     .tag.green{
-      color:#dcffef;
-      background:rgba(34,111,76,.22);
-      border-color:rgba(78,227,154,.20);
+      background:rgba(52,211,153,.10);
+      color:var(--green);
+      border-color:rgba(52,211,153,.18);
     }
 
     .tag.amber{
-      color:#fff2cf;
-      background:rgba(125,95,28,.24);
-      border-color:rgba(255,204,102,.18);
+      background:rgba(251,191,36,.10);
+      color:var(--amber);
+      border-color:rgba(251,191,36,.18);
     }
 
     .plan h3{
+      margin:16px 0 8px;
       font-size:28px;
-      letter-spacing:-.02em;
+      letter-spacing:-.5px;
     }
 
     .plan p{
-      margin-top:10px;
+      margin:0;
       color:var(--muted);
-      line-height:1.6;
     }
 
     .price{
+      margin:22px 0 6px;
       display:flex;
-      align-items:flex-end;
-      gap:10px;
-      margin-top:18px;
+      align-items:end;
+      gap:8px;
+      flex-wrap:wrap;
     }
 
     .price .num{
-      font-size:52px;
-      line-height:.95;
+      font-size:48px;
       font-weight:900;
-      letter-spacing:-.04em;
+      line-height:1;
+      letter-spacing:-1.4px;
     }
 
     .price .term{
-      color:var(--soft);
-      font-size:14px;
+      color:var(--muted);
+      font-size:15px;
       font-weight:700;
-      padding-bottom:7px;
+      padding-bottom:6px;
     }
 
     .price-note{
-      margin-top:10px;
-      color:var(--soft);
-      font-size:14px;
-      line-height:1.5;
-      min-height:42px;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:18px;
     }
 
     .btn{
-      margin-top:18px;
-      min-height:46px;
-      border-radius:14px;
-      border:1px solid transparent;
+      width:100%;
+      height:54px;
+      border-radius:16px;
+      border:0;
       font-size:14px;
-      font-weight:800;
-      padding:0 16px;
+      font-weight:900;
+      letter-spacing:.2px;
       cursor:pointer;
       transition:.15s ease;
+      margin-bottom:18px;
     }
+
+    .btn:hover{transform:translateY(-1px)}
 
     .btn-primary{
-      background:linear-gradient(180deg,var(--blue),var(--blue-2));
       color:#fff;
-      box-shadow:0 16px 34px rgba(45,108,223,.22);
-    }
-
-    .btn-primary:hover{
-      transform:translateY(-1px);
-      filter:brightness(1.03);
+      background:linear-gradient(180deg,#2891ff,#1876d8);
+      box-shadow:0 12px 26px rgba(24,118,216,.24);
     }
 
     .btn-secondary{
-      background:rgba(255,255,255,.04);
-      border-color:var(--line);
       color:var(--text);
-    }
-
-    .btn-secondary:hover{
-      background:rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(118,156,228,.14);
     }
 
     .feature-list{
-      margin:18px 0 0;
-      padding:0;
       list-style:none;
+      margin:0;
+      padding:0;
       display:grid;
-      gap:12px;
+      gap:10px;
     }
 
     .feature-list li{
-      padding:12px 0 0;
-      border-top:1px solid rgba(255,255,255,.06);
-      font-weight:700;
-      line-height:1.45;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      color:var(--text);
+      font-size:14px;
+      font-weight:600;
     }
 
-    .feature-list small{
+    .feature-list li small{
       display:block;
       margin-top:5px;
       color:var(--muted);
       font-size:13px;
       font-weight:500;
-      line-height:1.55;
     }
 
-    .matrix-card,
-    .card{
-      background:linear-gradient(180deg,rgba(16,26,45,.96),rgba(10,16,29,.96));
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:22px;
+    .matrix-card{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line-soft);
+      border-radius:24px;
       box-shadow:var(--shadow);
+      padding:22px;
     }
 
     .matrix-wrap{
-      overflow-x:auto;
+      overflow:auto;
     }
 
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:860px;
+      min-width:880px;
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(118,156,228,.10);
+      border-radius:18px;
+      overflow:hidden;
     }
 
     th,td{
       padding:14px 12px;
+      border-bottom:1px solid rgba(118,156,228,.08);
       text-align:left;
-      border-bottom:1px solid rgba(255,255,255,.06);
       vertical-align:top;
+      font-size:14px;
     }
 
     th{
-      color:#fff;
-      font-size:13px;
+      color:#dfe9ff;
+      font-size:12px;
       text-transform:uppercase;
-      letter-spacing:.12em;
+      letter-spacing:.7px;
+      background:rgba(255,255,255,.03);
     }
 
     td{
       color:var(--muted);
-      line-height:1.55;
-      font-size:14px;
     }
 
     td strong{
       color:var(--text);
-      font-size:14px;
     }
 
-    .yes{color:#dfffee;font-weight:800}
-    .mid{color:#fff2cf;font-weight:800}
-    .no{color:#ffced1;font-weight:800}
+    tr:last-child td{
+      border-bottom:0;
+    }
+
+    .yes{color:var(--green);font-weight:900}
+    .mid{color:var(--amber);font-weight:900}
+    .no{color:var(--muted);font-weight:800}
 
     .grid-2{
       display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:14px;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .card{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line-soft);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:22px;
     }
 
     .card h3{
-      font-size:21px;
-      margin-bottom:10px;
+      margin:0 0 12px;
+      font-size:22px;
+      letter-spacing:-.4px;
     }
 
-    .card p{
-      color:var(--muted);
-      line-height:1.65;
-    }
-
-    .audience-list{
+    .list{
+      list-style:none;
       margin:0;
-      padding-left:18px;
-      color:var(--muted);
+      padding:0;
       display:grid;
       gap:10px;
-      line-height:1.6;
     }
 
-    .audience-list li small{
+    .list li{
+      padding:13px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      color:var(--text);
+    }
+
+    .list li small{
       display:block;
-      color:var(--soft);
-      margin-top:4px;
+      margin-top:5px;
+      color:var(--muted);
     }
 
     .footer{
-      padding:24px 0 48px;
-      color:var(--soft);
+      padding:18px 0 42px;
+      color:var(--muted);
       font-size:14px;
     }
 
     .footer-inner{
-      border-top:1px solid rgba(118,156,228,.10);
       padding-top:18px;
+      border-top:1px solid rgba(118,156,228,.10);
       display:flex;
+      align-items:center;
       justify-content:space-between;
       gap:14px;
       flex-wrap:wrap;
@@ -506,25 +502,23 @@
     .footer-links a{color:var(--muted)}
     .footer-links a:hover{color:var(--text)}
 
-    @media (max-width:1120px){
-      .plan-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
-
+    @media (max-width:1080px){
+      .plan-grid,
       .grid-2{
         grid-template-columns:1fr;
+      }
+      h1{
+        font-size:36px;
       }
     }
 
     @media (max-width:760px){
-      .wrap{width:min(1180px, calc(100% - 20px))}
+      .wrap{padding:0 14px}
       .nav-links{display:none}
-      .mobile-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
       .hero-card,.plan,.matrix-card,.card{padding:18px}
       h1{font-size:32px}
       .brand-copy span{font-size:18px}
       .price .num{font-size:40px}
-      .plan-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -546,13 +540,6 @@
           <a class="nav-link active" href="/pricing.html">Pricing</a>
           <a class="nav-link" href="/developers.html">Developers</a>
         </div>
-
-        <div class="mobile-nav">
-          <a href="/">Dashboard</a>
-          <a href="/wallet/">Wallet Search</a>
-          <a class="active" href="/pricing.html">Pricing</a>
-          <a href="/developers.html">Developers</a>
-        </div>
       </div>
     </div>
   </div>
@@ -561,7 +548,7 @@
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">AUGUR Plans</div>
-        <h1>Free to start. Starter at $19. Pro at $49. Developer for API access.</h1>
+        <h1>Free for basic wallet reads. Pro for serious XRPL intelligence. Developer for API access.</h1>
         <p class="lede">
           AUGUR starts with public wallet intelligence and expands into watchlists, alerts, issuer tracking,
           saved reports, smart dashboards, and developer access. The backend is already live. These plans define the product shape.
@@ -588,74 +575,55 @@
         <div class="plan">
           <span class="tag">Free</span>
           <h3>Free</h3>
-          <p>Open access to prove the product and pull people into the platform.</p>
+          <p>Hook people with live wallet intelligence and plain-English reports.</p>
           <div class="price">
             <div class="num">$0</div>
             <div class="term">/ month</div>
           </div>
-          <div class="price-note">Basic entry for discovery and light usage.</div>
-          <button class="btn btn-secondary" type="button">Public Entry</button>
+          <div class="price-note">Top-of-funnel plan for discovery and basic use.</div>
+          <button class="btn btn-secondary" type="button">Current Public Entry</button>
           <ul class="feature-list">
-            <li>Basic wallet lookup<small>Run live XRPL wallet reads from the public site.</small></li>
-            <li>Classification and statement<small>Readable wallet type and plain-English summary.</small></li>
-            <li>Basic activity and risk<small>Enough to show the product without giving away the edge.</small></li>
-            <li>Limited daily usage<small>Controlled access that supports upgrades later.</small></li>
+            <li>Basic wallet lookup<small>Run live XRPL wallet reports from the public site.</small></li>
+            <li>Classification and statement<small>Get a readable wallet type and plain-English interpretation.</small></li>
+            <li>Basic activity and risk summary<small>Enough to prove the product without giving away the whole edge.</small></li>
+            <li>Limited daily lookups<small>Controlled usage to drive upgrades later.</small></li>
           </ul>
         </div>
 
         <div class="plan featured">
-          <span class="tag blue">Best Entry</span>
-          <h3>Starter</h3>
-          <p>For serious users who want more depth without jumping straight to full pro.</p>
-          <div class="price">
-            <div class="num">$19</div>
-            <div class="term">/ month</div>
-          </div>
-          <div class="price-note">The clean bridge between free and full intelligence.</div>
-          <button class="btn btn-primary" type="button">Recommended Start</button>
-          <ul class="feature-list">
-            <li>Full report view<small>Get the full report surface instead of the trimmed public layer.</small></li>
-            <li>Expanded signal detail<small>More context on behavior, issuer state, and risk.</small></li>
-            <li>Higher usage limits<small>Built for repeat checks and actual workflow use.</small></li>
-            <li>Basic saved reports<small>Keep important reads instead of treating every lookup like a one-off.</small></li>
-            <li>Cleaner dashboard access<small>Better platform utility without needing the full power tier.</small></li>
-          </ul>
-        </div>
-
-        <div class="plan">
-          <span class="tag green">Power</span>
+          <span class="tag blue">Recommended</span>
           <h3>Pro</h3>
-          <p>For analysts, traders, teams, researchers, and users who want the full AUGUR layer.</p>
+          <p>For serious XRPL users, traders, builders, token teams, and researchers.</p>
           <div class="price">
             <div class="num">$49</div>
-            <div class="term">/ month</div>
+            <div class="term">/ month target</div>
           </div>
-          <div class="price-note">Full intelligence tier for platform retention and recurring usage.</div>
-          <button class="btn btn-secondary" type="button">Full Intelligence</button>
+          <div class="price-note">Best value tier for platform intelligence and workflow retention.</div>
+          <button class="btn btn-primary" type="button">Best Product Fit</button>
           <ul class="feature-list">
+            <li>Full wallet intelligence reports<small>Full signal breakdowns, deeper risk notes, issuer-state context, and premium dashboards.</small></li>
+            <li>Saved reports and search history<small>Build a usable workspace instead of a one-off lookup tool.</small></li>
             <li>Watchlists and alerts<small>Track wallets, issuer changes, risk shifts, and notable movement.</small></li>
-            <li>Blackholed issuer explorer<small>Defensible intelligence surface with strong XRPL utility.</small></li>
-            <li>Whale and notable wallet panels<small>Make AUGUR feel like a real intelligence terminal.</small></li>
-            <li>Saved reports and history<small>Retention, workflow value, and repeat platform use.</small></li>
-            <li>Premium dashboard access<small>More visibility into important signals and platform views.</small></li>
+            <li>Blackholed issuer explorer<small>Very AUGUR. Very defensible. Very useful.</small></li>
+            <li>Whale and notable wallet panels<small>Make the dashboard feel like a real intelligence terminal.</small></li>
           </ul>
         </div>
 
         <div class="plan">
-          <span class="tag amber">Infrastructure</span>
+          <span class="tag green">Infrastructure</span>
           <h3>Developer</h3>
-          <p>For integrations, bots, analytics products, internal tools, and infrastructure users.</p>
+          <p>For integrations, bots, analytics products, internal tools, and XRPL builders.</p>
           <div class="price">
             <div class="num">$149</div>
-            <div class="term">/ month</div>
+            <div class="term">/ month target</div>
           </div>
-          <div class="price-note">API-first tier for direct product and data integration.</div>
-          <button class="btn btn-secondary" type="button">API Access</button>
+          <div class="price-note">API-first tier for direct platform access.</div>
+          <button class="btn btn-secondary" type="button">API Access Tier</button>
           <ul class="feature-list">
             <li>API keys and usage dashboard<small>Direct structured access to AUGUR intelligence outputs.</small></li>
             <li>Higher rate limits<small>Built for apps, research workflows, and automation.</small></li>
-            <li>Core report endpoints<small>Use report, classification, activity, risk, and future issuer routes.</small></li>
-            <li>Export and integration workflows<small>Use AUGUR as infrastructure, not just a UI.</small></li>
+            <li>Core report endpoints<small>/api/report, classification, activity, risk, and later issuer/token routes.</small></li>
+            <li>Export and integration workflows<small>Use AUGUR as intelligence infrastructure, not just a UI.</small></li>
             <li>Developer docs and examples<small>Turn the platform into something other products can build on.</small></li>
           </ul>
         </div>
@@ -677,7 +645,6 @@
               <tr>
                 <th>Feature</th>
                 <th>Free</th>
-                <th>Starter</th>
                 <th>Pro</th>
                 <th>Developer</th>
               </tr>
@@ -688,11 +655,9 @@
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Classification + statement</strong><br />Readable wallet intelligence</td>
-                <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
@@ -702,12 +667,10 @@
                 <td class="mid">Limited</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
               </tr>
               <tr>
-                <td><strong>Advanced risk context</strong><br />Stronger intelligence surface</td>
+                <td><strong>Advanced risk notes</strong><br />Stronger intelligence surface</td>
                 <td class="mid">Limited</td>
-                <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
@@ -716,53 +679,51 @@
                 <td class="mid">Basic</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Saved reports</strong><br />Retention and workflow value</td>
                 <td class="no">No</td>
-                <td class="mid">Basic</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
               <tr>
                 <td><strong>Watchlists</strong><br />Track notable wallets and issuers</td>
                 <td class="no">No</td>
+                <td class="yes">Yes</td>
+                <td class="yes">Yes</td>
+              </tr>
+              <tr>
+                <td><strong>Alerts</strong><br />Wallet movement and risk triggers</td>
                 <td class="no">No</td>
                 <td class="yes">Yes</td>
                 <td class="yes">Yes</td>
               </tr>
               <tr>
-                <td><strong>Smart alerts</strong><br />Notification layer for changing signals</td>
-                <td class="no">No</td>
+                <td><strong>Whale / notable wallet panels</strong><br />Platform dashboard value</td>
                 <td class="no">No</td>
                 <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
+                <td class="mid">Some</td>
               </tr>
               <tr>
-                <td><strong>Blackholed issuer explorer</strong><br />High-value XRPL intelligence tool</td>
+                <td><strong>Blackholed issuer explorer</strong><br />Defensible AUGUR feature</td>
                 <td class="no">No</td>
-                <td class="no">No</td>
                 <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
-              </tr>
-              <tr>
-                <td><strong>Premium dashboard views</strong><br />Denser intelligence interface</td>
-                <td class="no">No</td>
-                <td class="mid">Basic</td>
-                <td class="yes">Yes</td>
-                <td class="yes">Yes</td>
+                <td class="mid">API later</td>
               </tr>
               <tr>
                 <td><strong>API keys</strong><br />Programmatic access</td>
                 <td class="no">No</td>
                 <td class="no">No</td>
-                <td class="no">No</td>
                 <td class="yes">Yes</td>
               </tr>
               <tr>
-                <td><strong>Higher rate limits</strong><br />Built for apps and automation</td>
+                <td><strong>Higher rate limits</strong><br />Infrastructure use</td>
                 <td class="no">No</td>
+                <td class="mid">Normal</td>
+                <td class="yes">Yes</td>
+              </tr>
+              <tr>
+                <td><strong>Commercial integration use</strong><br />Apps and internal tools</td>
                 <td class="no">No</td>
                 <td class="no">No</td>
                 <td class="yes">Yes</td>
@@ -776,38 +737,38 @@
     <section class="section">
       <div class="grid-2">
         <div class="card">
-          <h3>Who each plan is for</h3>
-          <ul class="audience-list">
-            <li>Free<small>People discovering AUGUR and testing live wallet intelligence for the first time.</small></li>
-            <li>Starter<small>Users who want real utility, better limits, and fuller reports without jumping straight to Pro.</small></li>
-            <li>Pro<small>Serious users, traders, researchers, builders, token teams, and ecosystem operators.</small></li>
-            <li>Developer<small>Dashboards, bots, analytics products, internal tools, data workflows, and XRPL infrastructure users.</small></li>
+          <h3>Best subscriber features to build first</h3>
+          <ul class="list">
+            <li>Saved reports<small>Easy to understand. Strong retention. Low confusion.</small></li>
+            <li>Watchlists<small>Track wallets, issuers, and risk profiles over time.</small></li>
+            <li>Blackholed issuer directory<small>Very unique. Very AUGUR. Strong differentiator.</small></li>
+            <li>Whale and notable wallet dashboard<small>Makes the platform feel alive and valuable fast.</small></li>
+            <li>Premium intelligence feed<small>Live-style signals for subscribers, not just one-off lookups.</small></li>
           </ul>
         </div>
 
         <div class="card">
-          <h3>What this pricing does</h3>
-          <p>
-            Free drives adoption. Starter closes the gap between basic access and full platform usage.
-            Pro becomes the retention tier. Developer makes AUGUR infrastructure, not just an interface.
-          </p>
+          <h3>Who these plans are for</h3>
+          <ul class="list">
+            <li>Free<small>Curious users, casual XRPL users, people learning what AUGUR does.</small></li>
+            <li>Pro<small>Serious users, traders, researchers, builders, token teams, ecosystem operators.</small></li>
+            <li>Developer<small>Dashboards, bots, analytics products, internal tools, data workflows, and XRPL infrastructure users.</small></li>
+            <li>Later expansion<small>Team, enterprise, issuer intelligence packages, custom data products.</small></li>
+          </ul>
         </div>
       </div>
     </section>
-  </main>
 
-  <footer class="footer">
-    <div class="wrap">
+    <footer class="footer">
       <div class="footer-inner">
-        <div>AUGUR Pricing • XRPL wallet intelligence platform</div>
+        <div>AUGUR Pricing • XRPL intelligence product structure</div>
         <div class="footer-links">
-          <a href="/">Dashboard</a>
-          <a href="/wallet/">Wallet Search</a>
-          <a href="/developers.html">Developers</a>
+          <a href="/">Wallet Search</a>
+          <a href="/dashboard/">Dashboard</a>
           <a href="https://api.augurxrpl.com/api/health" target="_blank" rel="noopener">API Health</a>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
+  </main>
 </body>
 </html>
