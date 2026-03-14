@@ -157,6 +157,11 @@
     }
 
     .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+
       display:none;
       width:100%;
       overflow-x:auto;
@@ -170,7 +175,15 @@
       display:none;
     }
 
-    .mobile-nav a{
+    .mobile-nav::-webkit-scrollbar{
+  display:none;
+}
+
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
       flex:0 0 auto;
       white-space:nowrap;
       color:var(--muted);
@@ -834,6 +847,11 @@
         display:none;
       }
       .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+
         display:flex;
       }
       .metric-row{grid-template-columns:1fr}

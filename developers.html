@@ -144,6 +144,11 @@
     }
 
     .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+
       display:none;
       width:100%;
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -152,7 +157,15 @@
       border-top:1px solid rgba(118,156,228,.10);
     }
 
-    .mobile-nav a{
+    .mobile-nav::-webkit-scrollbar{
+  display:none;
+}
+
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
       min-height:42px;
       display:flex;
       align-items:center;
@@ -415,7 +428,12 @@
     @media (max-width:760px){
       .wrap{padding:0 14px}
       .nav-links{display:none}
-      .mobile-nav{display:grid}
+      .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+display:grid}
       .hero-card,.card{padding:14px}
       h1{font-size:34px}
       .brand-copy span{font-size:18px}
