@@ -149,6 +149,36 @@
       box-shadow:var(--glow);
     }
 
+.mobile-nav{
+  display:none;
+  width:100%;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(118,156,228,.10);
+}
+
+.mobile-nav a{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 8px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--muted);
+  background:rgba(255,255,255,.04);
+  font-size:13px;
+  font-weight:700;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active{
+  color:var(--text);
+  background:rgba(118,156,228,.12);
+}
+
     .hero{
       padding:26px 0 18px;
     }
@@ -799,9 +829,10 @@
       }
     }
 
-    @media (max-width:760px){
-      .wrap{padding:0 14px}
-      .nav-links{display:none}
+@media (max-width:760px){
+  .wrap{padding:0 14px}
+  .nav-links{display:none}
+  .mobile-nav{display:grid}
       .metric-row{grid-template-columns:1fr}
       .lookup{grid-template-columns:1fr}
       .analysis-grid{grid-template-columns:1fr}
@@ -830,6 +861,12 @@
           <a class="nav-link" href="/pricing.html">Pricing</a>
           <a class="nav-link" href="/developers.html">Developers</a>
         </div>
+<div class="mobile-nav">
+  <a class="active" href="/">Dashboard</a>
+  <a href="/wallet/">Wallet Search</a>
+  <a href="/pricing.html">Pricing</a>
+  <a href="/developers.html">Developers</a>
+</div>
       </div>
     </div>
   </div>
