@@ -1048,11 +1048,12 @@
         }
 
         const data = await res.json();
-        if (!data?.ok && !data?.address){
+        const report = data?.report || data;
+        if (!report?.address){
           throw new Error("Invalid response");
         }
 
-        applyReport(data);
+        applyReport(report);
       } catch (err){
         setPill("Error", "red");
         setStatus("Report request failed. Check the address and try again.");
