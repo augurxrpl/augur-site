@@ -893,17 +893,20 @@
 
     function formatBalance(data){
       const candidates = [
+        data?.balanceXRP,
         data?.balance,
         data?.overview?.balance,
         data?.wallet?.balance,
         data?.account?.balance
       ];
       const value = candidates.find(v => v !== undefined && v !== null && v !== "");
-      return safeText(value);
+      return value !== undefined && value !== null && value !== "" ? `${value} XRP` : "-";
     }
 
     function formatRecentTx(data){
       const candidates = [
+        data?.recentTxCount,
+        data?.activity?.sampledRecentTransactions,
         data?.activity?.recentTransactions,
         data?.activity?.recentTransactionCount,
         data?.recentTransactions,
@@ -1005,8 +1008,8 @@
       const classification = safeText(data?.classification, "Unknown");
       const confidence = safeText(data?.confidence, "-");
       const riskLevel = safeText(data?.risk?.level, "-");
-      const riskScore = safeText(data?.risk?.score, "-");
-      const statement = safeText(data?.statement, "No statement returned.");
+      const riskScore = safeText(data?.risk?.score ?? data?.risk?.level, "-");
+      const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
       const signals = extractSignals(data);
       const activityItems = extractActivities(data);
       const flagItems = extractAccountFlags(data);
