@@ -935,15 +935,49 @@
     }
 
     function extractSignals(data){
-      if (Array.isArray(data?.signals)) return data.signals.map(v => safeText(v)).filter(Boolean);
-      return [];
+      if (!Array.isArray(data?.signals)) return [];
+      return data.signals.map((v) => {
+        if (typeof v === "string") return v;
+        if (!v || typeof v !== "object") return safeText(v);
+        const parts = [
+          v.line,
+          v.label,
+          v.name,
+          v.signal,
+          v.type,
+          v.category,
+          v.value !== undefined && v.value !== null && v.value !== "" ? String(v.value) : "",
+          v.interpretation,
+          v.detail,
+          v.reason
+        ].filter(Boolean);
+        return parts.join(" • ");
+      }).filter(Boolean);
     }
 
     function extractActivities(data){
-      if (Array.isArray(data?.activity?.highlights)) return data.activity.highlights.map(v => safeText(v)).filter(Boolean);
-      if (Array.isArray(data?.activity?.items)) return data.activity.items.map(v => safeText(v)).filter(Boolean);
-      if (Array.isArray(data?.activity)) return data.activity.map(v => safeText(v)).filter(Boolean);
-      return [];
+      const items =
+        Array.isArray(data?.activity?.highlights) ? data.activity.highlights :
+        Array.isArray(data?.activity?.items) ? data.activity.items :
+        Array.isArray(data?.activity) ? data.activity :
+        [];
+      return items.map((v) => {
+        if (typeof v === "string") return v;
+        if (!v || typeof v !== "object") return safeText(v);
+        const parts = [
+          v.line,
+          v.label,
+          v.name,
+          v.title,
+          v.type,
+          v.category,
+          v.value !== undefined && v.value !== null && v.value !== "" ? String(v.value) : "",
+          v.interpretation,
+          v.detail,
+          v.reason
+        ].filter(Boolean);
+        return parts.join(" • ");
+      }).filter(Boolean);
     }
 
     function extractAccountFlags(data){
