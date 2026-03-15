@@ -844,17 +844,17 @@
   .wrap{padding:0 14px}
   .nav-links{display:none}
   .mobile-nav{
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-  padding-bottom:6px;
-display:flex}
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:6px;
+  }
       .metric-row{grid-template-columns:1fr}
       .lookup{grid-template-columns:1fr}
       .analysis-grid{grid-template-columns:1fr}
-      .mini-grid{grid-template-columns:1fr}
-      .hero-main,.hero-side,.card,.metric{padding:18px}
-      h1{font-size:34px}
+      .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hero-main,.hero-side,.card,.metric{padding:14px}
+      h1{font-size:30px}
       .brand-copy span{font-size:18px}
     }
   </style>
