@@ -548,16 +548,23 @@
       .wrap{padding:0 14px}
       .nav-links{display:none}
       .mobile-nav{
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-  padding-bottom:6px;
-display:flex}
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        padding-bottom:6px;
+      }
       .search{grid-template-columns:1fr}
       .analysis-grid{grid-template-columns:1fr}
-      .mini-grid{grid-template-columns:1fr}
-      .hero-card,.card{padding:14px}
-      h1{font-size:34px}
+      .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .hero{padding:12px 0 6px}
+      .hero-card,.card{padding:12px}
+      .mini-card{padding:10px;border-radius:12px}
+      .mini-label{font-size:10px;letter-spacing:.08em}
+      .mini-value{font-size:18px}
+      .mini-sub{font-size:11px;line-height:1.3}
+      h1{font-size:30px}
+      .lede{font-size:15px}
+      .search input,.btn{height:48px}
       .brand-copy span{font-size:18px}
     }
   </style>
