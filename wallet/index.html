@@ -567,7 +567,14 @@
       .search input,.btn{height:48px}
       .brand-copy span{font-size:18px}
     }
-  </style>
+  
+@media (max-width:760px){
+  .hero-card.hero-side{
+    margin-bottom:14px;
+  }
+}
+
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -1115,5 +1122,25 @@
 
     fetchHealthAndVersion();
   </script>
+
+<script>
+(function () {
+  function moveHeroSideAboveHeroMobile() {
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    const hero = document.querySelector("section.hero");
+    const heroSide = document.querySelector(".hero-card.hero-side");
+    if (!hero || !heroSide) return;
+    if (heroSide.dataset.mobileMoved === "1") return;
+    hero.parentNode.insertBefore(heroSide, hero);
+    heroSide.dataset.mobileMoved = "1";
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", moveHeroSideAboveHeroMobile);
+  } else {
+    moveHeroSideAboveHeroMobile();
+  }
+})();
+</script>
+
 </body>
 </html>
