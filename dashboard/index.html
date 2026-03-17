@@ -866,6 +866,125 @@
       h1{font-size:30px}
       .brand-copy span{font-size:18px}
     }
+
+@media (max-width: 760px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  body {
+    width: 100%;
+  }
+
+  main,
+  section,
+  .dashboard-grid,
+  .report-grid,
+  .stack,
+  .card,
+  .analysis-grid,
+  .wallet-summary,
+  .stat-list,
+  .chart-shell,
+  .tracker-list,
+  .alert-grid,
+  .footer-inner {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-grid,
+  .report-grid,
+  .analysis-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stack {
+    width: 100%;
+  }
+
+  .card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .wallet-summary,
+  .badge-row,
+  .legend,
+  .tracker-item,
+  .alert-item,
+  .stat-line,
+  .legend-line {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .kbd,
+  #walletAddress {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .signal-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .signal-table th,
+  .signal-table td {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .signal-table th:nth-child(1),
+  .signal-table td:nth-child(1) {
+    width: 22%;
+  }
+
+  .signal-table th:nth-child(2),
+  .signal-table td:nth-child(2) {
+    width: 18%;
+  }
+
+  .signal-table th:nth-child(3),
+  .signal-table td:nth-child(3) {
+    width: 18%;
+  }
+
+  .signal-table th:nth-child(4),
+  .signal-table td:nth-child(4) {
+    width: 42%;
+  }
+
+  .signal-table td[colspan="4"] {
+    padding: 14px 10px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    line-height: 1.4;
+  }
+
+  #signalsBody tr,
+  #signalsBody td {
+    height: auto !important;
+  }
+
+  .card[style*="margin-bottom:26px"] {
+    margin-bottom: 18px !important;
+  }
+
+  .card > div[style*="overflow:auto"] {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -1552,5 +1671,54 @@
 
     loadApiMeta();
   </script>
+
+<script>
+(function () {
+  function isMobile() {
+    return window.matchMedia("(max-width: 760px)").matches;
+  }
+
+  function findSignalSection() {
+    const sections = Array.from(document.querySelectorAll("section.card, section"));
+    return sections.find((section) => {
+      const h3 = section.querySelector("h3");
+      return h3 && h3.textContent.trim() === "Signal Details";
+    }) || null;
+  }
+
+  function applyMobileReportOrder() {
+    if (!isMobile()) return;
+
+    const dashboardGrid = document.querySelector(".dashboard-grid");
+    const reportGrid = document.querySelector(".report-grid");
+    const signalSection = findSignalSection();
+
+    if (!dashboardGrid || !reportGrid || !signalSection) return;
+    if (dashboardGrid.dataset.mobileReordered === "1") return;
+
+    const stacks = dashboardGrid.querySelectorAll(":scope > .stack");
+    if (stacks.length < 3) return;
+
+    const stack1 = stacks[0];
+    const stack2 = stacks[1];
+    const stack3 = stacks[2];
+
+    dashboardGrid.appendChild(stack1);
+    dashboardGrid.appendChild(reportGrid);
+    dashboardGrid.appendChild(signalSection);
+    dashboardGrid.appendChild(stack2);
+    dashboardGrid.appendChild(stack3);
+
+    dashboardGrid.dataset.mobileReordered = "1";
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyMobileReportOrder);
+  } else {
+    applyMobileReportOrder();
+  }
+})();
+</script>
+
 </body>
 </html>
