@@ -325,11 +325,10 @@
       font-weight:700;
     }
 
-    .hero-side{
-      padding:20px;
-      display:grid;
-      gap:14px;
-    }
+.hero-side{
+  display:grid;
+  align-content:start;
+}
 
     .mini-grid{
       display:grid;
@@ -855,7 +854,7 @@
       .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .mini-card{padding:10px;border-radius:12px}
       .hero-main{padding:12px}
-      .hero-side{display:none}
+      .hero-side{display:grid;margin-top:14px}
       .mini-label{font-size:10px;letter-spacing:.08em}
       .mini-value{margin-top:4px;font-size:18px}
       .mini-sub{margin-top:4px;font-size:11px;line-height:1.35}
@@ -985,42 +984,6 @@
   }
 }
 
-.hero-metrics-desktop{display:none;}
-
-@media (min-width:761px){
-  .hero-side{display:none !important;}
-  .hero-metrics-desktop{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:16px;
-    align-content:start;
-  }
-  .hero-metrics-desktop .metric{
-    min-width:0;
-    height:100%;
-    padding:18px;
-    border-radius:18px;
-  }
-  .hero-metrics-desktop .label{font-size:12px;letter-spacing:.12em;}
-  .hero-metrics-desktop .value{margin-top:8px;font-size:22px;line-height:1.05;}
-  .hero-metrics-desktop .sub{margin-top:8px;font-size:13px;line-height:1.4;}
-  .metric-row.metric-row-original{display:none !important;}
-}
-
-@media (max-width:760px){
-  .hero-metrics-desktop{display:none !important;}
-  .metric-row.metric-row-original{
-    display:grid !important;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:12px;
-    margin-top:14px;
-  }
-  .metric-row.metric-row-original .metric{
-    min-width:0;
-    padding:12px;
-  }
-}
-
   </style>
 </head>
 <body>
@@ -1079,65 +1042,30 @@
           <div id="status" class="status">Dashboard ready. Run a live wallet report.</div>
         </div>
 
-        <div class="panel hero-side">
-          <div class="mini-grid">
-            <div class="mini-card">
-              <div class="mini-label">API Health</div>
-              <div id="apiHealthValue" class="mini-value">Live</div>
-              <div class="mini-sub">Platform status</div>
-            </div>
-            <div class="mini-card">
-              <div class="mini-label">Engine Version</div>
-              <div id="apiVersionValue" class="mini-value">-</div>
-              <div class="mini-sub">Backend release</div>
-            </div>
-          </div>
-
-          <div class="mini-grid">
-            <div class="mini-card">
-              <div class="mini-label">Tracked Wallets</div>
-              <div class="mini-value">14,528</div>
-              <div class="mini-sub">Platform demo metric</div>
-            </div>
-            <div class="mini-card">
-              <div class="mini-label">Smart Alerts</div>
-              <div class="mini-value">8</div>
-              <div class="mini-sub">Dashboard demo metric</div>
-            </div>
-          </div>
-
-          <div class="mini-card">
-            <div class="mini-label">Market Activity</div>
-            <div class="mini-value">XRPL Live</div>
-            <div class="mini-sub">
-              AUGUR reads wallet behavior, issuer state, activity, and risk from public XRPL ledger data only.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row metric-row">
-        <div class="metric">
-          <div class="label">Total Wallets Tracked</div>
-          <div class="value">14,528</div>
-          <div class="sub">Platform direction metric</div>
-        </div>
-        <div class="metric">
-          <div class="label">Blackholed Issuers</div>
-          <div class="value">Live Detect</div>
-          <div class="sub">Real issuer-state override support</div>
-        </div>
-        <div class="metric">
-          <div class="label">Smart Money Alerts</div>
-          <div class="value">8</div>
-          <div class="sub">Subscriber feature preview</div>
-        </div>
-        <div class="metric">
-          <div class="label">Market Activity</div>
-          <div class="value">$XRP</div>
-          <div class="sub">XRPL intelligence platform positioning</div>
-        </div>
-      </div>
+<div class="panel hero-side">
+  <div class="row metric-row">
+    <div class="metric">
+      <div class="label">Total Wallets Tracked</div>
+      <div class="value">14,528</div>
+      <div class="sub">Platform direction metric</div>
+    </div>
+    <div class="metric">
+      <div class="label">Blackholed Issuers</div>
+      <div class="value">Live Detect</div>
+      <div class="sub">Real issuer-state override support</div>
+    </div>
+    <div class="metric">
+      <div class="label">Smart Money Alerts</div>
+      <div class="value">8</div>
+      <div class="sub">Subscriber feature preview</div>
+    </div>
+    <div class="metric">
+      <div class="label">Market Activity</div>
+      <div class="value">$XRP</div>
+      <div class="sub">XRPL intelligence platform positioning</div>
+    </div>
+  </div>
+</div>
     </section>
 
     <section class="dashboard-grid">
@@ -1752,32 +1680,6 @@
     document.addEventListener("DOMContentLoaded", applyMobileReportOrder);
   } else {
     applyMobileReportOrder();
-  }
-})();
-</script>
-
-<script>
-(function () {
-  function setupHeroMetrics() {
-    const heroSide = document.querySelector(".hero-side");
-    const metricRow = document.querySelector(".metric-row");
-    if (!heroSide || !metricRow) return;
-
-    metricRow.classList.add("metric-row-original");
-
-    let heroMetrics = document.querySelector(".hero-metrics-desktop");
-    if (!heroMetrics) {
-      heroMetrics = document.createElement("div");
-      heroMetrics.className = "hero-metrics-desktop";
-      heroMetrics.innerHTML = metricRow.innerHTML;
-      heroSide.parentNode.insertBefore(heroMetrics, heroSide.nextSibling);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupHeroMetrics);
-  } else {
-    setupHeroMetrics();
   }
 })();
 </script>
