@@ -567,18 +567,7 @@
       .search input,.btn{height:48px}
       .brand-copy span{font-size:18px}
     }
-  
-@media (max-width:760px){
-  section.hero .hero-side{
-    display:none !important;
-  }
-
-  .metric-row{
-    margin-bottom:14px;
-  }
-}
-
-</style>
+  </style>
 </head>
 <body>
   <div class="topbar">
@@ -1126,25 +1115,5 @@
 
     fetchHealthAndVersion();
   </script>
-
-<script>
-(function () {
-  function moveMetricsAboveHeroMobile() {
-    if (!window.matchMedia("(max-width: 760px)").matches) return;
-    const hero = document.querySelector("section.hero");
-    const metricRow = document.querySelector(".metric-row");
-    if (!hero || !metricRow) return;
-    if (metricRow.dataset.mobileMoved === "1") return;
-    hero.parentNode.insertBefore(metricRow, hero);
-    metricRow.dataset.mobileMoved = "1";
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", moveMetricsAboveHeroMobile);
-  } else {
-    moveMetricsAboveHeroMobile();
-  }
-})();
-</script>
-
 </body>
 </html>
