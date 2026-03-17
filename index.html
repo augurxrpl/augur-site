@@ -1552,5 +1552,54 @@
 
     loadApiMeta();
   </script>
+
+<script>
+(function () {
+  function isMobile() {
+    return window.matchMedia("(max-width: 760px)").matches;
+  }
+
+  function findSignalSection() {
+    const sections = Array.from(document.querySelectorAll("section.card, section"));
+    return sections.find((section) => {
+      const h3 = section.querySelector("h3");
+      return h3 && h3.textContent.trim() === "Signal Details";
+    }) || null;
+  }
+
+  function applyMobileReportOrder() {
+    if (!isMobile()) return;
+
+    const dashboardGrid = document.querySelector(".dashboard-grid");
+    const reportGrid = document.querySelector(".report-grid");
+    const signalSection = findSignalSection();
+
+    if (!dashboardGrid || !reportGrid || !signalSection) return;
+    if (dashboardGrid.dataset.mobileReordered === "1") return;
+
+    const stacks = dashboardGrid.querySelectorAll(":scope > .stack");
+    if (stacks.length < 3) return;
+
+    const stack1 = stacks[0];
+    const stack2 = stacks[1];
+    const stack3 = stacks[2];
+
+    dashboardGrid.appendChild(stack1);
+    dashboardGrid.appendChild(reportGrid);
+    dashboardGrid.appendChild(signalSection);
+    dashboardGrid.appendChild(stack2);
+    dashboardGrid.appendChild(stack3);
+
+    dashboardGrid.dataset.mobileReordered = "1";
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyMobileReportOrder);
+  } else {
+    applyMobileReportOrder();
+  }
+})();
+</script>
+
 </body>
 </html>
