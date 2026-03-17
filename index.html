@@ -855,7 +855,7 @@
       .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .mini-card{padding:10px;border-radius:12px}
       .hero-main{padding:12px}
-      .hero-side{display:grid;margin-top:14px}
+      .hero-side{display:none}
       .mini-label{font-size:10px;letter-spacing:.08em}
       .mini-value{margin-top:4px;font-size:18px}
       .mini-sub{margin-top:4px;font-size:11px;line-height:1.35}
@@ -925,32 +925,64 @@
         </div>
 
         <div class="panel hero-side">
-          <div class="row metric-row">
-            <div class="metric">
-              <div class="label">Total Wallets Tracked</div>
-              <div class="value">14,528</div>
-              <div class="sub">Platform direction metric</div>
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">API Health</div>
+              <div id="apiHealthValue" class="mini-value">Live</div>
+              <div class="mini-sub">Platform status</div>
             </div>
-            <div class="metric">
-              <div class="label">Blackholed Issuers</div>
-              <div class="value">Live Detect</div>
-              <div class="sub">Real issuer-state override support</div>
+            <div class="mini-card">
+              <div class="mini-label">Engine Version</div>
+              <div id="apiVersionValue" class="mini-value">-</div>
+              <div class="mini-sub">Backend release</div>
             </div>
-            <div class="metric">
-              <div class="label">Smart Money Alerts</div>
-              <div class="value">8</div>
-              <div class="sub">Subscriber feature preview</div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">Tracked Wallets</div>
+              <div class="mini-value">14,528</div>
+              <div class="mini-sub">Platform demo metric</div>
             </div>
-            <div class="metric">
-              <div class="label">Market Activity</div>
-              <div class="value">$XRP</div>
-              <div class="sub">XRPL intelligence platform positioning</div>
+            <div class="mini-card">
+              <div class="mini-label">Smart Alerts</div>
+              <div class="mini-value">8</div>
+              <div class="mini-sub">Dashboard demo metric</div>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-label">Market Activity</div>
+            <div class="mini-value">XRPL Live</div>
+            <div class="mini-sub">
+              AUGUR reads wallet behavior, issuer state, activity, and risk from public XRPL ledger data only.
             </div>
           </div>
         </div>
-
       </div>
 
+      <div class="row metric-row">
+        <div class="metric">
+          <div class="label">Total Wallets Tracked</div>
+          <div class="value">14,528</div>
+          <div class="sub">Platform direction metric</div>
+        </div>
+        <div class="metric">
+          <div class="label">Blackholed Issuers</div>
+          <div class="value">Live Detect</div>
+          <div class="sub">Real issuer-state override support</div>
+        </div>
+        <div class="metric">
+          <div class="label">Smart Money Alerts</div>
+          <div class="value">8</div>
+          <div class="sub">Subscriber feature preview</div>
+        </div>
+        <div class="metric">
+          <div class="label">Market Activity</div>
+          <div class="value">$XRP</div>
+          <div class="sub">XRPL intelligence platform positioning</div>
+        </div>
+      </div>
     </section>
 
     <section class="dashboard-grid">
