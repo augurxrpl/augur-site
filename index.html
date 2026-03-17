@@ -985,6 +985,42 @@
   }
 }
 
+.hero-metrics-desktop{display:none;}
+
+@media (min-width:761px){
+  .hero-side{display:none !important;}
+  .hero-metrics-desktop{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+    align-content:start;
+  }
+  .hero-metrics-desktop .metric{
+    min-width:0;
+    height:100%;
+    padding:18px;
+    border-radius:18px;
+  }
+  .hero-metrics-desktop .label{font-size:12px;letter-spacing:.12em;}
+  .hero-metrics-desktop .value{margin-top:8px;font-size:22px;line-height:1.05;}
+  .hero-metrics-desktop .sub{margin-top:8px;font-size:13px;line-height:1.4;}
+  .metric-row.metric-row-original{display:none !important;}
+}
+
+@media (max-width:760px){
+  .hero-metrics-desktop{display:none !important;}
+  .metric-row.metric-row-original{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+  .metric-row.metric-row-original .metric{
+    min-width:0;
+    padding:12px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -1716,6 +1752,32 @@
     document.addEventListener("DOMContentLoaded", applyMobileReportOrder);
   } else {
     applyMobileReportOrder();
+  }
+})();
+</script>
+
+<script>
+(function () {
+  function setupHeroMetrics() {
+    const heroSide = document.querySelector(".hero-side");
+    const metricRow = document.querySelector(".metric-row");
+    if (!heroSide || !metricRow) return;
+
+    metricRow.classList.add("metric-row-original");
+
+    let heroMetrics = document.querySelector(".hero-metrics-desktop");
+    if (!heroMetrics) {
+      heroMetrics = document.createElement("div");
+      heroMetrics.className = "hero-metrics-desktop";
+      heroMetrics.innerHTML = metricRow.innerHTML;
+      heroSide.parentNode.insertBefore(heroMetrics, heroSide.nextSibling);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupHeroMetrics);
+  } else {
+    setupHeroMetrics();
   }
 })();
 </script>
