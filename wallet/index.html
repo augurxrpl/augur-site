@@ -1141,9 +1141,6 @@
         </tr>`;
       }).join("");
 
-      if (tokenPageInfo) tokenPageInfo.textContent = `Page ${tokenHoldingsPage} of ${totalPages}`;
-      if (tokenPrevBtn) tokenPrevBtn.disabled = tokenHoldingsPage <= 1;
-      if (tokenNextBtn) tokenNextBtn.disabled = tokenHoldingsPage >= totalPages;
     }
 
     function renderTokenHoldings(items){
@@ -1175,6 +1172,10 @@
           <div class="flow pos">${balance}</div>
         </div>`;
       }).join("");
+
+      if (tokenPageInfo) tokenPageInfo.textContent = `Page ${tokenHoldingsPage} of ${totalPages}`;
+      if (tokenPrevBtn) tokenPrevBtn.disabled = tokenHoldingsPage <= 1;
+      if (tokenNextBtn) tokenNextBtn.disabled = tokenHoldingsPage >= totalPages;
     }
 
     function renderTransactionBreakdown(items){
