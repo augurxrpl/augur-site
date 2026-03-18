@@ -538,6 +538,29 @@
       flex:0 0 auto;
     }
 
+    .tracker-item{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(118,156,228,.10);
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+
+    .tracker-item > div{
+      min-width:0;
+    }
+
+    .tracker-item strong,
+    .tracker-item span,
+    .tracker-item small{
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+
     .list{
       list-style:none;
       padding:0;
@@ -1098,7 +1121,8 @@
         return `<div class="tracker-item">
           <div>
             <strong>${type}</strong>
-            <span>${summary}<br><small>${hash}</small></span>
+            <span>${summary}</span>
+            <small style="display:block;margin-top:6px;opacity:.8">${hash}</small>
           </div>
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
@@ -1189,6 +1213,7 @@
       const items =
         Array.isArray(data?.activity?.highlights) ? data.activity.highlights :
         Array.isArray(data?.activity?.items) ? data.activity.items :
+        Array.isArray(data?.activity?.summary) ? data.activity.summary :
         Array.isArray(data?.activity) ? data.activity :
         [];
       return items.map((v) => {
