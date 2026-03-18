@@ -538,6 +538,38 @@
       flex:0 0 auto;
     }
 
+    .pager{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .pager-info{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .pager-btn{
+      width:36px;
+      height:36px;
+      border-radius:999px;
+      border:1px solid rgba(118,156,228,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .pager-btn:disabled{
+      opacity:.35;
+      cursor:default;
+    }
+
+
     .tracker-item{
       display:flex;
       align-items:flex-start;
@@ -796,6 +828,15 @@
             <div id="tokenHoldingsList" class="list">
               <div class="empty">No non-XRP token holdings returned.</div>
             </div>
+            <div class="pager">
+          <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
+          <div id="txPageInfo" class="pager-info">Page 1 of 1</div>
+          <button id="txNextBtn" class="pager-btn" type="button">›</button>
+        </div>
+              <button id="tokenPrevBtn" class="pager-btn" type="button">‹</button>
+              <div id="tokenPageInfo" class="pager-info">Page 1 of 1</div>
+              <button id="tokenNextBtn" class="pager-btn" type="button">›</button>
+            </div>
           </div>
 
 
@@ -937,6 +978,7 @@
         <div id="transactionBreakdownList" class="list">
           <div class="empty">No recent transaction breakdown returned.</div>
         </div>
+        <div class="pager">
       </div>
     </section>
 
@@ -1019,6 +1061,12 @@
     const accountFlagsList = document.getElementById("accountFlagsList");
     const tokenHoldingsList = document.getElementById("tokenHoldingsList");
     const transactionBreakdownList = document.getElementById("transactionBreakdownList");
+    const tokenPrevBtn = document.getElementById("tokenPrevBtn");
+    const tokenNextBtn = document.getElementById("tokenNextBtn");
+    const tokenPageInfo = document.getElementById("tokenPageInfo");
+    const txPrevBtn = document.getElementById("txPrevBtn");
+    const txNextBtn = document.getElementById("txNextBtn");
+    const txPageInfo = document.getElementById("txPageInfo");
     const confidencePill = document.getElementById("confidencePill");
     const legendBalance = document.getElementById("legendBalance");
     const legendTrustlines = document.getElementById("legendTrustlines");
@@ -1028,6 +1076,12 @@
     const riskFlagsRow = document.getElementById("riskFlagsRow");
     const riskNotesList = document.getElementById("riskNotesList");
     const signalsBody = document.getElementById("signalsBody");
+
+    const ITEMS_PER_PAGE = 10;
+    let tokenHoldingsData = [];
+    let transactionBreakdownData = [];
+    let tokenHoldingsPage = 1;
+    let transactionBreakdownPage = 1;
 
     function safeText(value, fallback = "-"){
       if (value === null || value === undefined || value === "") return fallback;
@@ -1086,15 +1140,30 @@
           <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.interpretation ?? signal?.detail ?? signal?.reason, "-"))}</td>
         </tr>`;
       }).join("");
+
+      if (tokenPageInfo) tokenPageInfo.textContent = `Page ${tokenHoldingsPage} of ${totalPages}`;
+      if (tokenPrevBtn) tokenPrevBtn.disabled = tokenHoldingsPage <= 1;
+      if (tokenNextBtn) tokenNextBtn.disabled = tokenHoldingsPage >= totalPages;
     }
 
     function renderTokenHoldings(items){
+      tokenHoldingsData = Array.isArray(items) ? items : [];
+      const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
+      if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
+      if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
+
       if (!tokenHoldingsList) return;
-      if (!Array.isArray(items) || !items.length){
+      if (!tokenHoldingsData.length){
         tokenHoldingsList.innerHTML = `<div class="empty">No non-XRP token holdings returned.</div>`;
+        if (tokenPageInfo) tokenPageInfo.textContent = `Page 1 of 1`;
+        if (tokenPrevBtn) tokenPrevBtn.disabled = true;
+        if (tokenNextBtn) tokenNextBtn.disabled = true;
         return;
       }
-      tokenHoldingsList.innerHTML = items.map((item) => {
+      const startIndex = (tokenHoldingsPage - 1) * ITEMS_PER_PAGE;
+      const pageItems = tokenHoldingsData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      tokenHoldingsList.innerHTML = pageItems.map((item) => {
         const currency = escapeHtml(String(item?.currency || "-"));
         const issuer = escapeHtml(String(item?.issuer || "-"));
         const balance = escapeHtml(String(item?.balance || "0"));
@@ -1109,12 +1178,23 @@
     }
 
     function renderTransactionBreakdown(items){
+      transactionBreakdownData = Array.isArray(items) ? items : [];
+      const totalPages = Math.max(1, Math.ceil(transactionBreakdownData.length / ITEMS_PER_PAGE));
+      if (transactionBreakdownPage > totalPages) transactionBreakdownPage = totalPages;
+      if (transactionBreakdownPage < 1) transactionBreakdownPage = 1;
+
       if (!transactionBreakdownList) return;
-      if (!Array.isArray(items) || !items.length){
+      if (!transactionBreakdownData.length){
         transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown returned.</div>`;
+        if (txPageInfo) txPageInfo.textContent = `Page 1 of 1`;
+        if (txPrevBtn) txPrevBtn.disabled = true;
+        if (txNextBtn) txNextBtn.disabled = true;
         return;
       }
-      transactionBreakdownList.innerHTML = items.map((item) => {
+      const startIndex = (transactionBreakdownPage - 1) * ITEMS_PER_PAGE;
+      const pageItems = transactionBreakdownData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      transactionBreakdownList.innerHTML = pageItems.map((item) => {
         const hash = escapeHtml(String(item?.hash || "-"));
         const type = escapeHtml(String(item?.type || "Unknown"));
         const result = escapeHtml(String(item?.result || "-"));
@@ -1128,6 +1208,10 @@
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
       }).join("");
+
+      if (txPageInfo) txPageInfo.textContent = `Page ${transactionBreakdownPage} of ${totalPages}`;
+      if (txPrevBtn) txPrevBtn.disabled = transactionBreakdownPage <= 1;
+      if (txNextBtn) txNextBtn.disabled = transactionBreakdownPage >= totalPages;
     }
 
     function setPill(text, tone = "blue"){
@@ -1258,6 +1342,8 @@
     }
 
     function applyReport(data){
+      tokenHoldingsPage = 1;
+      transactionBreakdownPage = 1;
       const classification = safeText(data?.classification, "Unknown");
       const confidence = safeText(data?.confidence, "-");
       const riskLevel = safeText(data?.risk?.level, "-");
@@ -1379,6 +1465,26 @@
         exampleBtn.disabled = false;
       }
     }
+
+    if (tokenPrevBtn) tokenPrevBtn.addEventListener("click", () => {
+      tokenHoldingsPage -= 1;
+      renderTokenHoldings(tokenHoldingsData);
+    });
+
+    if (tokenNextBtn) tokenNextBtn.addEventListener("click", () => {
+      tokenHoldingsPage += 1;
+      renderTokenHoldings(tokenHoldingsData);
+    });
+
+    if (txPrevBtn) txPrevBtn.addEventListener("click", () => {
+      transactionBreakdownPage -= 1;
+      renderTransactionBreakdown(transactionBreakdownData);
+    });
+
+    if (txNextBtn) txNextBtn.addEventListener("click", () => {
+      transactionBreakdownPage += 1;
+      renderTransactionBreakdown(transactionBreakdownData);
+    });
 
     analyzeBtn.addEventListener("click", () => analyzeWallet(walletInput.value));
     exampleBtn.addEventListener("click", () => {
