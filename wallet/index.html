@@ -1107,18 +1107,27 @@
       }
     }
 
-    analyzeBtn.addEventListener("click", () => analyzeWallet(walletInput.value));
-    exampleBtn.addEventListener("click", () => {
-      walletInput.value = EXAMPLE_ADDRESS;
-      analyzeWallet(EXAMPLE_ADDRESS);
-    });
+    function getAddressFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      return (params.get("address") || "").trim();
+    }
 
-    walletInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter"){
-        event.preventDefault();
+    function clearAddressQuery() {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("address");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    }
+
         analyzeWallet(walletInput.value);
       }
     });
+
+    const queryAddress = getAddressFromQuery();
+    if (queryAddress) {
+      walletInput.value = queryAddress;
+      clearAddressQuery();
+      analyzeWallet(queryAddress);
+    }
 
     fetchHealthAndVersion();
   </script>
