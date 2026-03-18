@@ -567,14 +567,7 @@
       .search input,.btn{height:48px}
       .brand-copy span{font-size:18px}
     }
-  
-@media (max-width:760px){
-  .hero-card.hero-side{
-    margin-bottom:14px;
-  }
-}
-
-</style>
+  </style>
 </head>
 <body>
   <div class="topbar">
@@ -1107,49 +1100,20 @@
       }
     }
 
-    function getAddressFromQuery() {
-      const params = new URLSearchParams(window.location.search);
-      return (params.get("address") || "").trim();
-    }
+    analyzeBtn.addEventListener("click", () => analyzeWallet(walletInput.value));
+    exampleBtn.addEventListener("click", () => {
+      walletInput.value = EXAMPLE_ADDRESS;
+      analyzeWallet(EXAMPLE_ADDRESS);
+    });
 
-    function clearAddressQuery() {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("address");
-      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-    }
-
+    walletInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter"){
+        event.preventDefault();
         analyzeWallet(walletInput.value);
       }
     });
 
-    const queryAddress = getAddressFromQuery();
-    if (queryAddress) {
-      walletInput.value = queryAddress;
-      clearAddressQuery();
-      analyzeWallet(queryAddress);
-    }
-
     fetchHealthAndVersion();
   </script>
-
-<script>
-(function () {
-  function moveHeroSideAboveHeroMobile() {
-    if (!window.matchMedia("(max-width: 760px)").matches) return;
-    const hero = document.querySelector("section.hero");
-    const heroSide = document.querySelector(".hero-card.hero-side");
-    if (!hero || !heroSide) return;
-    if (heroSide.dataset.mobileMoved === "1") return;
-    hero.parentNode.insertBefore(heroSide, hero);
-    heroSide.dataset.mobileMoved = "1";
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", moveHeroSideAboveHeroMobile);
-  } else {
-    moveHeroSideAboveHeroMobile();
-  }
-})();
-</script>
-
 </body>
 </html>
