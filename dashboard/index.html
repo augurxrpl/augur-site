@@ -1104,101 +1104,7 @@
     </section>
 
     <section class="dashboard-grid">
-      <div class="stack">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3>Wallet Overview</h3>
-              <div class="subhead">Live report summary</div>
-            </div>
-            <span id="walletClassPill" class="badge blue">No Report</span>
-          </div>
-
-          <div class="wallet-summary">
-            <span id="walletAddress" class="kbd">No wallet loaded</span>
-            <div id="walletIdentity" class="badge-row">
-              <span class="badge">Awaiting analysis</span>
-            </div>
-          </div>
-
-          <div class="stat-list" style="margin-top:14px">
-            <div class="stat-line">
-              <div class="name">Balance</div>
-              <div id="walletBalance" class="val">-</div>
-            </div>
-            <div class="stat-line">
-              <div class="name">Recent Transactions</div>
-              <div id="walletTx" class="val">-</div>
-            </div>
-            <div class="stat-line">
-              <div class="name">Risk Score</div>
-              <div id="walletRisk" class="val">-</div>
-            </div>
-            <div class="stat-line">
-              <div class="name">Trustlines</div>
-              <div id="walletTrustlines" class="val">-</div>
-            </div>
-            <div class="stat-line">
-              <div class="name">Owner Count</div>
-              <div id="walletOwnerCount" class="val">-</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3>Recent Activity</h3>
-              <div class="subhead">Live wallet behavior summary</div>
-            </div>
-          </div>
-          <ul id="recentActivityList" class="list">
-            <li class="empty">Run a wallet analysis to populate activity insights.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="stack">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3>Analytics Report</h3>
-              <div class="subhead">Classification, statement, and signal context</div>
-            </div>
-            <span id="confidencePill" class="badge">Confidence -</span>
-          </div>
-
-          <div class="analysis-grid">
-            <div class="inner-card">
-              <h3 style="margin:0 0 10px;font-size:16px">Balance Breakdown</h3>
-              <div class="donut"></div>
-              <div class="legend">
-                <div class="legend-line">
-                  <div class="legend-left"><span class="dot" style="background:#4f8fff"></span><span>XRP</span></div>
-                  <strong id="legendBalance">-</strong>
-                </div>
-                <div class="legend-line">
-                  <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>Trustlines</span></div>
-                  <strong id="legendTrustlines">-</strong>
-                </div>
-                <div class="legend-line">
-                  <div class="legend-left"><span class="dot" style="background:#f59e0b"></span><span>Owner Count</span></div>
-                  <strong id="legendOwners">-</strong>
-                </div>
-                <div class="legend-line">
-                  <div class="legend-left"><span class="dot" style="background:#8b5cf6"></span><span>Recent TX</span></div>
-                  <strong id="legendTx">-</strong>
-                </div>
-              </div>
-            </div>
-
-            <div class="inner-card">
-              <h3 style="margin:0 0 10px;font-size:16px">Behavior Analysis</h3>
-              <ul id="behaviorList" class="list">
-                <li class="empty">Behavior analysis will appear here after a live report.</li>
-              </ul>
-            </div>
-          </div>
+     <div class="stack">
         </div>
 
         <div class="card">
@@ -1352,7 +1258,7 @@
     <section class="card" style="margin-bottom:26px">
       <div class="card-header">
         <div>
-          <h3>Latest XRPL and $XRP</h3>
+          <h3>Latest XRPL and $XRP News</h3>
           <div class="subhead">Fresh ecosystem, protocol, and market reading</div>
         </div>
       </div>
@@ -1621,7 +1527,7 @@
       renderSignals(data.signals || []);
     }
 
-    async function analyzeWallet() {
+    function analyzeWallet() {
       const address = walletInput.value.trim();
 
       if (!address) {
@@ -1630,32 +1536,7 @@
         return;
       }
 
-      analyzeBtn.disabled = true;
-      exampleBtn.disabled = true;
-      analyzeBtn.textContent = "Analyzing...";
-      setStatus("Running live AUGUR dashboard report...");
-
-      try {
-        const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(address)}`, {
-          headers: { "Accept": "application/json" }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || "Failed to load report");
-        }
-
-        renderReport(data);
-        setStatus(`Dashboard loaded live report for ${address}.`, "good");
-      } catch (error) {
-        console.error(error);
-        setStatus(error.message || "Failed to load report.", "bad");
-      } finally {
-        analyzeBtn.disabled = false;
-        exampleBtn.disabled = false;
-        analyzeBtn.textContent = "Analyze Wallet";
-      }
+      window.location.href = `/wallet/?address=${encodeURIComponent(address)}`;
     }
 
     async function loadApiMeta() {
