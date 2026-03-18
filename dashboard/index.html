@@ -1623,32 +1623,8 @@
         return;
       }
 
-      analyzeBtn.disabled = true;
-      exampleBtn.disabled = true;
-      analyzeBtn.textContent = "Analyzing...";
-      setStatus("Running live AUGUR dashboard report...");
-
-      try {
-        const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(address)}`, {
-          headers: { "Accept": "application/json" }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || "Failed to load report");
-        }
-
-        renderReport(data);
-        setStatus(`Dashboard loaded live report for ${address}.`, "good");
-      } catch (error) {
-        console.error(error);
-        setStatus(error.message || "Failed to load report.", "bad");
-      } finally {
-        analyzeBtn.disabled = false;
-        exampleBtn.disabled = false;
-        analyzeBtn.textContent = "Analyze Wallet";
-      }
+      window.location.href = "/wallet/?address=" + encodeURIComponent(address);
+      return;
     }
 
     async function loadApiMeta() {
