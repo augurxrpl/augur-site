@@ -765,6 +765,19 @@
           <div class="card">
             <div class="card-header">
               <div>
+                <h3>Token Holdings</h3>
+                <div class="subhead">Issued assets and trustline balances held by this wallet</div>
+              </div>
+            </div>
+            <div id="tokenHoldingsList" class="list">
+              <div class="empty">No non-XRP token holdings returned.</div>
+            </div>
+          </div>
+
+
+          <div class="card">
+            <div class="card-header">
+              <div>
                 <h3>Recent Activity</h3>
                 <div class="subhead">Live wallet behavior summary</div>
               </div>
@@ -893,6 +906,21 @@
       <div class="card">
         <div class="card-header">
           <div>
+            <h3>Transaction Breakdown</h3>
+            <div class="subhead">Recent ledger actions explained in plain English</div>
+          </div>
+        </div>
+        <div id="transactionBreakdownList" class="list">
+          <div class="empty">No recent transaction breakdown returned.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
             <h3>Signal Details</h3>
             <div class="subhead">Live signal breakdown from the report engine</div>
           </div>
@@ -965,6 +993,8 @@
     const riskScoreValue = document.getElementById("riskScoreValue");
 
     const accountFlagsList = document.getElementById("accountFlagsList");
+    const tokenHoldingsList = document.getElementById("tokenHoldingsList");
+    const transactionBreakdownList = document.getElementById("transactionBreakdownList");
     const confidencePill = document.getElementById("confidencePill");
     const legendBalance = document.getElementById("legendBalance");
     const legendTrustlines = document.getElementById("legendTrustlines");
@@ -1031,6 +1061,47 @@
           <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.value, "-"))}</td>
           <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.interpretation ?? signal?.detail ?? signal?.reason, "-"))}</td>
         </tr>`;
+      }).join("");
+    }
+
+    function renderTokenHoldings(items){
+      if (!tokenHoldingsList) return;
+      if (!Array.isArray(items) || !items.length){
+        tokenHoldingsList.innerHTML = `<div class="empty">No non-XRP token holdings returned.</div>`;
+        return;
+      }
+      tokenHoldingsList.innerHTML = items.map((item) => {
+        const currency = escapeHtml(String(item?.currency || "-"));
+        const issuer = escapeHtml(String(item?.issuer || "-"));
+        const balance = escapeHtml(String(item?.balance || "0"));
+        return `<div class="tracker-item">
+          <div>
+            <strong>${currency}</strong>
+            <span>${issuer}</span>
+          </div>
+          <div class="flow pos">${balance}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderTransactionBreakdown(items){
+      if (!transactionBreakdownList) return;
+      if (!Array.isArray(items) || !items.length){
+        transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown returned.</div>`;
+        return;
+      }
+      transactionBreakdownList.innerHTML = items.map((item) => {
+        const hash = escapeHtml(String(item?.hash || "-"));
+        const type = escapeHtml(String(item?.type || "Unknown"));
+        const result = escapeHtml(String(item?.result || "-"));
+        const summary = escapeHtml(String(item?.summary || "Transaction detected."));
+        return `<div class="tracker-item">
+          <div>
+            <strong>${type}</strong>
+            <span>${summary}<br><small>${hash}</small></span>
+          </div>
+          <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
+        </div>`;
       }).join("");
     }
 
@@ -1208,6 +1279,8 @@
       if (riskNotesList) renderList(riskNotesList, riskNotes, "No additional risk notes.");
       statementText.textContent = statement;
       renderSignals(Array.isArray(data?.signals) ? data.signals : []);
+      renderTokenHoldings(Array.isArray(data?.tokenHoldings) ? data.tokenHoldings : []);
+      renderTransactionBreakdown(Array.isArray(data?.transactionBreakdown) ? data.transactionBreakdown : []);
 
       classificationValue.textContent = classification;
       confidenceValue.textContent = confidence;
