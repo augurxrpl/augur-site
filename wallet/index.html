@@ -481,6 +481,63 @@
       line-height:1.4;
     }
 
+    .donut{
+      width:220px;
+      height:220px;
+      margin:8px auto 0;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at center, #0c1526 0 31%, transparent 32%),
+        conic-gradient(
+          #4f8fff 0 31%,
+          #4ecdc4 31% 47%,
+          #f59e0b 47% 61%,
+          #ef4444 61% 72%,
+          #8b5cf6 72% 86%,
+          #2dd4bf 86% 100%
+        );
+      box-shadow:inset 0 0 0 1px rgba(118,156,228,.12), 0 0 40px rgba(87,166,255,.08);
+      position:relative;
+    }
+
+    .donut::after{
+      content:"Portfolio";
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      color:var(--text);
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.5px;
+    }
+
+    .legend{
+      display:grid;
+      gap:8px;
+      margin-top:16px;
+    }
+    .legend-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .legend-left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      flex:0 0 auto;
+    }
+
     .list{
       list-style:none;
       padding:0;
@@ -728,11 +785,24 @@
             <div class="analysis-grid">
               <div>
                 <div class="subhead" style="margin-bottom:10px;">Balance Breakdown</div>
-                <div class="stat-list">
-                  <div class="stat-line"><div class="name">XRP</div><div id="legendBalance" class="val">-</div></div>
-                  <div class="stat-line"><div class="name">Trustlines</div><div id="legendTrustlines" class="val">-</div></div>
-                  <div class="stat-line"><div class="name">Owner Count</div><div id="legendOwners" class="val">-</div></div>
-                  <div class="stat-line"><div class="name">Recent TX</div><div id="legendTx" class="val">-</div></div>
+                <div class="donut"></div>
+                <div class="legend">
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#4f8fff"></span><span>XRP</span></div>
+                    <strong id="legendBalance">-</strong>
+                  </div>
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>Trustlines</span></div>
+                    <strong id="legendTrustlines">-</strong>
+                  </div>
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#f59e0b"></span><span>Owner Count</span></div>
+                    <strong id="legendOwners">-</strong>
+                  </div>
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#8b5cf6"></span><span>Recent TX</span></div>
+                    <strong id="legendTx">-</strong>
+                  </div>
                 </div>
               </div>
               <div>
