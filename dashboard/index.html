@@ -432,6 +432,18 @@
       margin-bottom:14px;
     }
 
+    .mini-link{
+      color:#7fc9ff;
+      font-size:13px;
+      font-weight:800;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+
+    .mini-link:hover{
+      text-decoration:underline;
+    }
+
     .card-header .subhead{
       color:var(--muted);
       font-size:13px;
@@ -999,15 +1011,13 @@
 
     .dashboard-grid{
       display:grid;
-      grid-template-columns:minmax(320px,.9fr) minmax(420px,1.1fr);
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:22px;
       align-items:stretch;
     }
 
     .dashboard-grid > .stack{
-      display:grid;
-      gap:22px;
-      align-content:start;
+      display:contents;
     }
     .chart-shell{
       min-height:280px;
@@ -1019,6 +1029,10 @@
 
     .tracker-item{
       min-height:74px;
+    }
+
+    .dashboard-grid .card{
+      min-height:420px;
     }
 
     .metric-row{
@@ -1191,6 +1205,7 @@
               <h3>Market Trends</h3>
               <div class="subhead">Platform analytics panel shell</div>
             </div>
+            <a class="mini-link" href="/wallet/">Open Wallet Search</a>
           </div>
 
           <div class="chart-shell">
@@ -1229,6 +1244,7 @@
               <h3>Smart Money Tracker</h3>
               <div class="subhead">Subscriber feature preview</div>
             </div>
+            <a class="mini-link" href="/wallet/">Open Wallet Search</a>
           </div>
 
           <div class="tracker-list">
@@ -1262,6 +1278,7 @@
               <h3>Alert Summary</h3>
               <div class="subhead">Subscriber feature preview</div>
             </div>
+            <a class="mini-link" href="/wallet/">Open Wallet Search</a>
           </div>
 
           <div class="alert-grid">
