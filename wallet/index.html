@@ -829,10 +829,6 @@
               <div class="empty">No non-XRP token holdings returned.</div>
             </div>
             <div class="pager">
-          <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
-          <div id="txPageInfo" class="pager-info">Page 1 of 1</div>
-          <button id="txNextBtn" class="pager-btn" type="button">›</button>
-        </div>
               <button id="tokenPrevBtn" class="pager-btn" type="button">‹</button>
               <div id="tokenPageInfo" class="pager-info">Page 1 of 1</div>
               <button id="tokenNextBtn" class="pager-btn" type="button">›</button>
@@ -979,6 +975,10 @@
           <div class="empty">No recent transaction breakdown returned.</div>
         </div>
         <div class="pager">
+          <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
+          <div id="txPageInfo" class="pager-info">Page 1 of 1</div>
+          <button id="txNextBtn" class="pager-btn" type="button">›</button>
+        </div>
       </div>
     </section>
 
@@ -1458,6 +1458,7 @@
 
         applyReport(report);
       } catch (err){
+        console.error("AUGUR wallet analyze error:", err);
         setPill("Error", "red");
         setStatus("Report request failed. Check the address and try again.");
       } finally {
