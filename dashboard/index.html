@@ -1020,10 +1020,9 @@
       <div class="hero-grid">
         <div class="panel hero-main">
           <div class="eyebrow">AUGUR Platform Dashboard</div>
-          <h1>XRPL wallet intelligence, issuer-state detection, alerts, and platform analytics.</h1>
+          <h1>AUGUR reads public XRPL wallets and explains what you are actually looking at.</h1>
           <p class="lede">
-            This dashboard is the platform layer for AUGUR. Search a wallet, review a live intelligence report,
-            monitor issuer-state signals, and preview subscriber features like alerts, tracking, and reports.
+            AUGUR translates raw XRPL wallet activity into plain-English intelligence. Use it to understand wallet behavior, issuer-state signals, blackhole conditions, account flags, risk, and recent activity without digging through raw ledger data yourself.
           </p>
 
           <div class="lookup">
@@ -1040,7 +1039,7 @@
             <span class="pill">No wallet connection</span>
           </div>
 
-          <div id="status" class="status">Dashboard ready. Run a live wallet report.</div>
+          <div id="status" class="status">AUGUR is ready. Start with a wallet to open the full analysis page.</div>
         </div>
 
         <div class="panel hero-side">
@@ -1059,22 +1058,22 @@
 
           <div class="mini-grid">
             <div class="mini-card">
-              <div class="mini-label">Tracked Wallets</div>
-              <div class="mini-value">14,528</div>
-              <div class="mini-sub">Platform demo metric</div>
+              <div class="mini-label">What AUGUR Reads</div>
+              <div class="mini-value">Wallets</div>
+              <div class="mini-sub">Public XRPL wallet behavior, issuer-state, flags, activity, and risk.</div>
             </div>
             <div class="mini-card">
-              <div class="mini-label">Smart Alerts</div>
-              <div class="mini-value">8</div>
-              <div class="mini-sub">Dashboard demo metric</div>
+              <div class="mini-label">Why It Matters</div>
+              <div class="mini-value">Context</div>
+              <div class="mini-sub">AUGUR gives you readable outputs instead of raw transactions and ledger noise.</div>
             </div>
           </div>
 
           <div class="mini-card">
-            <div class="mini-label">Market Activity</div>
-            <div class="mini-value">XRPL Live</div>
+            <div class="mini-label">Use AUGUR To</div>
+            <div class="mini-value">Research Faster</div>
             <div class="mini-sub">
-              AUGUR reads wallet behavior, issuer state, activity, and risk from public XRPL ledger data only.
+              Check classification, recent activity, blackhole conditions, account flags, risk notes, and signal detail before you ever connect a wallet.
             </div>
           </div>
         </div>
@@ -1316,74 +1315,93 @@
     </section>
 
     <section class="report-grid">
-      <div id="reportsPanel" class="card">
-        <div class="card-header">
-          <div>
-            <h3>Plain-English Report</h3>
-            <div class="subhead">Live AUGUR output</div>
-          </div>
-          <span id="activityPill" class="badge">Activity -</span>
-        </div>
-        <ul id="statementList" class="list">
-          <li class="empty">Run a wallet report to populate the live intelligence statement.</li>
-        </ul>
-      </div>
-
       <div class="stack">
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>Account Flags</h3>
-              <div class="subhead">Ledger identity and control state</div>
+              <h3>Why AUGUR</h3>
+              <div class="subhead">Why people use it instead of reading raw ledger output</div>
             </div>
           </div>
-          <ul id="accountFlagsList" class="list">
-            <li class="empty">No wallet loaded yet.</li>
+          <ul class="list">
+            <li>AUGUR translates raw XRPL wallet activity into readable context.</li>
+            <li>It helps you spot issuer-state signals and blackhole conditions faster.</li>
+            <li>It gives you behavior, risk, and account-flag context without wallet connection or custody.</li>
+            <li>It shortens research time for traders, builders, analysts, and teams.</li>
           </ul>
         </div>
 
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>Risk Flags</h3>
-              <div class="subhead">Structured risk output</div>
+              <h3>What You Can Check</h3>
+              <div class="subhead">The core wallet intelligence layers inside AUGUR</div>
             </div>
           </div>
-          <div id="riskFlagsRow" class="badge-row">
-            <span class="badge">No report</span>
-          </div>
-          <ul id="riskNotesList" class="list" style="margin-top:12px">
-            <li class="empty">No risk notes yet.</li>
+          <ul class="list">
+            <li>Wallet classification and confidence</li>
+            <li>Recent activity and behavior patterns</li>
+            <li>Issuer-state and blackhole detection</li>
+            <li>Account flags, risk notes, and signal detail</li>
           </ul>
         </div>
+
       </div>
     </section>
 
     <section class="card" style="margin-bottom:26px">
       <div class="card-header">
         <div>
-          <h3>Signal Details</h3>
-          <div class="subhead">Live signal breakdown from the report engine</div>
+          <h3>Latest XRPL and $XRP</h3>
+          <div class="subhead">Fresh ecosystem, protocol, and market reading</div>
         </div>
       </div>
-      <div style="overflow:auto">
-        <table class="signal-table">
-          <thead>
-            <tr>
-              <th>Signal</th>
-              <th>Category</th>
-              <th>Value</th>
-              <th>Interpretation</th>
-            </tr>
-          </thead>
-          <tbody id="signalsBody">
-            <tr>
-              <td colspan="4" class="empty">Run a wallet analysis to populate signal details.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="tracker-list">
+        <div class="tracker-item">
+          <div>
+            <strong>XRPL</strong>
+            <span><a href="https://xrpl.org/blog/2026/rippled-3.1.1" target="_blank" rel="noopener">Introducing XRP Ledger version 3.1.1 and upcoming Devnet reset</a></span>
+          </div>
+          <div class="flow pos">Mar 3</div>
+        </div>
+        <div class="tracker-item">
+          <div>
+            <strong>Ripple</strong>
+            <span><a href="https://ripple.com/insights/" target="_blank" rel="noopener">Revolutionizing Global Payments with Ripple’s End-to-End Stablecoin Platform</a></span>
+          </div>
+          <div class="flow pos">Mar 3</div>
+        </div>
+        <div class="tracker-item">
+          <div>
+            <strong>Ripple</strong>
+            <span><a href="https://ripple.com/insights/" target="_blank" rel="noopener">Supporting Innovation on the XRP Ledger: What’s Changing in 2026</a></span>
+          </div>
+          <div class="flow warn">Feb 26</div>
+        </div>
+        <div class="tracker-item">
+          <div>
+            <strong>Ripple</strong>
+            <span><a href="https://ripple.com/insights/institutional-defi-on-xrpl-scaling-real-world-finance-with-xrp-at-the-core/" target="_blank" rel="noopener">Institutional DeFi on XRPL: Scaling Real-World Finance with XRP at the Core</a></span>
+          </div>
+          <div class="flow warn">Feb 5</div>
+        </div>
+        <div class="tracker-item">
+          <div>
+            <strong>CoinDesk</strong>
+            <span><a href="https://www.coindesk.com/markets/2026/03/13/dnp-xrp-ledger-activity-is-hitting-records-but-why-are-xrp-prices-down-62-from-peak" target="_blank" rel="noopener">$XRP Ledger activity is hitting records</a></span>
+          </div>
+          <div class="flow pos">Mar 13</div>
+        </div>
+        <div class="tracker-item">
+          <div>
+            <strong>CoinDesk</strong>
+            <span><a href="https://www.coindesk.com/tech/2026/02/18/xrp-ledger-rolls-out-members-only-dex-for-regulated-institutions" target="_blank" rel="noopener">XRP Ledger rolls out members-only DEX for regulated institutions</a></span>
+          </div>
+          <div class="flow blue">Feb 18</div>
+        </div>
       </div>
     </section>
+
 
     <footer class="footer">
       <div class="footer-inner">
@@ -1676,14 +1694,6 @@
 (function () {
   function isMobile() {
     return window.matchMedia("(max-width: 760px)").matches;
-  }
-
-  function findSignalSection() {
-    const sections = Array.from(document.querySelectorAll("section.card, section"));
-    return sections.find((section) => {
-      const h3 = section.querySelector("h3");
-      return h3 && h3.textContent.trim() === "Signal Details";
-    }) || null;
   }
 
   function applyMobileReportOrder() {
