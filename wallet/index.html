@@ -720,6 +720,34 @@
           <div class="card">
             <div class="card-header">
               <div>
+                <h3>Analytics Report</h3>
+                <div class="subhead">Classification, balance, and behavior context</div>
+              </div>
+              <span id="confidencePill" class="badge">Confidence -</span>
+            </div>
+            <div class="analysis-grid">
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Balance Breakdown</div>
+                <div class="stat-list">
+                  <div class="stat-line"><div class="name">XRP</div><div id="legendBalance" class="val">-</div></div>
+                  <div class="stat-line"><div class="name">Trustlines</div><div id="legendTrustlines" class="val">-</div></div>
+                  <div class="stat-line"><div class="name">Owner Count</div><div id="legendOwners" class="val">-</div></div>
+                  <div class="stat-line"><div class="name">Recent TX</div><div id="legendTx" class="val">-</div></div>
+                </div>
+              </div>
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Behavior Analysis</div>
+                <ul id="behaviorList" class="list">
+                  <li class="empty">Behavior analysis will appear here after a live report.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="card">
+            <div class="card-header">
+              <div>
                 <h3>Signals and Statement</h3>
                 <div class="subhead">Readable intelligence from public ledger activity</div>
               </div>
@@ -765,6 +793,15 @@
                 <div id="riskScoreValue" class="val">-</div>
               </div>
             </div>
+            <div class="subhead" style="margin:14px 0 10px;">Risk Flags</div>
+            <div id="riskFlagsRow" class="badge-row">
+              <span class="badge">No report</span>
+            </div>
+            <div class="subhead" style="margin:14px 0 10px;">Risk Notes</div>
+            <ul id="riskNotesList" class="list">
+              <li class="empty">No risk notes yet.</li>
+            </ul>
+
           </div>
 
           <div class="card">
@@ -796,6 +833,35 @@
         </div>
       </div>
     </section>
+    <section class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Signal Details</h3>
+            <div class="subhead">Live signal breakdown from the report engine</div>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.08);">Signal</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.08);">Category</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.08);">Value</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.08);">Interpretation</th>
+              </tr>
+            </thead>
+            <tbody id="signalsBody">
+              <tr>
+                <td colspan="4" class="empty" style="padding:12px;">Run a wallet analysis to populate signal details.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
   </main>
 
   <footer class="footer">
@@ -843,6 +909,15 @@
     const riskScoreValue = document.getElementById("riskScoreValue");
 
     const accountFlagsList = document.getElementById("accountFlagsList");
+    const confidencePill = document.getElementById("confidencePill");
+    const legendBalance = document.getElementById("legendBalance");
+    const legendTrustlines = document.getElementById("legendTrustlines");
+    const legendOwners = document.getElementById("legendOwners");
+    const legendTx = document.getElementById("legendTx");
+    const behaviorList = document.getElementById("behaviorList");
+    const riskFlagsRow = document.getElementById("riskFlagsRow");
+    const riskNotesList = document.getElementById("riskNotesList");
+    const signalsBody = document.getElementById("signalsBody");
 
     function safeText(value, fallback = "-"){
       if (value === null || value === undefined || value === "") return fallback;
@@ -870,12 +945,37 @@
       target.innerHTML = items.map(item => `<li>${escapeHtml(item)}</li>`).join("");
     }
 
-    function renderBadgeRow(target, items){
+    function renderBadgeRow(target, items, emptyText = "Awaiting analysis", tone = ""){
       if (!items || !items.length){
-        target.innerHTML = `<span class="badge">Awaiting analysis</span>`;
+        target.innerHTML = `<span class="badge">${escapeHtml(emptyText)}</span>`;
         return;
       }
-      target.innerHTML = items.map(item => `<span class="badge">${escapeHtml(item)}</span>`).join("");
+      const cls = tone ? `badge ${tone}` : "badge";
+      target.innerHTML = items.map(item => `<span class="${cls}">${escapeHtml(item)}</span>`).join("");
+    }
+
+    function renderSignals(signals){
+      if (!signalsBody) return;
+      if (!Array.isArray(signals) || !signals.length){
+        signalsBody.innerHTML = `<tr><td colspan="4" class="empty" style="padding:12px;">No signal data available.</td></tr>`;
+        return;
+      }
+      signalsBody.innerHTML = signals.map((signal) => {
+        if (typeof signal === "string"){
+          return `<tr>
+            <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);"><strong>${escapeHtml(signal)}</strong></td>
+            <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">-</td>
+            <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">-</td>
+            <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">-</td>
+          </tr>`;
+        }
+        return `<tr>
+          <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);"><strong>${escapeHtml(safeText(signal?.label ?? signal?.key ?? signal?.name, "-"))}</strong></td>
+          <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.category, "-"))}</td>
+          <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.value, "-"))}</td>
+          <td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.06);">${escapeHtml(safeText(signal?.interpretation ?? signal?.detail ?? signal?.reason, "-"))}</td>
+        </tr>`;
+      }).join("");
     }
 
     function setPill(text, tone = "blue"){
@@ -1013,6 +1113,21 @@
       const signals = extractSignals(data);
       const activityItems = extractActivities(data);
       const flagItems = extractAccountFlags(data);
+      const behaviorItems = [
+        `Classification: ${classification}`,
+        `Confidence: ${confidence}`,
+        `Risk Level: ${riskLevel}`,
+        `Risk Score: ${riskScore}`
+      ];
+      const activitySummary = Array.isArray(data?.activity?.summary) ? data.activity.summary : [];
+      activitySummary.forEach(item => behaviorItems.push(safeText(item)));
+      const riskFlags = Array.isArray(data?.risk?.flags) ? data.risk.flags : [];
+      const riskNotes = Array.isArray(data?.risk?.notes) ? data.risk.notes : [];
+      const badgeTone = riskLevel.toLowerCase().includes("high")
+        ? "red"
+        : (riskLevel.toLowerCase().includes("medium") || riskLevel.toLowerCase().includes("moderate"))
+          ? "amber"
+          : (riskLevel.toLowerCase().includes("low") ? "green" : "");
 
       walletAddress.textContent = safeText(data?.address, "No wallet loaded");
       renderBadgeRow(walletIdentity, buildIdentityBadges(data));
@@ -1023,10 +1138,20 @@
       walletTrustlines.textContent = formatTrustlines(data);
       walletOwnerCount.textContent = formatOwnerCount(data);
 
+      if (confidencePill) confidencePill.textContent = `Confidence ${confidence}`;
+      if (legendBalance) legendBalance.textContent = formatBalance(data);
+      if (legendTrustlines) legendTrustlines.textContent = formatTrustlines(data);
+      if (legendOwners) legendOwners.textContent = formatOwnerCount(data);
+      if (legendTx) legendTx.textContent = formatRecentTx(data);
+
       renderList(recentActivityList, activityItems, "No recent activity insights returned.");
       renderList(signalList, signals, "No signals returned.");
       renderList(accountFlagsList, flagItems, "No account flag data.");
+      if (behaviorList) renderList(behaviorList, behaviorItems, "No behavior data available.");
+      if (riskFlagsRow) renderBadgeRow(riskFlagsRow, riskFlags, "No explicit risk flags returned for this wallet.", badgeTone);
+      if (riskNotesList) renderList(riskNotesList, riskNotes, "No additional risk notes.");
       statementText.textContent = statement;
+      renderSignals(Array.isArray(data?.signals) ? data.signals : []);
 
       classificationValue.textContent = classification;
       confidenceValue.textContent = confidence;
