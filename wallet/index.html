@@ -594,6 +594,31 @@
       word-break:break-word;
     }
 
+    #tokenHoldingsList .tracker-item,
+    #transactionBreakdownList .tracker-item{
+      padding:10px 12px;
+      gap:10px;
+    }
+
+    #tokenHoldingsList .tracker-item strong,
+    #transactionBreakdownList .tracker-item strong{
+      font-size:13px;
+      line-height:1.25;
+    }
+
+    #tokenHoldingsList .tracker-item span,
+    #transactionBreakdownList .tracker-item span,
+    #transactionBreakdownList .tracker-item small{
+      font-size:11px;
+      line-height:1.3;
+    }
+
+    #tokenHoldingsList .tracker-item .flow,
+    #transactionBreakdownList .tracker-item .flow{
+      font-size:11px;
+      line-height:1.2;
+    }
+
     .list{
       list-style:none;
       padding:0;
@@ -1161,9 +1186,9 @@
       const pageItems = tokenHoldingsData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
       tokenHoldingsList.innerHTML = pageItems.map((item) => {
-        const currency = escapeHtml(String(item?.currency || "-"));
+        const currency = escapeHtml(decodeCurrencyCode(item?.currency || "-"));
         const issuer = escapeHtml(String(item?.issuer || "-"));
-        const balance = escapeHtml(String(item?.balance || "0"));
+        const balance = escapeHtml(normalizeAmount(item?.balance || "0"));
         return `<div class="tracker-item">
           <div>
             <strong>${currency}</strong>
@@ -1200,11 +1225,13 @@
         const type = escapeHtml(String(item?.type || "Unknown"));
         const result = escapeHtml(String(item?.result || "-"));
         const summary = escapeHtml(String(item?.summary || "Transaction detected."));
+        const when = escapeHtml(formatTxTime(item?.timestamp));
         return `<div class="tracker-item">
           <div>
             <strong>${type}</strong>
             <span>${summary}</span>
-            <small style="display:block;margin-top:6px;opacity:.8">${hash}</small>
+            <small style="display:block;margin-top:4px;opacity:.78">${when}</small>
+            <small style="display:block;margin-top:4px;opacity:.8">${hash}</small>
           </div>
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
