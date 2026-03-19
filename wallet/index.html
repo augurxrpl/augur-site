@@ -1113,6 +1113,37 @@
       return String(value);
     }
 
+    function decodeCurrencyCode(value){
+      const raw = String(value || "").trim();
+      if (!raw) return "-";
+      if (/^[A-Z0-9]{3}$/.test(raw)) return raw;
+      if (!/^[A-Fa-f0-9]{40}$/.test(raw)) return raw;
+      try{
+        const bytes = raw.match(/.{1,2}/g) || [];
+        return bytes.map((b) => String.fromCharCode(parseInt(b, 16))).join("").replace(/\0+$/g, "").trim() || raw;
+      } catch {
+        return raw;
+      }
+    }
+
+    function normalizeAmount(value){
+      const raw = String(value ?? "").trim();
+      if (!raw) return "0";
+      const num = Number(raw);
+      if (!Number.isFinite(num)) return raw;
+      return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    }
+
+    function formatTxTime(value){
+      if (value === undefined || value === null || value === "") return "";
+      const num = Number(value);
+      if (!Number.isFinite(num)) return "";
+      const ms = num > 1000000000000 ? num : (946684800 + num) * 1000;
+      const d = new Date(ms);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString();
+    }
+
     function setStatus(message){
       statusEl.textContent = message;
     }
