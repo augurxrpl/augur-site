@@ -1332,21 +1332,9 @@
         </div>
         <div class="tracker-item">
           <div>
-            <strong id="augurNewsSource1">Ripple</strong>
-            <span><a id="augurNewsLink1" href="https://api.augurxrpl.com/api/news" target="_blank" rel="noopener">Loading live AUGUR news...</a></span>
-          </div>
-          <div id="augurNewsDate1" class="flow pos">Live</div>
         </div>
         <div class="tracker-item">
           <div>
-            <strong id="augurNewsSource2">Ripple</strong>
-            <span><a id="augurNewsLink2" href="https://api.augurxrpl.com/api/news" target="_blank" rel="noopener">Loading live AUGUR news...</a></span>
-          </div>
-          <div id="augurNewsDate2" class="flow warn">Live</div>
-        </div>
-        <div class="tracker-item">
-          <div>
-            <strong>Ripple</strong>
             <span><a href="https://ripple.com/insights/institutional-defi-on-xrpl-scaling-real-world-finance-with-xrp-at-the-core/" target="_blank" rel="noopener">Institutional DeFi on XRPL: Scaling Real-World Finance with XRP at the Core</a></span>
           </div>
           <div class="flow warn">Feb 5</div>
@@ -1672,49 +1660,6 @@
 </script>
 
 <script>
-async function loadAugurNews(){
-  try{
-    const res = await fetch("https://api.augurxrpl.com/api/news",{cache:"no-store"});
-    const data = await res.json();
-    const items = Array.isArray(data?.items) ? data.items : [];
-    const fmt = (iso) => {
-      if (!iso) return "Live";
-      const d = new Date(iso);
-      return d.toLocaleString("en-US",{month:"short",day:"numeric",timeZone:"UTC"});
-    };
-
-    const a = items[0];
-    const b = items[1];
-
-    if (a){
-      const s1 = document.getElementById("augurNewsSource1");
-      const l1 = document.getElementById("augurNewsLink1");
-      const d1 = document.getElementById("augurNewsDate1");
-      if (s1) s1.textContent = a.source || "Ripple";
-      if (l1) {
-        l1.textContent = a.title || "Latest update";
-        l1.href = a.link || "https://api.augurxrpl.com/api/news";
-      }
-      if (d1) d1.textContent = fmt(a.publishedAt);
-    }
-
-    if (b){
-      const s2 = document.getElementById("augurNewsSource2");
-      const l2 = document.getElementById("augurNewsLink2");
-      const d2 = document.getElementById("augurNewsDate2");
-      if (s2) s2.textContent = b.source || "Ripple";
-      if (l2) {
-        l2.textContent = b.title || "Latest update";
-        l2.href = b.link || "https://api.augurxrpl.com/api/news";
-      }
-      if (d2) d2.textContent = fmt(b.publishedAt);
-    }
-  } catch (e) {
-    console.error("AUGUR news load failed", e);
-  }
-}
-document.addEventListener("DOMContentLoaded", loadAugurNews);
-setInterval(loadAugurNews, 30000);
 </script>
 </body>
 </html>
