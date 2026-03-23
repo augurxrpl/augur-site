@@ -1414,25 +1414,13 @@
       const flags = data?.accountFlags || {};
       const items = [];
 
-      if ("blackholeTier" in data) {
-        items.push(`Blackhole tier: ${safeText(data.blackholeTier, "none").toUpperCase()}`);
-      }
-
-      if ("blackholeStatus" in data) {
-        items.push(`Confirmed blackhole status: ${data.blackholeStatus ? "True" : "False"}`);
-      }
-
-      if ("masterKeyDisabled" in flags) {
-        items.push(`Master key disabled: ${flags.masterKeyDisabled ? "True" : "False"}`);
-      }
-
-      if ("regularKey" in flags) {
-        items.push(`RegularKey: ${flags.regularKey || "None"}`);
-      }
-
-      if ("regularKeyLooksBlackholed" in flags) {
-        items.push(`RegularKey looks blackholed: ${flags.regularKeyLooksBlackholed ? "True" : "False"}`);
-      }
+      Object.entries(flags).forEach(([key, value]) => {
+        if (["masterKeyDisabled", "regularKey", "regularKeyLooksBlackholed"].includes(key)) return;
+        const label = key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, ch => ch.toUpperCase());
+        items.push(`${label}: ${safeText(value)}`);
+      });
 
       return items;
     }
