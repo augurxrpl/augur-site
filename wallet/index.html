@@ -1371,10 +1371,25 @@
       const flags = data?.accountFlags || {};
       const items = [];
 
-      if ("masterKeyDisabled" in flags) items.push(`Master key disabled: ${flags.masterKeyDisabled ? "True" : "False"}`);
-      if ("regularKey" in flags) items.push(`RegularKey: ${flags.regularKey || "None"}`);
-      if ("regularKeyLooksBlackholed" in flags) items.push(`RegularKey looks blackholed: ${flags.regularKeyLooksBlackholed ? "True" : "False"}`);
-      if ("blackholed" in flags) items.push(`Blackholed: ${flags.blackholed ? "True" : "False"}`);
+      if ("blackholeTier" in data) {
+        items.push(`Blackhole tier: ${safeText(data.blackholeTier, "none").toUpperCase()}`);
+      }
+
+      if ("blackholeStatus" in data) {
+        items.push(`Confirmed blackhole status: ${data.blackholeStatus ? "True" : "False"}`);
+      }
+
+      if ("masterKeyDisabled" in flags) {
+        items.push(`Master key disabled: ${flags.masterKeyDisabled ? "True" : "False"}`);
+      }
+
+      if ("regularKey" in flags) {
+        items.push(`RegularKey: ${flags.regularKey || "None"}`);
+      }
+
+      if ("regularKeyLooksBlackholed" in flags) {
+        items.push(`RegularKey looks blackholed: ${flags.regularKeyLooksBlackholed ? "True" : "False"}`);
+      }
 
       return items;
     }
@@ -1384,7 +1399,9 @@
       if (data?.classification) items.push(data.classification);
       if (data?.confidence) items.push(`Confidence: ${data.confidence}`);
       if (data?.risk?.level) items.push(`Risk: ${data.risk.level}`);
-      if (data?.accountFlags?.blackholed) items.push("Blackholed");
+      if (data?.blackholeTier && data.blackholeTier !== "none") {
+        items.push(`Blackhole: ${String(data.blackholeTier).toUpperCase()}`);
+      }
       return items;
     }
 
