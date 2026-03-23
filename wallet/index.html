@@ -1428,8 +1428,6 @@
     function buildIdentityBadges(data){
       const items = [];
       if (data?.classification) items.push(data.classification);
-      if (data?.confidence) items.push(`Confidence: ${data.confidence}`);
-      if (data?.risk?.level) items.push(`Risk: ${data.risk.level}`);
       if (data?.blackholeTier && data.blackholeTier !== "none") {
         items.push(`Blackhole: ${String(data.blackholeTier).toUpperCase()}`);
       }
