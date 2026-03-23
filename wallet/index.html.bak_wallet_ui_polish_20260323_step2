@@ -145,23 +145,27 @@
     }
 
     .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+
       display:none;
       width:100%;
-      gap:10px;
-      overflow-x:auto;
+      gap:8px;
       padding-top:12px;
-      padding-bottom:6px;
       border-top:1px solid rgba(118,156,228,.10);
-      -ms-overflow-style:none;
-      scrollbar-width:none;
     }
 
     .mobile-nav::-webkit-scrollbar{
-      display:none;
-    }
+  display:none;
+}
 
-    .mobile-nav a{
-      flex:0 0 auto;
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
       min-height:48px;
       display:flex;
       align-items:center;
@@ -844,7 +848,7 @@
               </div>
             </div>
             <div id="tokenHoldingsList" class="list">
-              <div class="empty">No XRPL token holdings detected.</div>
+              <div class="empty">No non-XRP token holdings returned.</div>
             </div>
             <div class="pager">
               <button id="tokenPrevBtn" class="pager-btn" type="button">‹</button>
@@ -876,7 +880,7 @@
             </div>
             <div class="analysis-grid">
               <div>
-                <div class="subhead" style="margin-bottom:10px;">Asset Mix Approximation</div>
+                <div class="subhead" style="margin-bottom:10px;">Balance Breakdown</div>
                 <div class="donut"></div>
                 <div class="legend">
                   <div class="legend-line">
@@ -884,7 +888,7 @@
                     <strong id="legendBalance">-</strong>
                   </div>
                   <div class="legend-line">
-                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>Token Holdings Count</span></div>
+                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>XRPL Tokens</span></div>
                     <strong id="legendTokens">-</strong>
                   </div>
                 </div>
@@ -982,7 +986,7 @@
           </div>
         </div>
         <div id="transactionBreakdownList" class="list">
-          <div class="empty">No recent transaction breakdown available.</div>
+          <div class="empty">No recent transaction breakdown returned.</div>
         </div>
         <div class="pager">
           <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
@@ -1184,16 +1188,14 @@
     }
 
     function renderTokenHoldings(items){
-      tokenHoldingsData = Array.isArray(items)
-        ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
-        : [];
+      tokenHoldingsData = Array.isArray(items) ? items : [];
       const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
       if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
       if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
 
       if (!tokenHoldingsList) return;
       if (!tokenHoldingsData.length){
-        tokenHoldingsList.innerHTML = `<div class="empty">No XRPL token holdings detected.</div>`;
+        tokenHoldingsList.innerHTML = `<div class="empty">No non-XRP token holdings returned.</div>`;
         if (tokenPageInfo) tokenPageInfo.textContent = `Page 1 of 1`;
         if (tokenPrevBtn) tokenPrevBtn.disabled = true;
         if (tokenNextBtn) tokenNextBtn.disabled = true;
@@ -1228,7 +1230,7 @@
 
       if (!transactionBreakdownList) return;
       if (!transactionBreakdownData.length){
-        transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown available.</div>`;
+        transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown returned.</div>`;
         if (txPageInfo) txPageInfo.textContent = `Page 1 of 1`;
         if (txPrevBtn) txPrevBtn.disabled = true;
         if (txNextBtn) txNextBtn.disabled = true;
@@ -1248,7 +1250,7 @@
             <strong>${type}</strong>
             <span>${summary}</span>
             <small style="display:block;margin-top:4px;opacity:.78">${when}</small>
-            <small style="display:block;margin-top:4px;opacity:.62;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
+            <small style="display:block;margin-top:4px;opacity:.8">${hash}</small>
           </div>
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
