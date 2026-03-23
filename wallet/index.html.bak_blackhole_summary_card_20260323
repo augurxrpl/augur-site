@@ -839,43 +839,6 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>Blackhole Status</h3>
-                <div class="subhead">Tiered blackhole assessment from current wallet state</div>
-              </div>
-              <span id="blackholeTierPill" class="badge green">NONE</span>
-            </div>
-            <div id="blackholeSummaryNote" class="note">Run a wallet analysis to evaluate blackhole state.</div>
-            <div class="stat-list" style="margin-top:14px;">
-              <div class="stat-line">
-                <div class="name">Tier</div>
-                <div id="blackholeTierValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Status</div>
-                <div id="blackholeStatusLabel" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Confirmed</div>
-                <div id="blackholeConfirmedValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Master Key Disabled</div>
-                <div id="blackholeMasterKeyValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">RegularKey</div>
-                <div id="blackholeRegularKeyValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">RegularKey Looks Blackholed</div>
-                <div id="blackholeRegularKeyLooksValue" class="val">-</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div>
                 <h3>Token Holdings</h3>
                 <div class="subhead">Issued assets and trustline balances held by this wallet</div>
               </div>
@@ -1095,14 +1058,6 @@
     const walletRisk = document.getElementById("walletRisk");
     const walletTrustlines = document.getElementById("walletTrustlines");
     const walletOwnerCount = document.getElementById("walletOwnerCount");
-    const blackholeTierPill = document.getElementById("blackholeTierPill");
-    const blackholeSummaryNote = document.getElementById("blackholeSummaryNote");
-    const blackholeTierValue = document.getElementById("blackholeTierValue");
-    const blackholeStatusLabel = document.getElementById("blackholeStatusLabel");
-    const blackholeConfirmedValue = document.getElementById("blackholeConfirmedValue");
-    const blackholeMasterKeyValue = document.getElementById("blackholeMasterKeyValue");
-    const blackholeRegularKeyValue = document.getElementById("blackholeRegularKeyValue");
-    const blackholeRegularKeyLooksValue = document.getElementById("blackholeRegularKeyLooksValue");
 
     const recentActivityList = document.getElementById("recentActivityList");
     const signalList = document.getElementById("signalList");
@@ -1448,44 +1403,6 @@
       return items;
     }
 
-    function getBlackholePresentation(data){
-      const flags = data?.accountFlags || {};
-      const tier = String(data?.blackholeTier || "none").toLowerCase();
-      const confirmed = !!data?.blackholeStatus;
-      const masterKeyDisabled = "masterKeyDisabled" in flags ? (flags.masterKeyDisabled ? "True" : "False") : "-";
-      const regularKey = "regularKey" in flags ? (flags.regularKey || "None") : "-";
-      const regularKeyLooks = "regularKeyLooksBlackholed" in flags ? (flags.regularKeyLooksBlackholed ? "True" : "False") : "-";
-
-      let pill = "green";
-      let label = "No blackhole pattern detected";
-      let note = "No blackhole pattern detected from current wallet flags and key state.";
-
-      if (tier === "confirmed") {
-        pill = "red";
-        label = "Confirmed blackhole state detected";
-        note = "Confirmed blackhole state detected from current wallet flags and key state.";
-      } else if (tier === "likely") {
-        pill = "amber";
-        label = "Likely blackhole pattern detected";
-        note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
-      } else if (tier === "partial") {
-        pill = "blue";
-        label = "Partial blackhole pattern detected";
-        note = "Partial blackhole pattern detected. Some blackhole signals are present, but the state is not confirmed.";
-      }
-
-      return {
-        tier: tier.toUpperCase(),
-        pill,
-        label,
-        note,
-        confirmed: confirmed ? "True" : "False",
-        masterKeyDisabled,
-        regularKey,
-        regularKeyLooks
-      };
-    }
-
     function applyReport(data){
       tokenHoldingsPage = 1;
       transactionBreakdownPage = 1;
@@ -1523,19 +1440,6 @@
       walletOwnerCount.textContent = formatOwnerCount(data);
 
       if (confidencePill) confidencePill.textContent = `Confidence ${confidence}`;
-
-      const blackholeView = getBlackholePresentation(data);
-      if (blackholeTierPill) {
-        blackholeTierPill.className = `badge ${blackholeView.pill}`;
-        blackholeTierPill.textContent = blackholeView.tier;
-      }
-      if (blackholeSummaryNote) blackholeSummaryNote.textContent = blackholeView.note;
-      if (blackholeTierValue) blackholeTierValue.textContent = blackholeView.tier;
-      if (blackholeStatusLabel) blackholeStatusLabel.textContent = blackholeView.label;
-      if (blackholeConfirmedValue) blackholeConfirmedValue.textContent = blackholeView.confirmed;
-      if (blackholeMasterKeyValue) blackholeMasterKeyValue.textContent = blackholeView.masterKeyDisabled;
-      if (blackholeRegularKeyValue) blackholeRegularKeyValue.textContent = blackholeView.regularKey;
-      if (blackholeRegularKeyLooksValue) blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
 
       const xrpBalanceRaw = Number(data?.balanceXRP ?? data?.balance ?? 0) || 0;
       const tokenHoldings = Array.isArray(data?.tokenHoldings) ? data.tokenHoldings : [];
