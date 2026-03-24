@@ -145,23 +145,27 @@
     }
 
     .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:6px;
+
       display:none;
       width:100%;
-      gap:10px;
-      overflow-x:auto;
+      gap:8px;
       padding-top:12px;
-      padding-bottom:6px;
       border-top:1px solid rgba(118,156,228,.10);
-      -ms-overflow-style:none;
-      scrollbar-width:none;
     }
 
     .mobile-nav::-webkit-scrollbar{
-      display:none;
-    }
+  display:none;
+}
 
-    .mobile-nav a{
-      flex:0 0 auto;
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
       min-height:48px;
       display:flex;
       align-items:center;
@@ -839,49 +843,12 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>Blackhole Status</h3>
-                <div class="subhead">Tiered blackhole assessment from current wallet state</div>
-              </div>
-              <span id="blackholeTierPill" class="badge green">NONE</span>
-            </div>
-            <div id="blackholeSummaryNote" class="note">Run a wallet analysis to evaluate blackhole state.</div>
-            <div class="stat-list" style="margin-top:14px;">
-              <div class="stat-line">
-                <div class="name">Tier</div>
-                <div id="blackholeTierValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Status</div>
-                <div id="blackholeStatusLabel" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Confirmed</div>
-                <div id="blackholeConfirmedValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">Master Key Disabled</div>
-                <div id="blackholeMasterKeyValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">RegularKey</div>
-                <div id="blackholeRegularKeyValue" class="val">-</div>
-              </div>
-              <div class="stat-line">
-                <div class="name">RegularKey Looks Blackholed</div>
-                <div id="blackholeRegularKeyLooksValue" class="val">-</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div>
                 <h3>Token Holdings</h3>
                 <div class="subhead">Issued assets and trustline balances held by this wallet</div>
               </div>
             </div>
             <div id="tokenHoldingsList" class="list">
-              <div class="empty">No XRPL token holdings detected.</div>
+              <div class="empty">No non-XRP token holdings returned.</div>
             </div>
             <div class="pager">
               <button id="tokenPrevBtn" class="pager-btn" type="button">‹</button>
@@ -913,7 +880,7 @@
             </div>
             <div class="analysis-grid">
               <div>
-                <div class="subhead" style="margin-bottom:10px;">Asset Mix Approximation</div>
+                <div class="subhead" style="margin-bottom:10px;">Balance Breakdown</div>
                 <div class="donut"></div>
                 <div class="legend">
                   <div class="legend-line">
@@ -921,7 +888,7 @@
                     <strong id="legendBalance">-</strong>
                   </div>
                   <div class="legend-line">
-                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>Token Holdings Count</span></div>
+                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>XRPL Tokens</span></div>
                     <strong id="legendTokens">-</strong>
                   </div>
                 </div>
@@ -1019,7 +986,7 @@
           </div>
         </div>
         <div id="transactionBreakdownList" class="list">
-          <div class="empty">No recent transaction breakdown available.</div>
+          <div class="empty">No recent transaction breakdown returned.</div>
         </div>
         <div class="pager">
           <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
@@ -1095,14 +1062,6 @@
     const walletRisk = document.getElementById("walletRisk");
     const walletTrustlines = document.getElementById("walletTrustlines");
     const walletOwnerCount = document.getElementById("walletOwnerCount");
-    const blackholeTierPill = document.getElementById("blackholeTierPill");
-    const blackholeSummaryNote = document.getElementById("blackholeSummaryNote");
-    const blackholeTierValue = document.getElementById("blackholeTierValue");
-    const blackholeStatusLabel = document.getElementById("blackholeStatusLabel");
-    const blackholeConfirmedValue = document.getElementById("blackholeConfirmedValue");
-    const blackholeMasterKeyValue = document.getElementById("blackholeMasterKeyValue");
-    const blackholeRegularKeyValue = document.getElementById("blackholeRegularKeyValue");
-    const blackholeRegularKeyLooksValue = document.getElementById("blackholeRegularKeyLooksValue");
 
     const recentActivityList = document.getElementById("recentActivityList");
     const signalList = document.getElementById("signalList");
@@ -1229,16 +1188,14 @@
     }
 
     function renderTokenHoldings(items){
-      tokenHoldingsData = Array.isArray(items)
-        ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
-        : [];
+      tokenHoldingsData = Array.isArray(items) ? items : [];
       const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
       if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
       if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
 
       if (!tokenHoldingsList) return;
       if (!tokenHoldingsData.length){
-        tokenHoldingsList.innerHTML = `<div class="empty">No XRPL token holdings detected.</div>`;
+        tokenHoldingsList.innerHTML = `<div class="empty">No non-XRP token holdings returned.</div>`;
         if (tokenPageInfo) tokenPageInfo.textContent = `Page 1 of 1`;
         if (tokenPrevBtn) tokenPrevBtn.disabled = true;
         if (tokenNextBtn) tokenNextBtn.disabled = true;
@@ -1273,7 +1230,7 @@
 
       if (!transactionBreakdownList) return;
       if (!transactionBreakdownData.length){
-        transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown available.</div>`;
+        transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown returned.</div>`;
         if (txPageInfo) txPageInfo.textContent = `Page 1 of 1`;
         if (txPrevBtn) txPrevBtn.disabled = true;
         if (txNextBtn) txNextBtn.disabled = true;
@@ -1293,7 +1250,7 @@
             <strong>${type}</strong>
             <span>${summary}</span>
             <small style="display:block;margin-top:4px;opacity:.78">${when}</small>
-            <small style="display:block;margin-top:4px;opacity:.62;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
+            <small style="display:block;margin-top:4px;opacity:.8">${hash}</small>
           </div>
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
@@ -1414,13 +1371,25 @@
       const flags = data?.accountFlags || {};
       const items = [];
 
-      Object.entries(flags).forEach(([key, value]) => {
-        if (["masterKeyDisabled", "regularKey", "regularKeyLooksBlackholed"].includes(key)) return;
-        const label = key
-          .replace(/([A-Z])/g, " $1")
-          .replace(/^./, ch => ch.toUpperCase());
-        items.push(`${label}: ${safeText(value)}`);
-      });
+      if ("blackholeTier" in data) {
+        items.push(`Blackhole tier: ${safeText(data.blackholeTier, "none").toUpperCase()}`);
+      }
+
+      if ("blackholeStatus" in data) {
+        items.push(`Confirmed blackhole status: ${data.blackholeStatus ? "True" : "False"}`);
+      }
+
+      if ("masterKeyDisabled" in flags) {
+        items.push(`Master key disabled: ${flags.masterKeyDisabled ? "True" : "False"}`);
+      }
+
+      if ("regularKey" in flags) {
+        items.push(`RegularKey: ${flags.regularKey || "None"}`);
+      }
+
+      if ("regularKeyLooksBlackholed" in flags) {
+        items.push(`RegularKey looks blackholed: ${flags.regularKeyLooksBlackholed ? "True" : "False"}`);
+      }
 
       return items;
     }
@@ -1428,48 +1397,12 @@
     function buildIdentityBadges(data){
       const items = [];
       if (data?.classification) items.push(data.classification);
+      if (data?.confidence) items.push(`Confidence: ${data.confidence}`);
+      if (data?.risk?.level) items.push(`Risk: ${data.risk.level}`);
       if (data?.blackholeTier && data.blackholeTier !== "none") {
         items.push(`Blackhole: ${String(data.blackholeTier).toUpperCase()}`);
       }
       return items;
-    }
-
-    function getBlackholePresentation(data){
-      const flags = data?.accountFlags || {};
-      const tier = String(data?.blackholeTier || "none").toLowerCase();
-      const confirmed = !!data?.blackholeStatus;
-      const masterKeyDisabled = "masterKeyDisabled" in flags ? (flags.masterKeyDisabled ? "True" : "False") : "-";
-      const regularKey = "regularKey" in flags ? (flags.regularKey || "None") : "-";
-      const regularKeyLooks = "regularKeyLooksBlackholed" in flags ? (flags.regularKeyLooksBlackholed ? "True" : "False") : "-";
-
-      let pill = "green";
-      let label = "No blackhole pattern detected";
-      let note = "No blackhole pattern detected from current wallet flags and key state.";
-
-      if (tier === "confirmed") {
-        pill = "red";
-        label = "Confirmed blackhole state detected";
-        note = "Confirmed blackhole state detected from current wallet flags and key state.";
-      } else if (tier === "likely") {
-        pill = "amber";
-        label = "Likely blackhole pattern detected";
-        note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
-      } else if (tier === "partial") {
-        pill = "blue";
-        label = "Partial blackhole pattern detected";
-        note = "Partial blackhole pattern detected. Some blackhole signals are present, but the state is not confirmed.";
-      }
-
-      return {
-        tier: tier.toUpperCase(),
-        pill,
-        label,
-        note,
-        confirmed: confirmed ? "True" : "False",
-        masterKeyDisabled,
-        regularKey,
-        regularKeyLooks
-      };
     }
 
     function applyReport(data){
@@ -1509,19 +1442,6 @@
       walletOwnerCount.textContent = formatOwnerCount(data);
 
       if (confidencePill) confidencePill.textContent = `Confidence ${confidence}`;
-
-      const blackholeView = getBlackholePresentation(data);
-      if (blackholeTierPill) {
-        blackholeTierPill.className = `badge ${blackholeView.pill}`;
-        blackholeTierPill.textContent = blackholeView.tier;
-      }
-      if (blackholeSummaryNote) blackholeSummaryNote.textContent = blackholeView.note;
-      if (blackholeTierValue) blackholeTierValue.textContent = blackholeView.tier;
-      if (blackholeStatusLabel) blackholeStatusLabel.textContent = blackholeView.label;
-      if (blackholeConfirmedValue) blackholeConfirmedValue.textContent = blackholeView.confirmed;
-      if (blackholeMasterKeyValue) blackholeMasterKeyValue.textContent = blackholeView.masterKeyDisabled;
-      if (blackholeRegularKeyValue) blackholeRegularKeyValue.textContent = blackholeView.regularKey;
-      if (blackholeRegularKeyLooksValue) blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
 
       const xrpBalanceRaw = Number(data?.balanceXRP ?? data?.balance ?? 0) || 0;
       const tokenHoldings = Array.isArray(data?.tokenHoldings) ? data.tokenHoldings : [];
