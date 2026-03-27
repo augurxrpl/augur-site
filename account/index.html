@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>AUGUR Account Status</title>
   <style>
     :root{
@@ -109,10 +109,9 @@
       color:var(--text);
     }
 
-    .mobile-nav{display:flex;width:100%;gap:10px;overflow-x:visible;
-      flex-wrap:wrap;padding-bottom:4px;}
+    .mobile-nav{display:none;width:100%;gap:8px;padding-top:12px;border-top:1px solid rgba(118,156,228,.10);}
     .mobile-nav::-webkit-scrollbar{height:0;}
-    .mobile-nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700;padding:10px 12px;border-radius:12px;white-space:nowrap;}
+    .mobile-nav a{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 8px;border-radius:12px;text-decoration:none;color:var(--muted);background:rgba(255,255,255,.04);font-size:13px;font-weight:700;}
     .mobile-nav a:hover,
     .mobile-nav a.active{background:rgba(255,255,255,.04);color:var(--text);}
 
@@ -299,7 +298,10 @@
 
     @media (max-width:860px){
       .nav-links{display:none}
-      .mobile-nav{display:flex}
+      .mobile-nav{
+        display:flex;
+        gap:8px;
+      }
     }
   </style>
 </head>
