@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AUGUR Account Status</title>
+  <style>
+    :root{
+      --line:rgba(118,156,228,.14);
+      --text:#eef4ff;
+      --muted:#9fb0cf;
+      --soft:#6f84a8;
+      --blue:#57a6ff;
+      --shadow:0 18px 44px rgba(0,0,0,.28);
+      --radius:24px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(87,166,255,.10), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(80,200,255,.08), transparent 40%),
+        linear-gradient(180deg,#07101c 0%,#08101c 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    .wrap{
+      width:min(1120px, calc(100% - 28px));
+      margin:0 auto;
+    }
+
+    .nav{
+      padding:18px 0;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      background:rgba(8,16,28,.72);
+      backdrop-filter:blur(14px);
+      position:sticky;
+      top:0;
+      z-index:30;
+    }
+
+    .nav-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-decoration:none;
+      color:var(--text);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .brand-mark{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg, rgba(87,166,255,.22), rgba(87,166,255,.08));
+      border:1px solid rgba(87,166,255,.18);
+      color:var(--blue);
+      box-shadow:var(--shadow);
+      font-size:14px;
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .nav-links a{
+      color:var(--muted);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:700;
+      padding:10px 12px;
+      border-radius:12px;
+    }
+
+    .nav-links a:hover{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+    }
+
+    main{
+      padding:34px 0 56px;
+    }
+
+    .hero{
+      display:grid;
+      gap:12px;
+      margin-bottom:22px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(87,166,255,.08);
+      border:1px solid rgba(87,166,255,.14);
+      color:var(--blue);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    h1{
+      margin:0;
+      font-size:42px;
+      line-height:1.02;
+      letter-spacing:-1px;
+    }
+
+    .lede{
+      margin:0;
+      color:var(--muted);
+      font-size:17px;
+      max-width:760px;
+      line-height:1.55;
+    }
+
+    .panel{
+      background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .field{
+      display:grid;
+      gap:8px;
+    }
+
+    .field label{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.03em;
+      color:var(--text);
+      text-transform:uppercase;
+    }
+
+    .input{
+      width:100%;
+      min-height:48px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.16);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:0 14px;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+    }
+
+    .input::placeholder{
+      color:var(--soft);
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:0 16px;
+      border-radius:14px;
+      border:1px solid transparent;
+      text-decoration:none;
+      font-weight:900;
+      font-size:14px;
+      cursor:pointer;
+    }
+
+    .btn-primary{
+      color:#07101c;
+      background:linear-gradient(180deg,#9fd8ff,#57a6ff);
+      box-shadow:0 10px 22px rgba(87,166,255,.28);
+    }
+
+    .btn-secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.04);
+      border-color:rgba(118,156,228,.16);
+    }
+
+    .status-box{
+      display:grid;
+      gap:10px;
+    }
+
+    .status-box[hidden]{
+      display:none;
+    }
+
+    .kv{
+      display:grid;
+      gap:8px;
+    }
+
+    .kv-row{
+      display:grid;
+      grid-template-columns:160px 1fr;
+      gap:10px;
+      align-items:start;
+      padding-top:8px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .kv-row:first-child{
+      border-top:0;
+      padding-top:0;
+    }
+
+    .kv-row strong{
+      color:var(--text);
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    .kv-row span,
+    .kv-row code{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .kv-row code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background:rgba(255,255,255,.04);
+      padding:2px 6px;
+      border-radius:8px;
+      color:var(--text);
+    }
+
+    .footer{
+      padding:20px 0 34px;
+      color:var(--soft);
+      font-size:13px;
+    }
+
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .kv-row{grid-template-columns:1fr}
+      h1{font-size:34px}
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <div class="nav-inner">
+        <a class="brand" href="/">
+          <span class="brand-mark">A</span>
+          <span>AUGUR</span>
+        </a>
+<div class="nav-links">
+  <a href="/">Dashboard</a>
+  <a href="/wallet/">Wallet Search</a>
+  <a href="/pricing.html">Pricing</a>
+  <a href="/developers.html">Developers</a>
+  <a href="/account/" style="color:var(--text);background:rgba(255,255,255,.04);">Account</a>
+</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Wallet-Based Access</div>
+      <h1>Account Status</h1>
+      <p class="lede">
+        Check subscription status for any XRPL wallet tied to AUGUR. No login. No custody. Wallet in, status out.
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="field">
+          <label for="walletInput">XRPL wallet</label>
+          <input class="input" id="walletInput" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="checkStatusBtn" type="button">Check Status</button>
+          <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin-top:0;margin-bottom:14px;">Subscription Result</h2>
+        <div class="status-box" id="statusBox" hidden>
+          <div class="kv" id="statusDetails"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      AUGUR Account Status • XRPL subscription lookup
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.augurxrpl.com";
+    const walletInput = document.getElementById("walletInput");
+    const checkStatusBtn = document.getElementById("checkStatusBtn");
+    const statusBox = document.getElementById("statusBox");
+    const statusDetails = document.getElementById("statusDetails");
+
+    function safeText(value){
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function escapeHtml(value){
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderRows(rows){
+      statusBox.hidden = false;
+      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
+        <div class="kv-row">
+          <strong>${escapeHtml(label)}</strong>
+          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
+        </div>
+      `).join("");
+    }
+
+    checkStatusBtn.addEventListener("click", async () => {
+      const wallet = walletInput.value.trim();
+
+      if (!wallet) {
+        renderRows([["Error", "Enter an XRPL wallet address.", false]]);
+        return;
+      }
+
+      checkStatusBtn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || data.message || "Status lookup failed");
+        }
+
+        renderRows([
+          ["Wallet", safeText(data.walletAddress), true],
+          ["Plan", safeText(data.planCode), false],
+          ["Status", safeText(data.status), false],
+          ["Active", safeText(data.active), false],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Started", safeText(data.startedAt), false],
+          ["Expires", safeText(data.expiresAt), false]
+        ]);
+      } catch (err) {
+        renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
+      } finally {
+        checkStatusBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
