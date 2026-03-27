@@ -616,6 +616,46 @@
       color:var(--text);
     }
 
+    #subscribe{
+      padding-top:18px;
+      padding-bottom:28px;
+    }
+
+    #subscribe .pricing-grid{
+      grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);
+      gap:18px;
+      align-items:start;
+    }
+
+    #subscribe .tier{
+      padding:20px;
+      border-radius:24px;
+    }
+
+    #subscribe h3{
+      margin:0 0 10px;
+    }
+
+    #subscribe .subtitle{
+      margin-bottom:14px;
+    }
+
+    #subscribe .action-row{
+      margin-top:18px;
+      margin-bottom:12px;
+    }
+
+    #subscribe .quote-box,
+    #subscribe .status-box{
+      min-height:120px;
+    }
+
+    @media (max-width:900px){
+      #subscribe .pricing-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
     .sub-divider{
       margin-top:14px;
       padding-top:14px;
@@ -844,8 +884,9 @@
 
           <div class="action-row">
             <button class="btn btn-primary" id="generateQuoteBtn" type="button">Generate Quote</button>
-            <button class="btn btn-secondary" id="checkPaymentBtn" type="button" disabled>Check Payment</button>
-            <button class="btn btn-secondary" id="activateBtn" type="button" disabled>Activate</button>
+            <a class="btn btn-primary" id="payXamanBtn" href="#" target="_blank" rel="noopener" hidden>Pay with Xaman</a>
+            <button class="btn btn-secondary" id="checkPaymentBtn" type="button" hidden disabled>Check Payment</button>
+            <button class="btn btn-secondary" id="activateBtn" type="button" hidden disabled>Activate</button>
           </div>
 
           <p class="sub-note">
@@ -891,6 +932,7 @@
     const subPlan = document.getElementById("subPlan");
     const selectedPlanPill = document.getElementById("selectedPlanPill");
     const generateQuoteBtn = document.getElementById("generateQuoteBtn");
+    const payXamanBtn = document.getElementById("payXamanBtn");
     const checkPaymentBtn = document.getElementById("checkPaymentBtn");
     const activateBtn = document.getElementById("activateBtn");
     const quoteBox = document.getElementById("quoteBox");
@@ -955,6 +997,9 @@
       }
 
       generateQuoteBtn.disabled = true;
+      payXamanBtn.hidden = true;
+      checkPaymentBtn.hidden = true;
+      activateBtn.hidden = true;
       checkPaymentBtn.disabled = true;
       activateBtn.disabled = true;
       quoteBox.hidden = true;
@@ -988,13 +1033,19 @@
           ["Payment Request ID", safeText(data.paymentRequestId), true]
         ]);
 
+        const xamanUrl = `https://xaman.app/detect/request:${encodeURIComponent(data.subscriptionWallet)}?amount=${encodeURIComponent(data.amountXrp)}&network=XRPL&dt=${encodeURIComponent(data.destinationTag)}`;
+        payXamanBtn.href = xamanUrl;
+        payXamanBtn.hidden = false;
+
         showStatus([
-          ["Next Step", "Send the exact XRP amount to the subscription wallet using the destination tag shown above.", false],
+          ["Next Step", "Tap Pay with Xaman or send the exact XRP amount manually using the destination tag shown above.", false],
           ["Memo", "Include the quote reference as memo when possible.", false]
         ]);
 
+        checkPaymentBtn.hidden = false;
         checkPaymentBtn.disabled = false;
-        activateBtn.disabled = false;
+        activateBtn.hidden = true;
+        activateBtn.disabled = true;
       } catch (err) {
         showStatus([["Error", err instanceof Error ? err.message : "Quote request failed", false]]);
       } finally {
@@ -1029,6 +1080,14 @@
           ["Amount", data.amountXrp ? `${data.amountXrp} XRP` : "—", false],
           ["Memo", safeText(data.memoText), false]
         ]);
+
+        if (data.matched) {
+          activateBtn.hidden = false;
+          activateBtn.disabled = false;
+        } else {
+          activateBtn.hidden = true;
+          activateBtn.disabled = true;
+        }
       } catch (err) {
         showStatus([["Error", err instanceof Error ? err.message : "Payment check failed", false]]);
       } finally {
