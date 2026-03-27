@@ -400,6 +400,7 @@
     const statusDetails = document.getElementById("statusDetails");
     const starterUtility = document.getElementById("starterUtility");
     const starterReportLink = document.getElementById("starterReportLink");
+    const params = new URLSearchParams(window.location.search);
 
     function safeText(value){
       if (value === null || value === undefined || value === "") return "—";
@@ -425,7 +426,7 @@
       `).join("");
     }
 
-    checkStatusBtn.addEventListener("click", async () => {
+    async function runStarterCheck(){
       const wallet = walletInput.value.trim();
 
       if (!wallet) {
@@ -466,7 +467,16 @@
       } finally {
         checkStatusBtn.disabled = false;
       }
-    });
+    }
+
+    checkStatusBtn.addEventListener("click", runStarterCheck);
+
+    const initialWallet = params.get("wallet");
+    if (initialWallet) {
+      walletInput.value = initialWallet;
+      runStarterCheck();
+    }
+
   </script>
 </body>
 </html>
