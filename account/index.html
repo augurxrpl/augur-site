@@ -28,18 +28,27 @@
     }
 
     .wrap{
-      width:min(1120px, calc(100% - 28px));
+      width:min(1240px, calc(100% - 36px)); padding:0 18px;
       margin:0 auto;
     }
 
-    .nav{
-      padding:18px 0;
-      border-bottom:1px solid rgba(255,255,255,.05);
-      background:rgba(8,16,28,.72);
-      backdrop-filter:blur(14px);
+    .topbar{
       position:sticky;
       top:0;
-      z-index:30;
+      z-index:50;
+      backdrop-filter:blur(14px);
+      background:rgba(5,11,21,.84);
+      border-bottom:1px solid rgba(118,156,228,.12);
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .nav{
+      min-height:74px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
     }
 
     .nav-inner{
@@ -295,7 +304,9 @@
   </style>
 </head>
 <body>
-  <header class="nav">
+  <header class="topbar">
+    <div class="wrap">
+      <div class="nav">
     <div class="wrap">
       <div class="nav-inner">
         <a class="brand" href="/">
@@ -317,6 +328,8 @@
   <a href="/account/" class="active">Account</a>
 </div>
       </div>
+    </div>
+        </div>
     </div>
   </header>
 
