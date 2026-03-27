@@ -95,6 +95,12 @@
       color:var(--text);
     }
 
+    .mobile-nav{display:none;width:100%;gap:10px;overflow-x:auto;padding-bottom:4px;}
+    .mobile-nav::-webkit-scrollbar{height:0;}
+    .mobile-nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700;padding:10px 12px;border-radius:12px;white-space:nowrap;}
+    .mobile-nav a:hover,
+    .mobile-nav a.active{background:rgba(255,255,255,.04);color:var(--text);}
+
     main{
       padding:34px 0 56px;
     }
@@ -275,6 +281,11 @@
       .kv-row{grid-template-columns:1fr}
       h1{font-size:34px}
     }
+
+    @media (max-width:860px){
+      .nav-links{display:none}
+      .mobile-nav{display:flex}
+    }
   </style>
 </head>
 <body>
@@ -291,6 +302,13 @@
   <a href="/pricing.html">Pricing</a>
   <a href="/developers.html">Developers</a>
   <a href="/account/" style="color:var(--text);background:rgba(255,255,255,.04);">Account</a>
+</div>
+<div class="mobile-nav">
+  <a href="/">Dashboard</a>
+  <a href="/wallet/">Wallet Search</a>
+  <a href="/pricing.html">Pricing</a>
+  <a href="/developers.html">Developers</a>
+  <a href="/account/" class="active">Account</a>
 </div>
       </div>
     </div>
