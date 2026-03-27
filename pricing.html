@@ -492,6 +492,136 @@
       line-height:1.45;
     }
 
+    .field{
+      display:grid;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .field label{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+      letter-spacing:.02em;
+    }
+
+    .input,
+    .select{
+      width:100%;
+      min-height:46px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.16);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:0 14px;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+    }
+
+    .input::placeholder{
+      color:var(--soft);
+    }
+
+    .action-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .action-row .btn{
+      margin-top:0;
+    }
+
+    .sub-note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .selected-plan{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(87,166,255,.08);
+      border:1px solid rgba(87,166,255,.14);
+      color:var(--blue);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      width:max-content;
+      margin-top:4px;
+    }
+
+    .quote-box,
+    .status-box{
+      margin-top:12px;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      display:grid;
+      gap:10px;
+    }
+
+    .quote-box[hidden],
+    .status-box[hidden]{
+      display:none;
+    }
+
+    .kv{
+      display:grid;
+      gap:8px;
+    }
+
+    .kv-row{
+      display:grid;
+      grid-template-columns:160px 1fr;
+      gap:10px;
+      align-items:start;
+      padding-top:8px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .kv-row:first-child{
+      border-top:0;
+      padding-top:0;
+    }
+
+    .kv-row strong{
+      color:var(--text);
+      font-size:13px;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+
+    .kv-row span,
+    .kv-row code{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+      word-break:break-word;
+    }
+
+    .kv-row code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background:rgba(255,255,255,.04);
+      padding:2px 6px;
+      border-radius:8px;
+      color:var(--text);
+    }
+
+    .sub-divider{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
     .footer{
       padding:18px 0 42px;
       color:var(--muted);
@@ -632,7 +762,7 @@
             <div class="term">/ month</div>
           </div>
           <div class="price-note">The clean bridge between free and full intelligence.</div>
-          <button class="btn btn-primary" type="button">Best Entry Tier</button>
+          <button class="btn btn-primary" type="button" data-plan-select="starter">Subscribe to Starter</button>
           <ul class="feature-list">
             <li>Full report view<small>Get the full report surface instead of the trimmed public layer.</small></li>
             <li>Expanded signal detail<small>More context on behavior, issuer state, and risk.</small></li>
@@ -651,7 +781,7 @@
             <div class="term">/ month</div>
           </div>
           <div class="price-note">Full intelligence tier for platform retention and workflow value.</div>
-          <button class="btn btn-secondary" type="button">Full Intelligence</button>
+          <button class="btn btn-secondary" type="button" data-plan-select="pro">Subscribe to Pro</button>
           <ul class="feature-list">
             <li>Saved reports and history<small>Build a usable workspace instead of a one-off lookup tool.</small></li>
             <li>Watchlists and alerts<small>Track wallets, issuer changes, risk shifts, and notable movement.</small></li>
@@ -670,7 +800,7 @@
             <div class="term">/ month</div>
           </div>
           <div class="price-note">API-first tier for direct platform access.</div>
-          <button class="btn btn-secondary" type="button">API Access Tier</button>
+          <button class="btn btn-secondary" type="button" data-plan-select="developer">Subscribe to Developer</button>
           <ul class="feature-list">
             <li>API keys and usage dashboard<small>Direct structured access to AUGUR intelligence outputs.</small></li>
             <li>Higher rate limits<small>Built for apps, research workflows, and automation.</small></li>
@@ -678,6 +808,64 @@
             <li>Export and integration workflows<small>Use AUGUR as intelligence infrastructure, not just a UI.</small></li>
             <li>Developer docs and examples<small>Turn the platform into something other products can build on.</small></li>
           </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="subscribe">
+      <div class="section-head">
+        <div>
+          <h2>Start a Subscription</h2>
+          <p>Enter your XRPL wallet, choose a paid plan, generate a quote, send the exact $XRP payment, then activate.</p>
+        </div>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="tier tier-featured">
+          <div class="eyebrow">Live Subscription</div>
+          <h3>Subscribe with XRPL</h3>
+          <p class="subtitle">No wallet connection. No custody. Generate a quote, pay the exact amount, then activate.</p>
+
+          <div class="selected-plan" id="selectedPlanPill">Selected Plan: starter</div>
+
+          <div class="field">
+            <label for="subWallet">XRPL wallet address</label>
+            <input class="input" id="subWallet" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+          </div>
+
+          <div class="field">
+            <label for="subPlan">Plan</label>
+            <select class="select" id="subPlan">
+              <option value="starter">Starter — $19 / month</option>
+              <option value="pro">Pro — $49 / month</option>
+              <option value="developer">Developer — $149 / month</option>
+            </select>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" id="generateQuoteBtn" type="button">Generate Quote</button>
+            <button class="btn btn-secondary" id="checkPaymentBtn" type="button" disabled>Check Payment</button>
+            <button class="btn btn-secondary" id="activateBtn" type="button" disabled>Activate</button>
+          </div>
+
+          <p class="sub-note">
+            Use the exact subscription wallet, destination tag, amount, and quote reference shown below.
+          </p>
+        </div>
+
+        <div class="tier">
+          <div class="eyebrow">Quote + Status</div>
+          <h3>Payment Instructions</h3>
+          <div class="quote-box" id="quoteBox" hidden>
+            <div class="kv" id="quoteDetails"></div>
+          </div>
+
+          <div class="sub-divider"></div>
+
+          <h3>Subscription Status</h3>
+          <div class="status-box" id="statusBox" hidden>
+            <div class="kv" id="statusDetails"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -697,5 +885,204 @@
       </div>
     </div>
   </footer>
+  <script>
+    const API_BASE = "https://api.augurxrpl.com";
+    const subWallet = document.getElementById("subWallet");
+    const subPlan = document.getElementById("subPlan");
+    const selectedPlanPill = document.getElementById("selectedPlanPill");
+    const generateQuoteBtn = document.getElementById("generateQuoteBtn");
+    const checkPaymentBtn = document.getElementById("checkPaymentBtn");
+    const activateBtn = document.getElementById("activateBtn");
+    const quoteBox = document.getElementById("quoteBox");
+    const quoteDetails = document.getElementById("quoteDetails");
+    const statusBox = document.getElementById("statusBox");
+    const statusDetails = document.getElementById("statusDetails");
+    const planButtons = document.querySelectorAll("[data-plan-select]");
+
+    let currentQuote = null;
+
+    function safeText(value){
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function escapeHtml(value){
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setSelectedPlan(plan){
+      subPlan.value = plan;
+      selectedPlanPill.textContent = `Selected Plan: ${plan}`;
+    }
+
+    function renderRows(target, rows){
+      target.innerHTML = rows.map(([label, value, isCode]) => `
+        <div class="kv-row">
+          <strong>${escapeHtml(label)}</strong>
+          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
+        </div>
+      `).join("");
+    }
+
+    function showStatus(rows){
+      statusBox.hidden = false;
+      renderRows(statusDetails, rows);
+    }
+
+    planButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const plan = btn.getAttribute("data-plan-select");
+        if (!plan) return;
+        setSelectedPlan(plan);
+        document.getElementById("subscribe").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    subPlan.addEventListener("change", () => setSelectedPlan(subPlan.value));
+
+    generateQuoteBtn.addEventListener("click", async () => {
+      const walletAddress = subWallet.value.trim();
+      const planCode = subPlan.value.trim();
+
+      if (!walletAddress) {
+        showStatus([["Error", "Enter an XRPL wallet address before generating a quote.", false]]);
+        return;
+      }
+
+      generateQuoteBtn.disabled = true;
+      checkPaymentBtn.disabled = true;
+      activateBtn.disabled = true;
+      quoteBox.hidden = true;
+      currentQuote = null;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/quote`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletAddress, planCode })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.message || data.error || "Quote request failed");
+        }
+
+        currentQuote = data;
+        quoteBox.hidden = false;
+
+        renderRows(quoteDetails, [
+          ["Plan", `${safeText(data.planName)} (${safeText(data.planCode)})`, false],
+          ["Wallet", safeText(data.walletAddress), true],
+          ["Subscription Wallet", safeText(data.subscriptionWallet), true],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Amount", `${safeText(data.amountXrp)} XRP`, true],
+          ["Quote Reference", safeText(data.quoteReference), true],
+          ["Created", safeText(data.quoteCreatedAt), false],
+          ["Expires", safeText(data.quoteExpiresAt), false],
+          ["Payment Request ID", safeText(data.paymentRequestId), true]
+        ]);
+
+        showStatus([
+          ["Next Step", "Send the exact XRP amount to the subscription wallet using the destination tag shown above.", false],
+          ["Memo", "Include the quote reference as memo when possible.", false]
+        ]);
+
+        checkPaymentBtn.disabled = false;
+        activateBtn.disabled = false;
+      } catch (err) {
+        showStatus([["Error", err instanceof Error ? err.message : "Quote request failed", false]]);
+      } finally {
+        generateQuoteBtn.disabled = false;
+      }
+    });
+
+    checkPaymentBtn.addEventListener("click", async () => {
+      if (!currentQuote?.paymentRequestId) {
+        showStatus([["Error", "Generate a quote first.", false]]);
+        return;
+      }
+
+      checkPaymentBtn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/check-payment?paymentRequestId=${encodeURIComponent(currentQuote.paymentRequestId)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.message || data.error || "Payment check failed");
+        }
+
+        showStatus([
+          ["Matched", data.matched ? "Yes" : "No", false],
+          ["Request Status", safeText(data.status), false],
+          ["Payment Request ID", safeText(data.paymentRequestId), true],
+          ["Transaction Hash", safeText(data.txHash), true],
+          ["From Wallet", safeText(data.fromAddress), true],
+          ["To Wallet", safeText(data.toAddress), true],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Amount", data.amountXrp ? `${data.amountXrp} XRP` : "—", false],
+          ["Memo", safeText(data.memoText), false]
+        ]);
+      } catch (err) {
+        showStatus([["Error", err instanceof Error ? err.message : "Payment check failed", false]]);
+      } finally {
+        checkPaymentBtn.disabled = false;
+      }
+    });
+
+    activateBtn.addEventListener("click", async () => {
+      if (!currentQuote?.paymentRequestId) {
+        showStatus([["Error", "Generate a quote first.", false]]);
+        return;
+      }
+
+      activateBtn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/activate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentRequestId: currentQuote.paymentRequestId })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          showStatus([
+            ["Error", safeText(data.error || data.message || "Activation failed"), false],
+            ["Expected Wallet", safeText(data.expectedWalletAddress), true],
+            ["Payer Wallet", safeText(data.payerWalletAddress), true],
+            ["Payment Request ID", safeText(data.paymentRequestId), true],
+            ["Transaction Hash", safeText(data.txHash), true]
+          ]);
+          return;
+        }
+
+        showStatus([
+          ["Wallet", safeText(data.walletAddress), true],
+          ["Plan", safeText(data.planCode), false],
+          ["Status", safeText(data.status), false],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Started", safeText(data.startedAt), false],
+          ["Expires", safeText(data.expiresAt), false],
+          ["Payment Request ID", safeText(data.paymentRequestId), true],
+          ["Transaction Hash", safeText(data.txHash), true]
+        ]);
+      } catch (err) {
+        showStatus([["Error", err instanceof Error ? err.message : "Activation failed", false]]);
+      } finally {
+        activateBtn.disabled = false;
+      }
+    });
+
+    setSelectedPlan(subPlan.value);
+  </script>
+
 </body>
 </html>
