@@ -375,6 +375,11 @@
         <div class="status-box" id="statusBox" hidden>
           <div class="kv" id="statusDetails"></div>
         </div>
+        <div class="panel" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
+          <h3 style="margin:0 0 10px;">Subscriber Utility</h3>
+          <p style="margin:0;color:var(--muted);line-height:1.55;">This wallet has paid access. Open the utility available for this tier.</p>
+          <div style="margin-top:12px;"><a class="btn btn-primary" id="accountUtilityLink" href="/starter.html" style="text-decoration:none;">Open Starter Utility</a></div>
+        </div>
       </div>
     </section>
   </main>
@@ -391,6 +396,8 @@
     const checkStatusBtn = document.getElementById("checkStatusBtn");
     const statusBox = document.getElementById("statusBox");
     const statusDetails = document.getElementById("statusDetails");
+    const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
+    const accountUtilityLink = document.getElementById("accountUtilityLink");
 
     function safeText(value){
       if (value === null || value === undefined || value === "") return "—";
@@ -425,6 +432,7 @@
       }
 
       checkStatusBtn.disabled = true;
+      accountUtilityLauncher.hidden = true;
 
       try {
         const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
@@ -433,6 +441,9 @@
         if (!res.ok || !data.ok) {
           throw new Error(data.error || data.message || "Status lookup failed");
         }
+
+        const plan = String(data.planCode || "").toLowerCase();
+        const allowed = data.active === true && ["starter","pro","developer"].includes(plan);
 
         renderRows([
           ["Wallet", safeText(data.walletAddress), true],
@@ -443,6 +454,11 @@
           ["Started", safeText(data.startedAt), false],
           ["Expires", safeText(data.expiresAt), false]
         ]);
+
+        if (allowed) {
+          accountUtilityLauncher.hidden = false;
+          accountUtilityLink.href = `/starter.html?wallet=${encodeURIComponent(wallet)}`;
+        }
       } catch (err) {
         renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
       } finally {
