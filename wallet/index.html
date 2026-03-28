@@ -1657,5 +1657,90 @@
 
     fetchHealthAndVersion();
   </script>
+
+<script>
+(function(){
+  const AUTOLOAD_WALLET_QUERY_PARAM = true;
+  const params = new URLSearchParams(window.location.search);
+  const incomingWallet =
+    (params.get("wallet") || params.get("address") || params.get("account") || "").trim();
+
+  if (!incomingWallet) return;
+
+  function looksLikeWallet(value){
+    return /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(String(value || "").trim());
+  }
+
+  if (!looksLikeWallet(incomingWallet)) return;
+
+  function findWalletInput(){
+    return (
+      document.querySelector('.search input') ||
+      document.querySelector('input[type="text"]') ||
+      document.querySelector('input')
+    );
+  }
+
+  function findSearchButton(){
+    return (
+      document.querySelector('.search .btn-primary') ||
+      document.querySelector('.search button') ||
+      document.querySelector('button.btn-primary') ||
+      document.querySelector('button')
+    );
+  }
+
+  function triggerSearch(input){
+    const btn = findSearchButton();
+
+    if (btn) {
+      btn.click();
+      return;
+    }
+
+    if (input) {
+      input.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        which: 13,
+        keyCode: 13,
+        bubbles: true
+      }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function applyWalletAndRun(){
+    const input = findWalletInput();
+    if (!input) return false;
+
+    input.value = incomingWallet;
+    input.setAttribute("value", incomingWallet);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("wallet", incomingWallet);
+    history.replaceState({}, "", url);
+
+    setTimeout(() => triggerSearch(input), 120);
+    return true;
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!applyWalletAndRun()) {
+        setTimeout(applyWalletAndRun, 250);
+      }
+    });
+  } else {
+    if (!applyWalletAndRun()) {
+      setTimeout(applyWalletAndRun, 250);
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
