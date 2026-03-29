@@ -565,7 +565,63 @@
       font-size:14px;
     }
 
-    .footer{
+    
+    .code-block{
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+
+    .code-label{
+      color:var(--soft);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .code-line{
+      color:#dbe8ff;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:12px;
+      line-height:1.6;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .copy-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .copy-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(118,156,228,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .copy-btn:hover{
+      transform:translateY(-1px);
+    }
+
+.footer{
       padding:20px 0 34px;
       color:var(--soft);
       font-size:13px;
@@ -746,6 +802,11 @@
             <h2 class="section-title">Endpoint Surface</h2>
             <div class="endpoint-grid" id="endpointGrid"></div>
           </div>
+
+          <div class="panel">
+            <h2 class="section-title">Developer Request Tools</h2>
+            <div class="dev-grid" id="requestTools"></div>
+          </div>
         </div>
 
         <div class="stack">
@@ -821,6 +882,7 @@
 
     const devGrid = document.getElementById("devGrid");
     const endpointGrid = document.getElementById("endpointGrid");
+    const requestTools = document.getElementById("requestTools");
     const signalGrid = document.getElementById("signalGrid");
 
     const classificationCopy = document.getElementById("classificationCopy");
@@ -904,6 +966,7 @@
       readoutPills.innerHTML = "";
       devGrid.innerHTML = "";
       endpointGrid.innerHTML = "";
+      if (requestTools) requestTools.innerHTML = "";
       signalGrid.innerHTML = "";
       classificationCopy.textContent = "Classification data will load after Developer unlock if available.";
       statementCopy.textContent = "Statement data will load after Developer unlock if available.";
@@ -1009,7 +1072,74 @@
       developerSummary.textContent = summary;
     }
 
-    function updateDeveloperShell(allowed){
+
+    function buildToolCard(label, value, copyValue){
+      return `
+        <div class="code-block">
+          <div class="code-label">${escapeHtml(label)}</div>
+          <div class="code-line">${escapeHtml(value)}</div>
+          <div class="copy-row">
+            <button class="copy-btn" type="button" data-copy="${escapeHtml(copyValue)}">Copy</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindCopyButtons(){
+      document.querySelectorAll("[data-copy]").forEach((btn) => {
+        btn.onclick = async () => {
+          const value = btn.getAttribute("data-copy") || "";
+          try {
+            await navigator.clipboard.writeText(value);
+            const original = btn.textContent;
+            btn.textContent = "Copied";
+            setTimeout(() => {
+              btn.textContent = original;
+            }, 1200);
+          } catch (err) {
+            btn.textContent = "Copy Failed";
+            setTimeout(() => {
+              btn.textContent = "Copy";
+            }, 1200);
+          }
+        };
+      });
+    }
+
+    function renderRequestTools(wallet, allowed){
+      if (!requestTools) return;
+
+      if (!allowed) {
+        requestTools.innerHTML = buildToolCard(
+          "Developer tools locked",
+          "Upgrade this same wallet to Developer to unlock request tools and endpoint helpers.",
+          "Developer tools locked"
+        );
+        bindCopyButtons();
+        return;
+      }
+
+      const statusUrl = `${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`;
+      const classificationUrl = `${API_BASE}/api/classification?wallet=${encodeURIComponent(wallet)}`;
+      const statementUrl = `${API_BASE}/api/statement?wallet=${encodeURIComponent(wallet)}`;
+
+      const fetchStatus = `fetch("${statusUrl}").then(r => r.json()).then(console.log)`;
+      const fetchClassification = `fetch("${classificationUrl}").then(r => r.json()).then(console.log)`;
+      const fetchStatement = `fetch("${statementUrl}").then(r => r.json()).then(console.log)`;
+
+      requestTools.innerHTML = [
+        buildToolCard("Status URL", statusUrl, statusUrl),
+        buildToolCard("Classification URL", classificationUrl, classificationUrl),
+        buildToolCard("Statement URL", statementUrl, statementUrl),
+        buildToolCard("Fetch Example: Status", fetchStatus, fetchStatus),
+        buildToolCard("Fetch Example: Classification", fetchClassification, fetchClassification),
+        buildToolCard("Fetch Example: Statement", fetchStatement, fetchStatement)
+      ].join("");
+
+      bindCopyButtons();
+    }
+
+    function updateDeveloperShell(allowed, wallet){
       if (!allowed) {
         devGrid.innerHTML = buildCard(
           "dev-card",
@@ -1028,6 +1158,8 @@
           buildCard("signal-card", "Upgrade path", "Upgrade this same wallet to Developer if it needs the top-tier build surface."),
           buildCard("signal-card", "Identity posture", "Wallet is the identity layer, so Developer rights must belong to this same address.")
         ].join("");
+
+        renderRequestTools(wallet, false);
         return;
       }
 
@@ -1035,7 +1167,7 @@
         buildCard(
           "dev-card",
           "Integration posture",
-          "Developer is where AUGUR should feel like a build surface. This tier should eventually carry docs, examples, access posture, and implementation guidance."
+          "Developer is where AUGUR should feel like a build surface. This tier now includes live request tools tied to the current wallet."
         ),
         buildCard(
           "dev-card",
@@ -1045,7 +1177,7 @@
         buildCard(
           "dev-card",
           "Next build target",
-          "The next hard upgrade here is turning this shell into a real integration console with docs, examples, and cleaner endpoint interaction patterns."
+          "The next hard upgrade here is turning this into a real integration console with live docs, examples, and cleaner endpoint interaction patterns."
         )
       ].join("");
 
@@ -1072,9 +1204,11 @@
 
       signalGrid.innerHTML = [
         buildCard("signal-card", "Build posture", "This wallet is in the correct paid tier for the top-level integration surface."),
-        buildCard("signal-card", "Endpoint posture", "Developer should become the cleanest place to understand what AUGUR exposes and how it should be consumed."),
-        buildCard("signal-card", "Execution posture", "The next real move is replacing passive endpoint cards with live examples, docs, and integration guidance.")
+        buildCard("signal-card", "Endpoint posture", "Developer now includes wallet-bound request helpers for the core current endpoints."),
+        buildCard("signal-card", "Execution posture", "The next real move is replacing passive helper blocks with full docs, examples, and test consoles.")
       ].join("");
+
+      renderRequestTools(wallet, true);
     }
 
     async function loadOptionalIntelligence(wallet, allowed){
@@ -1176,7 +1310,7 @@
 
         updateMetrics(data, allowed);
         updateReadout(data, allowed);
-        updateDeveloperShell(allowed);
+        updateDeveloperShell(allowed, wallet);
 
         resultShell.hidden = false;
 
