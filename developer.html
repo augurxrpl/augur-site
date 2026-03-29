@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>AUGUR Developer Utility</title>
+  <style>
+    :root{
+      --line:rgba(118,156,228,.14);
+      --line-strong:rgba(118,156,228,.22);
+      --text:#eef4ff;
+      --muted:#9fb0cf;
+      --soft:#6f84a8;
+      --blue:#57a6ff;
+      --blue2:#9fd8ff;
+      --good:#3ddc97;
+      --warn:#ffbf57;
+      --bad:#ff6b7d;
+      --shadow:0 18px 44px rgba(0,0,0,.28);
+      --radius:24px;
+      --panel:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
+      --panel-soft:linear-gradient(180deg,rgba(21,36,62,.92),rgba(10,18,33,.92));
+      --chip:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(87,166,255,.10), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(80,200,255,.08), transparent 40%),
+        linear-gradient(180deg,#07101c 0%,#08101c 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    .wrap{
+      width:min(1280px, calc(100% - 36px));
+      padding:0 18px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(14px);
+      background:rgba(5,11,21,.84);
+      border-bottom:1px solid rgba(118,156,228,.12);
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .nav{
+      min-height:74px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .nav-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      width:100%;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-decoration:none;
+      color:var(--text);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .brand-mark{
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg,#12305e,#0b1f44);
+      border:1px solid rgba(139,203,255,.22);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+
+    .brand-mark img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      padding:6px;
+      display:block;
+    }
+
+    .brand-copy{
+      display:grid;
+      gap:2px;
+    }
+
+    .brand-copy small{
+      color:var(--muted);
+      font-size:10px;
+      line-height:1;
+      letter-spacing:.16em;
+    }
+
+    .brand-copy span{
+      color:var(--text);
+      font-size:18px;
+      line-height:1;
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      color:var(--muted);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:700;
+      padding:10px 12px;
+      border-radius:12px;
+    }
+
+    .nav-link:hover,
+    .nav-link.active{
+      background:var(--chip);
+      color:var(--text);
+    }
+
+    .mobile-nav{
+      display:none;
+      width:100%;
+      justify-content:flex-start;
+      gap:8px;
+      flex-wrap:wrap;
+      padding-top:12px;
+      padding-bottom:12px;
+      border-top:1px solid rgba(118,156,228,.10);
+    }
+
+    .mobile-nav a{
+      min-height:48px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 10px;
+      border-radius:12px;
+      text-decoration:none;
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .mobile-nav a:hover,
+    .mobile-nav a.active{
+      background:var(--chip);
+      color:var(--text);
+    }
+
+    main{
+      padding:18px 0 44px;
+    }
+
+    .hero{
+      display:grid;
+      gap:14px;
+      padding-top:10px;
+      margin-bottom:18px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(87,166,255,.08);
+      border:1px solid rgba(87,166,255,.14);
+      color:var(--blue);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    h1{
+      margin:0;
+      font-size:42px;
+      line-height:1.02;
+      letter-spacing:-1px;
+    }
+
+    .lede{
+      margin:0;
+      color:var(--muted);
+      font-size:17px;
+      max-width:900px;
+      line-height:1.55;
+    }
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .top-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .field{
+      display:grid;
+      gap:8px;
+    }
+
+    .field label{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.03em;
+      color:var(--text);
+      text-transform:uppercase;
+    }
+
+    .input{
+      width:100%;
+      min-height:52px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.16);
+      background:var(--chip);
+      color:var(--text);
+      padding:0 14px;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+    }
+
+    .input::placeholder{ color:var(--soft); }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:0 16px;
+      border-radius:14px;
+      border:1px solid transparent;
+      text-decoration:none;
+      font-weight:900;
+      font-size:14px;
+      cursor:pointer;
+      transition:transform .16s ease, opacity .16s ease, border-color .16s ease;
+    }
+
+    .btn:hover{ transform:translateY(-1px); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+    .btn-primary{
+      color:#07101c;
+      background:linear-gradient(180deg,var(--blue2),var(--blue));
+      box-shadow:0 10px 22px rgba(87,166,255,.28);
+    }
+
+    .btn-secondary{
+      color:var(--text);
+      background:var(--chip);
+      border-color:rgba(118,156,228,.16);
+    }
+
+    .btn-ghost{
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
+      border-color:rgba(118,156,228,.12);
+    }
+
+    .status-card h2,
+    .section-title{
+      margin:0 0 14px;
+      font-size:20px;
+      line-height:1.15;
+    }
+
+    .status-box[hidden],
+    .result-shell[hidden],
+    .error-shell[hidden],
+    .inactive-shell[hidden],
+    .loading-shell[hidden]{
+      display:none;
+    }
+
+    .kv{
+      display:grid;
+      gap:8px;
+    }
+
+    .kv-row{
+      display:grid;
+      grid-template-columns:160px 1fr;
+      gap:10px;
+      align-items:start;
+      padding-top:8px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .kv-row:first-child{
+      border-top:0;
+      padding-top:0;
+    }
+
+    .kv-row strong{
+      color:var(--text);
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    .kv-row span,
+    .kv-row code{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .kv-row code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background:var(--chip);
+      padding:2px 6px;
+      border-radius:8px;
+      color:var(--text);
+    }
+
+    .micro{
+      color:var(--soft);
+      font-size:13px;
+      line-height:1.5;
+      margin-top:12px;
+    }
+
+    .mini-pill-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .mini-pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:32px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+
+    .mini-pill.good{
+      color:#c8ffe2;
+      border-color:rgba(61,220,151,.26);
+      background:rgba(61,220,151,.12);
+    }
+
+    .mini-pill.warn{
+      color:#ffe8b8;
+      border-color:rgba(255,191,87,.26);
+      background:rgba(255,191,87,.12);
+    }
+
+    .mini-pill.bad{
+      color:#ffd1d8;
+      border-color:rgba(255,107,125,.26);
+      background:rgba(255,107,125,.12);
+    }
+
+    .mini-pill.blue{
+      color:#dcebff;
+      border-color:rgba(87,166,255,.26);
+      background:rgba(87,166,255,.12);
+    }
+
+    .result-shell{
+      display:grid;
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .metric{
+      background:var(--panel-soft);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      min-height:126px;
+      display:grid;
+      gap:8px;
+      align-content:start;
+    }
+
+    .metric-label{
+      color:var(--soft);
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .metric-value{
+      color:var(--text);
+      font-size:20px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .metric-copy{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .content-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
+    }
+
+    .stack{
+      display:grid;
+      gap:18px;
+    }
+
+    .statement-box{
+      background:linear-gradient(180deg,rgba(18,35,63,.94),rgba(9,16,29,.94));
+      border:1px solid var(--line-strong);
+      border-radius:20px;
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    .statement-box p{
+      margin:0;
+      color:var(--text);
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .dev-grid,
+    .endpoint-grid,
+    .signal-grid,
+    .action-grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .dev-card,
+    .endpoint-card,
+    .signal-card,
+    .action-card{
+      background:var(--panel-soft);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      display:grid;
+      gap:8px;
+    }
+
+    .dev-card h3,
+    .endpoint-card h3,
+    .signal-card h3,
+    .action-card h3{
+      margin:0;
+      font-size:16px;
+      line-height:1.2;
+    }
+
+    .dev-card p,
+    .endpoint-card p,
+    .signal-card p,
+    .action-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .endpoint-path{
+      display:inline-flex;
+      align-items:center;
+      min-height:34px;
+      width:max-content;
+      max-width:100%;
+      padding:0 10px;
+      border-radius:10px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#dbe8ff;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:12px;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+
+    .notice{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    .notice.good{ border-color:rgba(61,220,151,.18); }
+    .notice.warn{ border-color:rgba(255,191,87,.18); }
+    .notice.bad{ border-color:rgba(255,107,125,.18); }
+
+    .notice h3{
+      margin:0;
+      font-size:18px;
+      line-height:1.2;
+    }
+
+    .notice p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .footer{
+      padding:20px 0 34px;
+      color:var(--soft);
+      font-size:13px;
+    }
+
+    @media (max-width:1080px){
+      .top-grid,
+      .content-grid{
+        grid-template-columns:1fr;
+      }
+
+      .metric-grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:900px){
+      .kv-row{ grid-template-columns:1fr; }
+      h1{ font-size:34px; }
+    }
+
+    @media (max-width:860px){
+      .nav-links{ display:none; }
+      .mobile-nav{ display:flex; }
+    }
+
+    @media (max-width:640px){
+      .metric-grid{ grid-template-columns:1fr; }
+      .wrap{
+        width:min(1280px, calc(100% - 24px));
+        padding:0 12px;
+      }
+      .panel,.notice{ padding:18px; }
+      .btn-row{ flex-direction:column; }
+      .btn{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="nav">
+        <div class="nav-inner">
+          <a class="brand" href="/">
+            <div class="brand-mark">
+              <img src="/assets/augur_xrpl_icon.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_xrpl_icon.png';" />
+            </div>
+            <div class="brand-copy">
+              <small>XRPL Intelligence</small>
+              <span>AUGUR</span>
+            </div>
+          </a>
+
+          <div class="nav-links">
+            <a class="nav-link" href="/">Dashboard</a>
+            <a class="nav-link" href="/wallet/">Wallet Search</a>
+            <a class="nav-link" href="/pricing.html">Pricing</a>
+            <a class="nav-link" href="/developers.html">Developers</a>
+            <a class="nav-link active" href="/account/">Account</a>
+          </div>
+
+          <div class="mobile-nav">
+            <a href="/">Dashboard</a>
+            <a href="/wallet/">Wallet Search</a>
+            <a href="/pricing.html">Pricing</a>
+            <a href="/developers.html">Developers</a>
+            <a href="/account/" class="active">Account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Developer Utility</div>
+      <h1>Developer Intelligence Surface</h1>
+      <p class="lede">
+        Developer is the top tier operator surface. This is where paid access shifts from wallet reads into integration posture, endpoint awareness, and build-focused AUGUR usage. Active Developer wallets only.
+      </p>
+    </section>
+
+    <section class="top-grid">
+      <div class="panel">
+        <div class="field">
+          <label for="walletInput">XRPL wallet</label>
+          <input class="input" id="walletInput" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="checkStatusBtn" type="button">Unlock Developer</button>
+          <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
+          <a class="btn btn-ghost" id="openWalletBtn" href="/wallet/">Open Wallet Search</a>
+        </div>
+
+        <p class="micro">
+          Developer access is restricted to active Developer wallets only. Pro does not unlock this surface.
+        </p>
+      </div>
+
+      <div class="panel status-card">
+        <h2>Developer Access Status</h2>
+
+        <div class="status-box" id="statusBox" hidden>
+          <div class="kv" id="statusDetails"></div>
+        </div>
+
+        <div class="loading-shell" id="loadingShell" hidden>
+          <div class="notice">
+            <h3>Checking Developer access</h3>
+            <p>Reading paid wallet state and preparing the Developer surface.</p>
+          </div>
+        </div>
+
+        <div class="error-shell" id="errorShell" hidden>
+          <div class="notice bad">
+            <h3>Status lookup failed</h3>
+            <p id="errorCopy">Unable to read this wallet right now.</p>
+          </div>
+        </div>
+
+        <div class="inactive-shell" id="inactiveShell" hidden>
+          <div class="notice warn">
+            <h3>Developer is locked</h3>
+            <p id="inactiveCopy">This wallet does not have active Developer-level access.</p>
+            <div class="btn-row" style="margin-top:2px;">
+              <a class="btn btn-primary" href="/pricing.html">Go to Pricing</a>
+              <a class="btn btn-secondary" id="inactiveWalletLink" href="/wallet/">Open Wallet Search</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-shell" id="resultShell" hidden>
+      <section class="metric-grid">
+        <div class="metric">
+          <div class="metric-label">Access State</div>
+          <div class="metric-value" id="metricAccess">Locked</div>
+          <div class="metric-copy" id="metricAccessCopy">Developer unlocks only for active Developer wallets.</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Plan Class</div>
+          <div class="metric-value" id="metricPlan">None</div>
+          <div class="metric-copy" id="metricPlanCopy">No Developer-tier wallet detected yet.</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Runway</div>
+          <div class="metric-value" id="metricTime">Unknown</div>
+          <div class="metric-copy" id="metricTimeCopy">Subscription timing posture will load here.</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Build Readiness</div>
+          <div class="metric-value" id="metricUtility">Standby</div>
+          <div class="metric-copy" id="metricUtilityCopy">Developer actions appear once access is verified.</div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="stack">
+          <div class="panel">
+            <h2 class="section-title">Developer Readout</h2>
+            <div class="mini-pill-row" id="readoutPills"></div>
+            <div class="statement-box" style="margin-top:14px;">
+              <p id="developerSummary">Run a wallet check to generate the Developer readout.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 class="section-title">Integration Posture</h2>
+            <div class="dev-grid" id="devGrid"></div>
+          </div>
+
+          <div class="panel">
+            <h2 class="section-title">Endpoint Surface</h2>
+            <div class="endpoint-grid" id="endpointGrid"></div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <h2 class="section-title">Advanced Build Summary</h2>
+            <div class="statement-box">
+              <p id="classificationCopy">Classification data will load after Developer unlock if available.</p>
+              <p id="statementCopy">Statement data will load after Developer unlock if available.</p>
+              <p id="developerEdgeCopy">Developer posture will render stronger integration guidance after unlock.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 class="section-title">Developer Signals</h2>
+            <div class="signal-grid" id="signalGrid"></div>
+          </div>
+
+          <div class="panel">
+            <h2 class="section-title">Action Panel</h2>
+            <div class="action-grid">
+              <div class="action-card">
+                <h3>Open Full Wallet Report</h3>
+                <p>Launch the full wallet surface with the current wallet carried through.</p>
+                <a class="btn btn-primary" id="developerReportLink" href="/wallet/">Open Full Wallet Report</a>
+              </div>
+
+              <div class="action-card">
+                <h3>Open Pro Surface</h3>
+                <p>Drop into the Pro layer using this same wallet when you want the operator shell instead of the top-tier build shell.</p>
+                <a class="btn btn-secondary" id="proLink" href="/pro.html">Open Pro Utility</a>
+              </div>
+
+              <div class="action-card">
+                <h3>Run Developer Check Again</h3>
+                <p>Re-read the Developer gate without leaving the page.</p>
+                <button class="btn btn-ghost" id="rerunBtn" type="button">Recheck Developer Access</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      AUGUR Developer Utility • Wallet-based access • XRPL only
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.augurxrpl.com";
+
+    const walletInput = document.getElementById("walletInput");
+    const checkStatusBtn = document.getElementById("checkStatusBtn");
+    const rerunBtn = document.getElementById("rerunBtn");
+    const openWalletBtn = document.getElementById("openWalletBtn");
+
+    const statusBox = document.getElementById("statusBox");
+    const statusDetails = document.getElementById("statusDetails");
+
+    const loadingShell = document.getElementById("loadingShell");
+    const errorShell = document.getElementById("errorShell");
+    const errorCopy = document.getElementById("errorCopy");
+
+    const inactiveShell = document.getElementById("inactiveShell");
+    const inactiveCopy = document.getElementById("inactiveCopy");
+    const inactiveWalletLink = document.getElementById("inactiveWalletLink");
+
+    const resultShell = document.getElementById("resultShell");
+    const readoutPills = document.getElementById("readoutPills");
+    const developerSummary = document.getElementById("developerSummary");
+
+    const devGrid = document.getElementById("devGrid");
+    const endpointGrid = document.getElementById("endpointGrid");
+    const signalGrid = document.getElementById("signalGrid");
+
+    const classificationCopy = document.getElementById("classificationCopy");
+    const statementCopy = document.getElementById("statementCopy");
+    const developerEdgeCopy = document.getElementById("developerEdgeCopy");
+
+    const developerReportLink = document.getElementById("developerReportLink");
+    const proLink = document.getElementById("proLink");
+
+    const metricAccess = document.getElementById("metricAccess");
+    const metricAccessCopy = document.getElementById("metricAccessCopy");
+    const metricPlan = document.getElementById("metricPlan");
+    const metricPlanCopy = document.getElementById("metricPlanCopy");
+    const metricTime = document.getElementById("metricTime");
+    const metricTimeCopy = document.getElementById("metricTimeCopy");
+    const metricUtility = document.getElementById("metricUtility");
+    const metricUtilityCopy = document.getElementById("metricUtilityCopy");
+
+    const params = new URLSearchParams(window.location.search);
+
+    function safeText(value){
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function escapeHtml(value){
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function looksLikeWallet(value){
+      return /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(String(value || "").trim());
+    }
+
+    function formatDate(value){
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return d.toLocaleString(undefined, {
+        year:"numeric",
+        month:"short",
+        day:"numeric",
+        hour:"numeric",
+        minute:"2-digit"
+      });
+    }
+
+    function daysUntil(value){
+      if (!value) return null;
+      const t = new Date(value).getTime();
+      if (Number.isNaN(t)) return null;
+      return Math.ceil((t - Date.now()) / 86400000);
+    }
+
+    function renderRows(rows){
+      statusBox.hidden = false;
+      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
+        <div class="kv-row">
+          <strong>${escapeHtml(label)}</strong>
+          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
+        </div>
+      `).join("");
+    }
+
+    function setLoading(on){
+      loadingShell.hidden = !on;
+      checkStatusBtn.disabled = on;
+      rerunBtn.disabled = on;
+    }
+
+    function resetStates(){
+      statusBox.hidden = true;
+      errorShell.hidden = true;
+      inactiveShell.hidden = true;
+      resultShell.hidden = true;
+      statusDetails.innerHTML = "";
+      readoutPills.innerHTML = "";
+      devGrid.innerHTML = "";
+      endpointGrid.innerHTML = "";
+      signalGrid.innerHTML = "";
+      classificationCopy.textContent = "Classification data will load after Developer unlock if available.";
+      statementCopy.textContent = "Statement data will load after Developer unlock if available.";
+      developerEdgeCopy.textContent = "Developer posture will render stronger integration guidance after unlock.";
+    }
+
+    function buildPill(text, tone){
+      return `<span class="mini-pill ${tone ? escapeHtml(tone) : ""}">${escapeHtml(text)}</span>`;
+    }
+
+    function buildCard(className, title, copy, extra = ""){
+      return `
+        <div class="${className}">
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(copy)}</p>
+          ${extra}
+        </div>
+      `;
+    }
+
+    function wireWalletLinks(wallet){
+      const target = looksLikeWallet(wallet) ? `/wallet/?wallet=${encodeURIComponent(wallet)}` : "/wallet/";
+      developerReportLink.href = target;
+      openWalletBtn.href = target;
+      inactiveWalletLink.href = target;
+      proLink.href = looksLikeWallet(wallet) ? `/pro.html?wallet=${encodeURIComponent(wallet)}` : "/pro.html";
+    }
+
+    function updateMetrics(data, allowed){
+      const plan = String(data.planCode || "").toLowerCase();
+      const remainingDays = daysUntil(data.expiresAt);
+
+      metricAccess.textContent = allowed ? "Unlocked" : "Locked";
+      metricAccessCopy.textContent = allowed
+        ? "This wallet clears the Developer gate and can use the top-tier surface."
+        : "This wallet does not currently clear the Developer access gate.";
+
+      metricPlan.textContent = data.planCode ? String(data.planCode).toUpperCase() : "None";
+      metricPlanCopy.textContent = plan
+        ? `${String(data.planCode).toUpperCase()} tier detected from live subscription status.`
+        : "No Developer-tier wallet detected for this address.";
+
+      if (allowed) {
+        if (remainingDays === null) {
+          metricTime.textContent = "Active";
+          metricTimeCopy.textContent = "The plan is active, but expiry timing could not be read cleanly.";
+        } else if (remainingDays <= 3) {
+          metricTime.textContent = `${remainingDays}d`;
+          metricTimeCopy.textContent = "Developer access is active, but renewal pressure is close.";
+        } else if (remainingDays <= 10) {
+          metricTime.textContent = `${remainingDays}d`;
+          metricTimeCopy.textContent = "The plan is active with moderate runway left.";
+        } else {
+          metricTime.textContent = `${remainingDays}d`;
+          metricTimeCopy.textContent = "The plan has healthy runway remaining.";
+        }
+
+        metricUtility.textContent = "Ready";
+        metricUtilityCopy.textContent = "Developer actions, endpoint posture, and build-facing shell are unlocked.";
+      } else {
+        metricTime.textContent = "Inactive";
+        metricTimeCopy.textContent = "No active Developer subscription window is available for this wallet.";
+        metricUtility.textContent = "Standby";
+        metricUtilityCopy.textContent = "Upgrade to Developer to unlock the top-tier surface.";
+      }
+    }
+
+    function updateReadout(data, allowed){
+      const plan = String(data.planCode || "").toLowerCase();
+      const remainingDays = daysUntil(data.expiresAt);
+
+      const pills = [];
+      pills.push(buildPill(data.active === true ? "Active" : "Inactive", data.active === true ? "good" : "bad"));
+      pills.push(buildPill(data.planCode ? String(data.planCode).toUpperCase() : "No Plan", plan ? "blue" : "warn"));
+
+      if (data.destinationTag !== null && data.destinationTag !== undefined && data.destinationTag !== "") {
+        pills.push(buildPill(`Tag ${data.destinationTag}`, "blue"));
+      }
+
+      if (allowed && remainingDays !== null) {
+        pills.push(buildPill(remainingDays <= 3 ? "Renew Soon" : "Developer Ready", remainingDays <= 3 ? "warn" : "good"));
+      }
+
+      readoutPills.innerHTML = pills.join("");
+
+      if (!allowed) {
+        developerSummary.textContent = "This wallet is readable, but it does not currently hold active Developer-level access. Developer stays locked until the wallet is on an active Developer subscription.";
+        return;
+      }
+
+      let summary = "This wallet is active on Developer. It clears the top-tier gate and is positioned for build-focused AUGUR usage, not just operator-level wallet review.";
+
+      if (remainingDays !== null) {
+        if (remainingDays <= 3) {
+          summary += " Renewal should be handled soon so Developer access does not lapse.";
+        } else if (remainingDays <= 10) {
+          summary += " Time runway is acceptable, but expiry is no longer distant.";
+        } else {
+          summary += " Time runway is healthy and the wallet is in a stable top-tier paid posture.";
+        }
+      }
+
+      developerSummary.textContent = summary;
+    }
+
+    function updateDeveloperShell(allowed){
+      if (!allowed) {
+        devGrid.innerHTML = buildCard(
+          "dev-card",
+          "Integration posture locked",
+          "Developer-only build posture is not available to Free, Starter, or Pro wallets."
+        );
+
+        endpointGrid.innerHTML = buildCard(
+          "endpoint-card",
+          "Endpoint surface locked",
+          "The endpoint reference shell belongs to Developer only."
+        );
+
+        signalGrid.innerHTML = [
+          buildCard("signal-card", "Build posture", "This wallet does not clear the Developer gate."),
+          buildCard("signal-card", "Upgrade path", "Upgrade this same wallet to Developer if it needs the top-tier build surface."),
+          buildCard("signal-card", "Identity posture", "Wallet is the identity layer, so Developer rights must belong to this same address.")
+        ].join("");
+        return;
+      }
+
+      devGrid.innerHTML = [
+        buildCard(
+          "dev-card",
+          "Integration posture",
+          "Developer is where AUGUR should feel like a build surface. This tier should eventually carry docs, examples, access posture, and implementation guidance."
+        ),
+        buildCard(
+          "dev-card",
+          "Top-tier workflow",
+          "This wallet is in the correct class to consume advanced AUGUR capability without being forced to live only in user-facing operator views."
+        ),
+        buildCard(
+          "dev-card",
+          "Next build target",
+          "The next hard upgrade here is turning this shell into a real integration console with docs, examples, and cleaner endpoint interaction patterns."
+        )
+      ].join("");
+
+      endpointGrid.innerHTML = [
+        buildCard(
+          "endpoint-card",
+          "Subscription status endpoint",
+          "Live subscription state is the first paid-gating layer that all higher-tier surfaces depend on.",
+          '<div class="endpoint-path">/api/subscription/status?wallet=...</div>'
+        ),
+        buildCard(
+          "endpoint-card",
+          "Classification endpoint",
+          "Classification is already part of the current read path and belongs in the Developer integration view.",
+          '<div class="endpoint-path">/api/classification?wallet=...</div>'
+        ),
+        buildCard(
+          "endpoint-card",
+          "Statement endpoint",
+          "Statement output is already part of the current intelligence path and should be available to Developer-facing workflows.",
+          '<div class="endpoint-path">/api/statement?wallet=...</div>'
+        )
+      ].join("");
+
+      signalGrid.innerHTML = [
+        buildCard("signal-card", "Build posture", "This wallet is in the correct paid tier for the top-level integration surface."),
+        buildCard("signal-card", "Endpoint posture", "Developer should become the cleanest place to understand what AUGUR exposes and how it should be consumed."),
+        buildCard("signal-card", "Execution posture", "The next real move is replacing passive endpoint cards with live examples, docs, and integration guidance.")
+      ].join("");
+    }
+
+    async function loadOptionalIntelligence(wallet, allowed){
+      if (!allowed) {
+        classificationCopy.textContent = "Classification is withheld here because the wallet did not pass the Developer access gate.";
+        statementCopy.textContent = "Statement readout is withheld here because the wallet did not pass the Developer access gate.";
+        developerEdgeCopy.textContent = "Upgrade this wallet to Developer to unlock the top-tier build surface.";
+        return;
+      }
+
+      classificationCopy.textContent = "Loading classification signal if available.";
+      statementCopy.textContent = "Loading statement signal if available.";
+      developerEdgeCopy.textContent = "Loading Developer build posture signal.";
+
+      const classificationUrl = `${API_BASE}/api/classification?wallet=${encodeURIComponent(wallet)}`;
+      const statementUrl = `${API_BASE}/api/statement?wallet=${encodeURIComponent(wallet)}`;
+
+      const [classificationRes, statementRes] = await Promise.allSettled([
+        fetch(classificationUrl).then(async res => {
+          const data = await res.json().catch(() => ({}));
+          return { ok: res.ok, data };
+        }),
+        fetch(statementUrl).then(async res => {
+          const data = await res.json().catch(() => ({}));
+          return { ok: res.ok, data };
+        })
+      ]);
+
+      if (classificationRes.status === "fulfilled" && classificationRes.value.ok && classificationRes.value.data) {
+        const payload = classificationRes.value.data;
+        const value =
+          payload.classification ||
+          payload.label ||
+          payload.tier ||
+          payload.result ||
+          payload.summary ||
+          JSON.stringify(payload);
+        classificationCopy.textContent = `Classification: ${typeof value === "string" ? value : JSON.stringify(value)}`;
+      } else {
+        classificationCopy.textContent = "Classification data is not available from the current response path for this wallet.";
+      }
+
+      if (statementRes.status === "fulfilled" && statementRes.value.ok && statementRes.value.data) {
+        const payload = statementRes.value.data;
+        const value =
+          payload.statement ||
+          payload.summary ||
+          payload.message ||
+          payload.result ||
+          JSON.stringify(payload);
+        statementCopy.textContent = `Statement: ${typeof value === "string" ? value : JSON.stringify(value)}`;
+      } else {
+        statementCopy.textContent = "Statement data is not available from the current response path for this wallet.";
+      }
+
+      developerEdgeCopy.textContent = "Developer posture is live. The next hard upgrade is replacing this shell with real docs, examples, and endpoint interaction tooling.";
+    }
+
+    async function runDeveloperCheck(){
+      const wallet = walletInput.value.trim();
+
+      resetStates();
+      wireWalletLinks(wallet);
+
+      if (!wallet) {
+        errorShell.hidden = false;
+        errorCopy.textContent = "Enter an XRPL wallet address.";
+        return;
+      }
+
+      if (!looksLikeWallet(wallet)) {
+        errorShell.hidden = false;
+        errorCopy.textContent = "That does not look like a valid XRPL wallet address.";
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || data.message || "Status lookup failed");
+        }
+
+        const plan = String(data.planCode || "").toLowerCase();
+        const allowed = data.active === true && ["developer"].includes(plan);
+
+        renderRows([
+          ["Wallet", safeText(data.walletAddress || wallet), true],
+          ["Plan", safeText(data.planCode), false],
+          ["Status", safeText(data.status), false],
+          ["Active", safeText(data.active), false],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Started", formatDate(data.startedAt), false],
+          ["Expires", formatDate(data.expiresAt), false]
+        ]);
+
+        updateMetrics(data, allowed);
+        updateReadout(data, allowed);
+        updateDeveloperShell(allowed);
+
+        resultShell.hidden = false;
+
+        if (!allowed) {
+          inactiveShell.hidden = false;
+          inactiveCopy.textContent = "This wallet does not currently have active Developer-level access. Pro is not enough here. Use Developer pricing, then come back and rerun the check.";
+          classificationCopy.textContent = "Classification is withheld here because the wallet did not pass the Developer access gate.";
+          statementCopy.textContent = "Statement readout is withheld here because the wallet did not pass the Developer access gate.";
+          developerEdgeCopy.textContent = "The top-tier build surface is locked until this wallet clears the Developer gate.";
+          return;
+        }
+
+        await loadOptionalIntelligence(wallet, allowed);
+      } catch (err) {
+        errorShell.hidden = false;
+        errorCopy.textContent = err instanceof Error ? err.message : "Status lookup failed";
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkStatusBtn.addEventListener("click", runDeveloperCheck);
+    rerunBtn.addEventListener("click", runDeveloperCheck);
+
+    walletInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        runDeveloperCheck();
+      }
+    });
+
+    const initialWallet = params.get("wallet");
+    if (initialWallet) {
+      walletInput.value = initialWallet;
+      wireWalletLinks(initialWallet);
+      runDeveloperCheck();
+    }
+  </script>
+</body>
+</html>
