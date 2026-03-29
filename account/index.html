@@ -461,9 +461,12 @@
           let utilityPath = "/starter.html";
           let utilityLabel = "Open Starter Utility";
 
-          if (plan === "pro" || plan === "developer") {
+          if (plan === "pro") {
             utilityPath = "/pro.html";
             utilityLabel = "Open Pro Utility";
+          } else if (plan === "developer") {
+            utilityPath = "/developer.html";
+            utilityLabel = "Open Developer Utility";
           }
 
           accountUtilityLink.href = `${utilityPath}?wallet=${encodeURIComponent(wallet)}`;
