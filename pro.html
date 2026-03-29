@@ -548,7 +548,83 @@
       font-size:14px;
     }
 
-    .footer{
+    
+    .slot-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .slot-card{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .slot-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .slot-name{
+      color:var(--text);
+      font-size:14px;
+      font-weight:900;
+    }
+
+    .slot-wallet{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      word-break:break-word;
+      min-height:34px;
+    }
+
+    .slot-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .slot-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(118,156,228,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      text-decoration:none;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .slot-btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .watchlist-toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    @media (max-width:760px){
+      .slot-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+.footer{
       padding:20px 0 34px;
       color:var(--soft);
       font-size:13px;
@@ -726,8 +802,13 @@
           </div>
 
           <div class="panel">
-            <h2 class="section-title">Watchlist Shell</h2>
+            <h2 class="section-title">Watchlist Surface</h2>
             <div class="watchlist-grid" id="watchlistGrid"></div>
+            <div class="watchlist-toolbar" id="watchlistToolbar" hidden>
+              <button class="btn btn-primary" id="saveCurrentWalletBtn" type="button">Save Current Wallet</button>
+              <button class="btn btn-ghost" id="clearWatchlistBtn" type="button">Clear Watchlist</button>
+            </div>
+            <div class="slot-grid" id="watchlistSlots" hidden></div>
           </div>
         </div>
 
@@ -804,7 +885,13 @@
 
     const compareGrid = document.getElementById("compareGrid");
     const watchlistGrid = document.getElementById("watchlistGrid");
+    const watchlistToolbar = document.getElementById("watchlistToolbar");
+    const watchlistSlots = document.getElementById("watchlistSlots");
+    const saveCurrentWalletBtn = document.getElementById("saveCurrentWalletBtn");
+    const clearWatchlistBtn = document.getElementById("clearWatchlistBtn");
     const insightList = document.getElementById("insightList");
+
+    const WATCHLIST_KEY = "augur_pro_watchlist_v1";
 
     const classificationCopy = document.getElementById("classificationCopy");
     const statementCopy = document.getElementById("statementCopy");
@@ -887,6 +974,13 @@
       readoutPills.innerHTML = "";
       compareGrid.innerHTML = "";
       watchlistGrid.innerHTML = "";
+      if (watchlistSlots) {
+        watchlistSlots.innerHTML = "";
+        watchlistSlots.hidden = true;
+      }
+      if (watchlistToolbar) {
+        watchlistToolbar.hidden = true;
+      }
       insightList.innerHTML = "";
       classificationCopy.textContent = "Classification data will load after Pro unlock if available.";
       statementCopy.textContent = "Statement data will load after Pro unlock if available.";
@@ -1016,7 +1110,104 @@
       proSummary.textContent = summary;
     }
 
-    function updateCompareAndWatchlist(allowed){
+
+    function getWatchlist(){
+      try {
+        const raw = localStorage.getItem(WATCHLIST_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.filter(looksLikeWallet).slice(0, 4) : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function setWatchlist(items){
+      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(items.filter(looksLikeWallet).slice(0, 4)));
+    }
+
+    function renderWatchlistSlots(currentWallet){
+      if (!watchlistSlots || !watchlistToolbar) return;
+
+      const items = getWatchlist();
+      watchlistToolbar.hidden = false;
+      watchlistSlots.hidden = false;
+
+      const slots = [0,1,2,3].map((idx) => {
+        const wallet = items[idx] || "";
+        const walletHtml = wallet
+          ? `<div class="slot-wallet">${escapeHtml(wallet)}</div>`
+          : `<div class="slot-wallet">Empty slot</div>`;
+
+        const actions = wallet
+          ? `
+            <div class="slot-actions">
+              <a class="slot-btn" href="/wallet/?wallet=${encodeURIComponent(wallet)}">Open Report</a>
+              <a class="slot-btn" href="/starter.html?wallet=${encodeURIComponent(wallet)}">Starter</a>
+              <button class="slot-btn" type="button" data-remove-watch="${idx}">Remove</button>
+            </div>
+          `
+          : `
+            <div class="slot-actions">
+              <button class="slot-btn" type="button" data-fill-watch="${idx}">Use Current Wallet</button>
+            </div>
+          `;
+
+        return `
+          <div class="slot-card">
+            <div class="slot-top">
+              <div class="slot-name">Watch Slot ${idx + 1}</div>
+              ${wallet ? '<span class="mini-pill blue">Saved</span>' : '<span class="mini-pill warn">Empty</span>'}
+            </div>
+            ${walletHtml}
+            ${actions}
+          </div>
+        `;
+      }).join("");
+
+      watchlistSlots.innerHTML = slots;
+
+      watchlistSlots.querySelectorAll("[data-remove-watch]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.getAttribute("data-remove-watch"));
+          const next = getWatchlist();
+          next.splice(idx, 1);
+          setWatchlist(next);
+          renderWatchlistSlots(currentWallet);
+        });
+      });
+
+      watchlistSlots.querySelectorAll("[data-fill-watch]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.getAttribute("data-fill-watch"));
+          if (!looksLikeWallet(currentWallet)) return;
+          const next = getWatchlist();
+          next[idx] = currentWallet;
+          setWatchlist(next);
+          renderWatchlistSlots(currentWallet);
+        });
+      });
+    }
+
+    function bindWatchlistActions(currentWallet){
+      if (saveCurrentWalletBtn) {
+        saveCurrentWalletBtn.onclick = () => {
+          if (!looksLikeWallet(currentWallet)) return;
+          const next = getWatchlist().filter((w) => w !== currentWallet);
+          next.unshift(currentWallet);
+          setWatchlist(next.slice(0, 4));
+          renderWatchlistSlots(currentWallet);
+        };
+      }
+
+      if (clearWatchlistBtn) {
+        clearWatchlistBtn.onclick = () => {
+          localStorage.removeItem(WATCHLIST_KEY);
+          renderWatchlistSlots(currentWallet);
+        };
+      }
+    }
+
+    function updateCompareAndWatchlist(allowed, wallet){
       if (!allowed) {
         compareGrid.innerHTML = buildCompareCard(
           "Comparison locked",
@@ -1027,38 +1218,49 @@
           "Watchlist locked",
           "Watchlist planning belongs to the Pro surface and stays locked until the wallet clears the Pro gate."
         );
+
+        if (watchlistToolbar) watchlistToolbar.hidden = true;
+        if (watchlistSlots) {
+          watchlistSlots.hidden = true;
+          watchlistSlots.innerHTML = "";
+        }
         return;
       }
 
+      const savedCount = getWatchlist().length;
+
       compareGrid.innerHTML = [
         buildCompareCard(
-          "Wallet comparison posture",
-          "This is the correct place to compare a primary wallet against secondary wallets, issuers, or tracked entities. The shell is now live and ready for deeper compare logic."
+          "Primary wallet locked in",
+          "The current wallet is now the anchor wallet for the Pro surface. Use the saved watchlist slots below as comparison targets and quick launch points."
         ),
         buildCompareCard(
           "Operator-side workflow",
-          "Pro is built for people tracking more than one wallet. It should become the daily operator surface, not just a prettier single-wallet page."
+          "Pro is built for people tracking more than one wallet. This page now holds saved watch targets locally so you can move faster without rebuilding context."
         ),
         buildCompareCard(
-          "Next compare build",
-          "The next hard upgrade here is adding real comparison slots with side-by-side wallet summaries, signal deltas, and posture differences."
+          "Saved compare posture",
+          `You currently have ${savedCount} saved watchlist ${savedCount === 1 ? "slot" : "slots"} available for quick report access and future compare expansion.`
         )
       ].join("");
 
       watchlistGrid.innerHTML = [
         buildWatchCard(
-          "Watchlist structure",
-          "This shell marks the future watchlist surface. Paid users should be able to track a small set of priority wallets without rebuilding context every time."
+          "Watchlist is now live",
+          "You can save the current wallet, keep up to four tracked wallets locally in this browser, and open reports or Starter views from each slot."
         ),
         buildWatchCard(
-          "Priority wallet planning",
-          "Use this tier to define the first saved wallet set: primary wallet, known counterparties, issuer wallet, and one or two high-interest external wallets."
+          "Fast operator loop",
+          "Use the current wallet as your anchor, then save related wallets into slots for repeated checks, issuer review, or behavior tracking."
         ),
         buildWatchCard(
-          "Next watchlist build",
-          "The next upgrade here is wallet slots with local persistence or backend-backed saved sets tied to the paid wallet identity."
+          "Next upgrade path",
+          "The next hard upgrade is true side-by-side compare logic using these saved slots as persistent targets."
         )
       ].join("");
+
+      bindWatchlistActions(wallet);
+      renderWatchlistSlots(wallet);
     }
 
     function updateInsights(data, allowed){
@@ -1213,7 +1415,7 @@
 
         updateMetrics(data, allowed);
         updateReadout(data, allowed);
-        updateCompareAndWatchlist(allowed);
+        updateCompareAndWatchlist(allowed, wallet);
         updateInsights(data, allowed);
 
         resultShell.hidden = false;
