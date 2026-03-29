@@ -242,7 +242,38 @@
       margin-top:12px;
     }
 
-    .pill{
+    
+    .tier-hud{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:28px;
+      padding:0 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin:10px 0 0;
+      border:1px solid rgba(118,156,228,.16);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      width:max-content;
+    }
+
+    .tier-hud.live{
+      color:#d8ffe9;
+      background:rgba(61,220,151,.12);
+      border-color:rgba(61,220,151,.24);
+    }
+
+    .tier-hud.build{
+      color:#ffe8b8;
+      background:rgba(255,191,87,.12);
+      border-color:rgba(255,191,87,.24);
+    }
+
+.pill{
       display:inline-flex;
       align-items:center;
       gap:8px;
@@ -811,6 +842,7 @@
         <div class="plan featured">
           <span class="tag blue">Recommended</span>
           <h3>Starter</h3>
+          <div class="tier-hud live">Utility Live</div>
           <p>For serious users who want more depth without jumping straight to full Pro.</p>
           <div class="price">
             <div class="num">$19</div>
@@ -830,6 +862,7 @@
         <div class="plan">
           <span class="tag">Pro</span>
           <h3>Pro</h3>
+          <div class="tier-hud build">Active Build</div>
           <p>For serious XRPL users, traders, builders, token teams, and researchers.</p>
           <div class="price">
             <div class="num">$49</div>
@@ -849,6 +882,7 @@
         <div class="plan">
           <span class="tag green">Infrastructure</span>
           <h3>Developer</h3>
+          <div class="tier-hud build">Active Build</div>
           <p>For integrations, bots, analytics products, internal tools, and XRPL builders.</p>
           <div class="price">
             <div class="num">$149</div>
