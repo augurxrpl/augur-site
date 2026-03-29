@@ -376,9 +376,11 @@
           <div class="kv" id="statusDetails"></div>
         </div>
         <div class="panel" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
-          <h3 style="margin:0 0 10px;">Subscriber Utility</h3>
-          <p style="margin:0;color:var(--muted);line-height:1.55;">This wallet has paid access. Open the utility available for this tier.</p>
-          <div style="margin-top:12px;"><a class="btn btn-primary" id="accountUtilityLink" href="/starter.html" style="text-decoration:none;">Open Starter Utility</a></div>
+          <h3 style="margin:0 0 10px;">Included Utilities</h3>
+          <p style="margin:0;color:var(--muted);line-height:1.55;">
+            This wallet has paid access. Open any included utility below.
+          </p>
+          <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
         </div>
       </div>
     </section>
@@ -397,7 +399,7 @@
     const statusBox = document.getElementById("statusBox");
     const statusDetails = document.getElementById("statusDetails");
     const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
-    const accountUtilityLink = document.getElementById("accountUtilityLink");
+    const accountUtilityLinks = document.getElementById("accountUtilityLinks");
 
     function safeText(value){
       if (value === null || value === undefined || value === "") return "—";
@@ -411,6 +413,38 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+    }
+
+
+    function renderUtilityLinks(plan, wallet){
+      if (!accountUtilityLinks) return;
+
+      const links = [];
+
+      if (["starter","pro","developer"].includes(plan)) {
+        links.push({
+          href: `/starter.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Starter Utility"
+        });
+      }
+
+      if (["pro","developer"].includes(plan)) {
+        links.push({
+          href: `/pro.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Pro Utility"
+        });
+      }
+
+      if (plan === "developer") {
+        links.push({
+          href: `/developer.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Developer Utility"
+        });
+      }
+
+      accountUtilityLinks.innerHTML = links.map((item) => `
+        <a class="btn btn-primary" href="${item.href}" style="text-decoration:none;">${item.label}</a>
+      `).join("");
     }
 
     function renderRows(rows){
@@ -457,20 +491,7 @@
 
         if (allowed) {
           accountUtilityLauncher.hidden = false;
-
-          let utilityPath = "/starter.html";
-          let utilityLabel = "Open Starter Utility";
-
-          if (plan === "pro") {
-            utilityPath = "/pro.html";
-            utilityLabel = "Open Pro Utility";
-          } else if (plan === "developer") {
-            utilityPath = "/developer.html";
-            utilityLabel = "Open Developer Utility";
-          }
-
-          accountUtilityLink.href = `${utilityPath}?wallet=${encodeURIComponent(wallet)}`;
-          accountUtilityLink.textContent = utilityLabel;
+          renderUtilityLinks(plan, wallet);
         }
       } catch (err) {
         renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
