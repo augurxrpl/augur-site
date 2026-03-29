@@ -457,7 +457,17 @@
 
         if (allowed) {
           accountUtilityLauncher.hidden = false;
-          accountUtilityLink.href = `/starter.html?wallet=${encodeURIComponent(wallet)}`;
+
+          let utilityPath = "/starter.html";
+          let utilityLabel = "Open Starter Utility";
+
+          if (plan === "pro" || plan === "developer") {
+            utilityPath = "/pro.html";
+            utilityLabel = "Open Pro Utility";
+          }
+
+          accountUtilityLink.href = `${utilityPath}?wallet=${encodeURIComponent(wallet)}`;
+          accountUtilityLink.textContent = utilityLabel;
         }
       } catch (err) {
         renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
