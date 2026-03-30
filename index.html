@@ -88,7 +88,6 @@
       width:100%;
       height:100%;
       object-fit:contain;
-      transform:translateY(-48px);
       display:block;
       transform:translateY(-48px);
     }
@@ -143,43 +142,47 @@
     }
 
 .mobile-nav{
-      display:none;
-      width:100%;
-      gap:10px;
-      overflow-x:visible;
+  display:flex;
+  gap:10px;
+  overflow-x:visible;
       flex-wrap:wrap;
-      padding-top:12px;
-      padding-bottom:6px;
-      border-top:1px solid rgba(118,156,228,.10);
-      -ms-overflow-style:none;
-      scrollbar-width:none;
-    }
+  padding-bottom:6px;
 
-    .mobile-nav::-webkit-scrollbar{
-      display:none;
-    }
+  display:none;
+  width:100%;
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(118,156,228,.10);
+}
 
-    .mobile-nav a{
-      flex:0 0 auto;
-      min-height:64px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:0 8px;
-      border-radius:12px;
-      text-decoration:none;
-      color:var(--muted);
-      background:rgba(255,255,255,.04);
-      font-size:13px;
-      font-weight:700;
-    }
+.mobile-nav::-webkit-scrollbar{
+  display:none;
+}
 
-    .mobile-nav a:hover,
-    .mobile-nav a.active{
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
-      color:var(--text);
-    }
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 8px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--muted);
+  background:rgba(255,255,255,.04);
+  font-size:13px;
+  font-weight:700;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active{
+  color:var(--text);
+  background:rgba(118,156,228,.12);
+}
 
     .hero{
       padding:16px 0 8px;
@@ -1036,16 +1039,16 @@
         </a>
 
 <div class="nav-links">
-  <a class="nav-link" href="/">Dashboard</a>
-  <a class="nav-link active" href="/wallet/">Wallet Search</a>
+  <a class="nav-link active" href="/">Dashboard</a>
+  <a class="nav-link" href="/wallet/">Wallet Search</a>
   <a class="nav-link" href="/pricing.html">Pricing</a>
   <a class="nav-link" href="/developers.html">Developers</a>
   <a class="nav-link" href="/account/">Account</a>
 </div>
 
 <div class="mobile-nav">
-  <a href="/">Dashboard</a>
-  <a class="active" href="/wallet/">Wallet Search</a>
+  <a class="active" href="/">Dashboard</a>
+  <a href="/wallet/">Wallet Search</a>
   <a href="/pricing.html">Pricing</a>
   <a href="/developers.html">Developers</a>
   <a href="/account/">Account</a>
