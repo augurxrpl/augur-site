@@ -4,36 +4,44 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>AUGUR Account Status</title>
+  <meta name="description" content="Use AUGUR as XRPL intelligence infrastructure. Structured XRPL wallet intelligence, issuer-state detection, blackhole-aware analysis, and API access for apps, dashboards, bots, and internal tools." />
   <style>
     :root{
-      --line:rgba(118,156,228,.14);
+      --bg:#050b14;
+      --panel:#111c31;
+      --panel-2:#0b1323;
+      --line:rgba(118,156,228,.12);
+      --line-soft:rgba(118,156,228,.10);
       --text:#eef4ff;
-      --muted:#9fb0cf;
-      --soft:#6f84a8;
-      --blue:#57a6ff;
-      --shadow:0 18px 44px rgba(0,0,0,.28);
-      --radius:24px;
+      --muted:#9fb0d0;
+      --soft:#7f92b6;
+      --blue:#59a6ff;
+      --blue-2:#2d6cdf;
+      --green:#4ee39a;
+      --amber:#ffcc66;
+      --red:#ff7878;
+      --shadow:0 24px 80px rgba(0,0,0,.36);
+      --glow:0 0 0 1px rgba(87,166,255,.14), 0 0 28px rgba(45,108,223,.10);
+      --radius:22px;
     }
 
     *{box-sizing:border-box}
-    a{color:inherit;text-decoration:none}
-    html,body{margin:0;padding:0}
+    html{scroll-behavior:smooth}
     body{
+      margin:0;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:
-        radial-gradient(1200px 700px at 10% -10%, rgba(87,166,255,.10), transparent 55%),
-        radial-gradient(900px 500px at 100% 0%, rgba(80,200,255,.08), transparent 40%),
-        linear-gradient(180deg,#07101c 0%,#08101c 100%);
+        radial-gradient(circle at top, rgba(56,104,198,.18), transparent 30%),
+        linear-gradient(180deg, #09111f 0%, var(--bg) 100%);
       color:var(--text);
-      min-height:100vh;
     }
+
+    a{color:inherit;text-decoration:none}
 
     .wrap{
       width:min(1240px, calc(100% - 36px));
-      max-width:1240px;
+      margin:0 auto;
       padding:0 18px;
-      margin-left:auto;
-      margin-right:auto;
     }
 
     .topbar{
@@ -54,7 +62,6 @@
       gap:16px;
       flex-wrap:wrap;
     }
-
 
     .brand{
       display:flex;
@@ -127,31 +134,37 @@
       color:#fff;
       background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
       border-color:rgba(87,166,255,.20);
+      box-shadow:var(--glow);
     }
 
     .mobile-nav{
+  display:flex;
+  gap:10px;
+  overflow-x:visible;
+      flex-wrap:wrap;
+  padding-bottom:6px;
+
       display:none;
       width:100%;
-      gap:10px;
-      overflow-x:visible;
-      flex-wrap:wrap;
+      gap:8px;
       padding-top:12px;
-      padding-bottom:6px;
       border-top:1px solid rgba(118,156,228,.10);
-      -ms-overflow-style:none;
-      scrollbar-width:none;
     }
 
     .mobile-nav::-webkit-scrollbar{
-      display:none;
-    }
+  display:none;
+}
 
-    .mobile-nav a{
-      flex:0 0 auto;
+.mobile-nav a{
+  flex:0 0 auto;
+
+  flex:0 0 auto;
+
       min-height:64px;
       display:flex;
       align-items:center;
       justify-content:center;
+      text-align:center;
       padding:0 8px;
       border-radius:12px;
       text-decoration:none;
@@ -163,18 +176,16 @@
 
     .mobile-nav a:hover,
     .mobile-nav a.active{
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
       color:var(--text);
+      background:rgba(118,156,228,.12);
     }
 
     .hero{
       padding:16px 0 8px;
     }
 
-    .hero-card{
-      max-width:1100px;
-      margin-left:auto;
-      margin-right:auto;
+    .hero-card,
+    .card{
       background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
       border:1px solid var(--line);
       border-radius:22px;
@@ -184,175 +195,225 @@
 
     .eyebrow{
       display:inline-flex;
-      width:max-content;
       align-items:center;
       gap:8px;
       padding:8px 12px;
       border-radius:999px;
       background:rgba(87,166,255,.08);
       border:1px solid rgba(87,166,255,.14);
-      color:var(--blue);
+      color:var(--blue-2);
       font-size:12px;
       text-transform:uppercase;
-      letter-spacing:.12em;
+      letter-spacing:.8px;
     }
 
+    h1,h2,h3,p,pre{margin:0}
+
     h1{
-      margin:0;
+      margin:14px 0 10px;
       font-size:42px;
       line-height:1.02;
-      letter-spacing:-1px;
+      letter-spacing:-1.1px;
+      max-width:900px;
     }
 
     .lede{
       margin:0;
       color:var(--muted);
       font-size:17px;
-      max-width:760px;
+      max-width:940px;
       line-height:1.55;
     }
 
-    .panel{
-      background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      padding:14px;
+    .trust{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
     }
 
     .section{
-      padding:8px 0 0;
+      padding:8px 0 14px;
     }
 
-    .grid{
-      max-width:1100px;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-    }
-
-    .field{
-      display:grid;
-      gap:8px;
-    }
-
-    .field label{
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.03em;
-      color:var(--text);
-      text-transform:uppercase;
-    }
-
-    .input{
-      width:100%;
-      min-height:64px;
-      border:1px solid rgba(118,156,228,.16);
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
-      color:var(--text);
-      padding:0 14px;
-      font-size:14px;
-      font-weight:700;
-      outline:none;
-    }
-
-    .input::placeholder{
-      color:var(--soft);
-    }
-
-    .btn-row{
+    .section-head{
       display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:12px;
       flex-wrap:wrap;
-      gap:12px;
-      margin-top:16px;
     }
 
-    .btn{
+    .section-head h2{
+      font-size:28px;
+      letter-spacing:-.6px;
+    }
+
+    .section-head p{
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .grid-2{
+      display:grid;
+      gap:12px;
+    }
+
+    .tag{
       display:inline-flex;
       align-items:center;
-      justify-content:center;
-      min-height:46px;
-      padding:0 16px;
-      border:1px solid transparent;
-      text-decoration:none;
-      font-size:14px;
-      cursor:pointer;
-    }
-
-    .btn-primary{
-      color:#07101c;
-      background:linear-gradient(180deg,#9fd8ff,#57a6ff);
-      box-shadow:0 10px 22px rgba(87,166,255,.28);
-    }
-
-    .btn-secondary{
-      color:var(--text);
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
-      border-color:rgba(118,156,228,.16);
-    }
-
-    .status-box{
-      display:grid;
-      gap:10px;
-    }
-
-    .status-box[hidden]{
-      display:none;
-    }
-
-    .kv{
-      display:grid;
-      gap:8px;
-    }
-
-    .kv-row{
-      display:grid;
-      grid-template-columns:160px 1fr;
-      gap:10px;
-      align-items:start;
-      padding-top:8px;
-      border-top:1px solid rgba(255,255,255,.06);
-    }
-
-    .kv-row:first-child{
-      border-top:0;
-      padding-top:0;
-    }
-
-    .kv-row strong{
-      color:var(--text);
-      font-size:13px;
+      width:max-content;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:11px;
+      letter-spacing:.14em;
       text-transform:uppercase;
-      letter-spacing:.03em;
+      color:#dfe9ff;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line-soft);
+      margin-bottom:12px;
     }
 
-    .kv-row span,
-    .kv-row code{
+    .tag.blue{
+      color:#dcebff;
+      background:rgba(49,108,214,.18);
+      border-color:rgba(89,166,255,.20);
+    }
+
+    .tag.green{
+      color:#dcffef;
+      background:rgba(34,111,76,.22);
+      border-color:rgba(78,227,154,.20);
+    }
+
+    .tag.amber{
+      color:#fff2cf;
+      background:rgba(125,95,28,.24);
+      border-color:rgba(255,204,102,.18);
+    }
+
+    .card h3{
+      font-size:22px;
+      letter-spacing:-.02em;
+      margin-bottom:10px;
+    }
+
+    .card p{
       color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .code-card{
+      background:linear-gradient(180deg,rgba(9,15,26,.98),rgba(7,12,22,.98));
+      border:1px solid rgba(118,156,228,.14);
+      border-radius:18px;
+      padding:14px;
+      overflow:auto;
+    }
+
+    pre{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:12px;
+      line-height:1.6;
+      color:#dbe8ff;
+      white-space:pre-wrap;
       word-break:break-word;
     }
 
-    .kv-row code{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
-      padding:2px 6px;
-      border-radius:8px;
-      color:var(--text);
+    .list{
+      margin:0;
+      padding-left:18px;
+      color:var(--muted);
+      display:grid;
+      gap:10px;
+      line-height:1.55;
+      font-size:14px;
     }
 
-    .footer{
-      padding:20px 0 34px;
+    .list li small{
+      display:block;
       color:var(--soft);
+      margin-top:4px;
+    }
+
+    .endpoint-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .endpoint{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .endpoint .path{
+      display:inline-block;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:13px;
+      font-weight:800;
+      color:#dbe8ff;
+      margin-bottom:6px;
+    }
+
+    .endpoint p{
+      color:var(--muted);
+      line-height:1.5;
       font-size:13px;
     }
 
-    @media (max-width:900px){
-      .grid{grid-template-columns:1fr}
-      .kv-row{grid-template-columns:1fr}
-      h1{font-size:34px}
+    .footer{
+      padding:18px 0 42px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .footer-inner{
+      padding-top:18px;
+      border-top:1px solid rgba(118,156,228,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .footer-links{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .footer-links a{color:var(--muted)}
+    .footer-links a:hover{color:var(--text)}
+
+    @media (max-width:1080px){
+      .grid-3,
+      .grid-2{
+        grid-template-columns:1fr;
+      }
     }
 
     @media (max-width:760px){
@@ -362,9 +423,18 @@
         display:flex;
         gap:10px;
         overflow-x:visible;
-        flex-wrap:wrap;
+      flex-wrap:wrap;
         padding-bottom:6px;
       }
+      .hero{padding:12px 0 6px}
+      .hero-card,.card{padding:12px}
+      .section{padding:6px 0 10px}
+      .section-head{margin-bottom:10px}
+      .section-head h2{font-size:24px}
+      .card h3{font-size:19px}
+      .card p,.list,.endpoint p{font-size:13px}
+      h1{font-size:30px}
+      .lede{font-size:15px}
       .brand-copy span{font-size:18px}
     }
   </style>
@@ -404,157 +474,57 @@
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">Wallet-Based Access</div>
-      <h1>Account Status</h1>
-      <p class="lede">
-        Check subscription status for any XRPL wallet tied to AUGUR. No login. No custody. Wallet in, status out.
-      </p>
+        <h1>Account Status</h1>
+        <p class="lede">
+          Check subscription status for any XRPL wallet tied to AUGUR. No login. No custody. Wallet in, status out.
+        </p>
       </div>
     </section>
 
     <section class="section">
-      <div class="grid">
-      <div class="panel">
-        <div class="field">
-          <label for="walletInput">XRPL wallet</label>
-          <input class="input" id="walletInput" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(0,520px)); justify-content:center;gap:18px;">
+        <div class="card">
+          <div class="field" style="display:grid;gap:8px;">
+            <label for="walletInput" style="font-size:13px;font-weight:800;letter-spacing:.03em;color:var(--text);text-transform:uppercase;">XRPL wallet</label>
+            <input class="input" id="walletInput" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+          </div>
+
+          <div class="btn-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
+            <button class="btn btn-primary" id="checkStatusBtn" type="button">Check Status</button>
+            <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
+          </div>
         </div>
 
-        <div class="btn-row">
-          <button class="btn btn-primary" id="checkStatusBtn" type="button">Check Status</button>
-          <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
-        </div>
-      </div>
+        <div class="card">
+          <h2 style="margin:0 0 14px;">Subscription Result</h2>
+          <div class="status-box" id="statusBox" hidden>
+            <div class="kv" id="statusDetails"></div>
+          </div>
 
-      <div class="panel">
-        <h2 style="margin-top:0;margin-bottom:14px;">Subscription Result</h2>
-        <div class="status-box" id="statusBox" hidden>
-          <div class="kv" id="statusDetails"></div>
-        </div>
-        <div class="panel" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
-          <h3 style="margin:0 0 10px;">Included Utilities</h3>
-          <p style="margin:0;color:var(--muted);line-height:1.55;">
-            This wallet has paid access. Open any included utility below.
-          </p>
-          <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
+          <div class="card" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
+            <h3 style="margin:0 0 10px;">Included Utilities</h3>
+            <p style="margin:0;color:var(--muted);line-height:1.55;">
+              This wallet has paid access. Open any included utility below.
+            </p>
+            <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
+          </div>
         </div>
       </div>
-    </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="wrap">
-      AUGUR Account Status • XRPL subscription lookup
+      <div class="footer-inner">
+        <div>AUGUR Account • XRPL intelligence infrastructure</div>
+        <div class="footer-links">
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="https://api.augurxrpl.com/api/health" target="_blank" rel="noopener">API Health</a>
+        </div>
+      </div>
     </div>
   </footer>
-
-  <script>
-    const API_BASE = "https://api.augurxrpl.com";
-    const walletInput = document.getElementById("walletInput");
-    const checkStatusBtn = document.getElementById("checkStatusBtn");
-    const statusBox = document.getElementById("statusBox");
-    const statusDetails = document.getElementById("statusDetails");
-    const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
-    const accountUtilityLinks = document.getElementById("accountUtilityLinks");
-
-    function safeText(value){
-      if (value === null || value === undefined || value === "") return "—";
-      return String(value);
-    }
-
-    function escapeHtml(value){
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-
-    function renderUtilityLinks(plan, wallet){
-      if (!accountUtilityLinks) return;
-
-      const links = [];
-
-      if (["starter","pro","developer"].includes(plan)) {
-        links.push({
-          href: `/starter.html?wallet=${encodeURIComponent(wallet)}`,
-          label: "Open Starter Utility"
-        });
-      }
-
-      if (["pro","developer"].includes(plan)) {
-        links.push({
-          href: `/pro.html?wallet=${encodeURIComponent(wallet)}`,
-          label: "Open Pro Utility"
-        });
-      }
-
-      if (plan === "developer") {
-        links.push({
-          href: `/developer.html?wallet=${encodeURIComponent(wallet)}`,
-          label: "Open Developer Utility"
-        });
-      }
-
-      accountUtilityLinks.innerHTML = links.map((item) => `
-        <a class="btn btn-primary" href="${item.href}" style="text-decoration:none;">${item.label}</a>
-      `).join("");
-    }
-
-    function renderRows(rows){
-      statusBox.hidden = false;
-      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
-        <div class="kv-row">
-          <strong>${escapeHtml(label)}</strong>
-          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
-        </div>
-      `).join("");
-    }
-
-    checkStatusBtn.addEventListener("click", async () => {
-      const wallet = walletInput.value.trim();
-
-      if (!wallet) {
-        renderRows([["Error", "Enter an XRPL wallet address.", false]]);
-        return;
-      }
-
-      checkStatusBtn.disabled = true;
-      accountUtilityLauncher.hidden = true;
-
-      try {
-        const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || data.message || "Status lookup failed");
-        }
-
-        const plan = String(data.planCode || "").toLowerCase();
-        const allowed = data.active === true && ["starter","pro","developer"].includes(plan);
-
-        renderRows([
-          ["Wallet", safeText(data.walletAddress), true],
-          ["Plan", safeText(data.planCode), false],
-          ["Status", safeText(data.status), false],
-          ["Active", safeText(data.active), false],
-          ["Destination Tag", safeText(data.destinationTag), true],
-          ["Started", safeText(data.startedAt), false],
-          ["Expires", safeText(data.expiresAt), false]
-        ]);
-
-        if (allowed) {
-          accountUtilityLauncher.hidden = false;
-          renderUtilityLinks(plan, wallet);
-        }
-      } catch (err) {
-        renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
-      } finally {
-        checkStatusBtn.disabled = false;
-      }
-    });
-  </script>
 </body>
 </html>
