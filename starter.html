@@ -59,16 +59,6 @@
       gap:16px;
       flex-wrap:wrap;
     }
-
-    .nav-inner{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      flex-wrap:wrap;
-      width:100%;
-    }
-
     .brand{
       display:flex;
       align-items:center;
@@ -83,17 +73,9 @@
     .brand-mark{
       width:168px;
       height:64px;
-      border-radius:14px;
       display:grid;
       place-items:center;
-      background:linear-gradient(180deg,#12305e,#0b1f44);
-      border:1px solid rgba(139,203,255,.22);
-      color:var(--blue);
-      box-shadow:var(--shadow);
-      font-size:16px;
-      font-weight:900;
-      overflow:hidden;
-      flex:0 0 auto;
+      color:var(--blue-2);
     }
 
     .brand-mark img{
@@ -101,68 +83,82 @@
       height:100%;
       object-fit:contain;
       display:block;
-      padding:6px;
-      display:block;
+      transform:translateY(-48px);
     }
 
     .brand-copy{
-      display:grid;
+      display:flex;
+      flex-direction:column;
       gap:2px;
     }
 
     .brand-copy small{
       color:var(--muted);
-      font-size:10px;
-      line-height:1;
-      letter-spacing:.16em;
+      font-size:11px;
+      letter-spacing:.9px;
+      text-transform:uppercase;
+      font-weight:700;
     }
 
     .brand-copy span{
-      color:var(--text);
-      font-size:18px;
-      line-height:1;
+      font-size:22px;
+      letter-spacing:.8px;
     }
 
     .nav-links{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:8px;
       flex-wrap:wrap;
     }
 
     .nav-link{
       color:var(--muted);
-      text-decoration:none;
+      padding:10px 14px;
+      border-radius:12px;
       font-size:14px;
       font-weight:700;
-      padding:10px 12px;
-      border-radius:12px;
+      border:1px solid transparent;
+      transition:.15s ease;
     }
 
-    .nav-link:hover,
-    .nav-link.active{
-      background:var(--chip);
+    .nav-link:hover{
       color:var(--text);
+      background:rgba(255,255,255,.03);
+      border-color:rgba(118,156,228,.10);
+    }
+
+    .nav-link.active{
+      color:#fff;
+      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
+      border-color:rgba(87,166,255,.20);
     }
 
     .mobile-nav{
       display:none;
       width:100%;
-      justify-content:flex-start;
-      gap:8px;
+      gap:10px;
+      overflow-x:visible;
       flex-wrap:wrap;
       padding-top:12px;
-      padding-bottom:12px;
+      padding-bottom:6px;
       border-top:1px solid rgba(118,156,228,.10);
+      -ms-overflow-style:none;
+      scrollbar-width:none;
+    }
+
+    .mobile-nav::-webkit-scrollbar{
+      display:none;
     }
 
     .mobile-nav a{
+      flex:0 0 auto;
       min-height:64px;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-      padding:0 10px;
+      padding:0 8px;
       border-radius:12px;
       text-decoration:none;
       color:var(--muted);
@@ -173,7 +169,7 @@
 
     .mobile-nav a:hover,
     .mobile-nav a.active{
-      background:var(--chip);
+      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
       color:var(--text);
     }
 
@@ -656,7 +652,6 @@
   <header class="topbar">
     <div class="wrap">
       <div class="nav">
-        <div class="nav-inner">
           <a class="brand" href="/">
             <div class="brand-mark">
               <img src="/assets/augur_logo.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_logo.png';" />
@@ -673,9 +668,7 @@
             <a class="nav-link" href="/pricing.html">Pricing</a>
             <a class="nav-link" href="/developers.html">Developers</a>
             <a class="nav-link active" href="/account/">Account</a>
-          </div>
-
-          <div class="mobile-nav">
+        <div class="mobile-nav">
             <a href="/">Dashboard</a>
             <a href="/wallet/">Wallet Search</a>
             <a href="/pricing.html">Pricing</a>
