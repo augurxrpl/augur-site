@@ -339,12 +339,17 @@
       h1{font-size:34px}
     }
 
-    @media (max-width:860px){
+    @media (max-width:760px){
+      .wrap{padding:0 14px}
       .nav-links{display:none}
       .mobile-nav{
         display:flex;
-        gap:8px;
+        gap:10px;
+        overflow-x:visible;
+        flex-wrap:wrap;
+        padding-bottom:6px;
       }
+      .brand-copy span{font-size:18px}
     }
   </style>
 </head>
