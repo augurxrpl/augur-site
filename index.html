@@ -73,31 +73,24 @@
       display:flex;
       align-items:center;
       gap:14px;
-      font-weight:900;
       letter-spacing:.4px;
     }
 
     .brand-mark{
       width:168px;
       height:64px;
-      border-radius:14px;
       display:grid;
       place-items:center;
       color:var(--blue-2);
-      background:linear-gradient(180deg,#12305e,#0b1f44);
-      border:1px solid rgba(139,203,255,.22);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 26px rgba(0,0,0,.32);
-      font-size:16px;
-      font-weight:900;
     }
 
     .brand-mark img{
       width:100%;
       height:100%;
       object-fit:contain;
+      transform:translateY(-48px);
       display:block;
-      padding:6px;
-      display:block;
+      transform:translateY(-48px);
     }
 
     .brand-copy{
@@ -117,7 +110,6 @@
     .brand-copy span{
       font-size:22px;
       letter-spacing:.8px;
-      font-weight:900;
     }
 
     .nav-links{
@@ -151,47 +143,43 @@
     }
 
 .mobile-nav{
-  display:flex;
-  gap:10px;
-  overflow-x:visible;
+      display:none;
+      width:100%;
+      gap:10px;
+      overflow-x:visible;
       flex-wrap:wrap;
-  padding-bottom:6px;
+      padding-top:12px;
+      padding-bottom:6px;
+      border-top:1px solid rgba(118,156,228,.10);
+      -ms-overflow-style:none;
+      scrollbar-width:none;
+    }
 
-  display:none;
-  width:100%;
-  gap:8px;
-  padding-top:12px;
-  border-top:1px solid rgba(118,156,228,.10);
-}
+    .mobile-nav::-webkit-scrollbar{
+      display:none;
+    }
 
-.mobile-nav::-webkit-scrollbar{
-  display:none;
-}
+    .mobile-nav a{
+      flex:0 0 auto;
+      min-height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 8px;
+      border-radius:12px;
+      text-decoration:none;
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+      font-size:13px;
+      font-weight:700;
+    }
 
-.mobile-nav a{
-  flex:0 0 auto;
-
-  flex:0 0 auto;
-
-  min-height:64px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:0 8px;
-  border-radius:12px;
-  text-decoration:none;
-  color:var(--muted);
-  background:rgba(255,255,255,.04);
-  font-size:13px;
-  font-weight:700;
-}
-
-.mobile-nav a:hover,
-.mobile-nav a.active{
-  color:var(--text);
-  background:rgba(118,156,228,.12);
-}
+    .mobile-nav a:hover,
+    .mobile-nav a.active{
+      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
+      color:var(--text);
+    }
 
     .hero{
       padding:16px 0 8px;
@@ -226,7 +214,6 @@
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:.8px;
-      font-weight:900;
     }
 
     h1{
@@ -274,7 +261,6 @@
       border:0;
       padding:0 18px;
       font-size:14px;
-      font-weight:900;
       letter-spacing:.2px;
       cursor:pointer;
       transition:.15s ease;
@@ -357,7 +343,6 @@
     .mini-value{
       margin-top:8px;
       font-size:28px;
-      font-weight:900;
     }
 
     .mini-sub{
@@ -395,7 +380,6 @@
     .metric .value{
       margin-top:8px;
       font-size:28px;
-      font-weight:900;
     }
 
     .metric .sub{
@@ -511,8 +495,6 @@
 
     .stat-line .val{
       color:var(--text);
-      font-size:16px;
-      font-weight:900;
       text-align:right;
     }
 
@@ -523,7 +505,6 @@
       padding:8px 12px;
       border-radius:999px;
       font-size:12px;
-      font-weight:900;
       letter-spacing:.5px;
       border:1px solid rgba(118,156,228,.14);
       background:rgba(255,255,255,.04);
@@ -583,7 +564,6 @@
       place-items:center;
       color:var(--text);
       font-size:14px;
-      font-weight:900;
       letter-spacing:.5px;
     }
 
@@ -625,7 +605,6 @@
 
     .list li{
       padding:13px 14px;
-      border-radius:14px;
       background:rgba(255,255,255,.03);
       border:1px solid rgba(118,156,228,.10);
       color:var(--text);
@@ -655,7 +634,6 @@
 
     .tracker-item strong{
       display:block;
-      font-size:16px;
     }
 
     .tracker-item span{
@@ -667,7 +645,6 @@
 
     .tracker-item .flow{
       font-size:20px;
-      font-weight:900;
       white-space:nowrap;
     }
 
@@ -729,7 +706,6 @@
 
     .alert-item{
       padding:14px;
-      border-radius:14px;
       background:rgba(255,255,255,.03);
       border:1px solid rgba(118,156,228,.10);
       display:flex;
@@ -746,7 +722,6 @@
 
     .alert-badge{
       font-size:12px;
-      font-weight:900;
       padding:7px 10px;
       border-radius:999px;
       white-space:nowrap;
@@ -810,7 +785,6 @@
     .empty{
       color:var(--muted);
       padding:14px;
-      border-radius:14px;
       background:rgba(255,255,255,.03);
       border:1px dashed rgba(118,156,228,.10);
     }
@@ -1062,16 +1036,16 @@
         </a>
 
 <div class="nav-links">
-  <a class="nav-link active" href="/">Dashboard</a>
-  <a class="nav-link" href="/wallet/">Wallet Search</a>
+  <a class="nav-link" href="/">Dashboard</a>
+  <a class="nav-link active" href="/wallet/">Wallet Search</a>
   <a class="nav-link" href="/pricing.html">Pricing</a>
   <a class="nav-link" href="/developers.html">Developers</a>
   <a class="nav-link" href="/account/">Account</a>
 </div>
 
 <div class="mobile-nav">
-  <a class="active" href="/">Dashboard</a>
-  <a href="/wallet/">Wallet Search</a>
+  <a href="/">Dashboard</a>
+  <a class="active" href="/wallet/">Wallet Search</a>
   <a href="/pricing.html">Pricing</a>
   <a href="/developers.html">Developers</a>
   <a href="/account/">Account</a>
