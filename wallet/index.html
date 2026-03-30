@@ -83,6 +83,7 @@
       height:100%;
       object-fit:contain;
       display:block;
+      transform:translateY(-8px);
     }
 
     .brand-copy{
@@ -1274,8 +1275,10 @@
           <div>
             <strong>${type}</strong>
             <span>${summary}</span>
-            <small style="display:block;margin-top:4px;opacity:.78">${when}</small>
-            <small style="display:block;margin-top:4px;opacity:.62;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
+            <small style="display:block;
+      transform:translateY(-8px);margin-top:4px;opacity:.78">${when}</small>
+            <small style="display:block;
+      transform:translateY(-8px);margin-top:4px;opacity:.62;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
           </div>
           <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>`;
