@@ -215,9 +215,13 @@
     .panel{
       background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
       border:1px solid var(--line);
-      border-radius:var(--radius);
+      border-radius:22px;
       box-shadow:var(--shadow);
-      padding:22px;
+      padding:14px;
+    }
+
+    .section{
+      padding:8px 0 0;
     }
 
     .grid{
@@ -407,7 +411,8 @@
       </div>
     </section>
 
-    <section class="grid">
+    <section class="section">
+      <div class="grid">
       <div class="panel">
         <div class="field">
           <label for="walletInput">XRPL wallet</label>
@@ -433,6 +438,7 @@
           <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
         </div>
       </div>
+    </div>
     </section>
   </main>
 
