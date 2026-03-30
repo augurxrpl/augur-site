@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>AUGUR Account Status</title>
-  <meta name="description" content="Use AUGUR as XRPL intelligence infrastructure. Structured XRPL wallet intelligence, issuer-state detection, blackhole-aware analysis, and API access for apps, dashboards, bots, and internal tools." />
+  <meta name="description" content="Check AUGUR subscription status for any XRPL wallet. Wallet-based access. No login. No custody." />
   <style>
     :root{
       --bg:#050b14;
@@ -482,14 +482,21 @@
     </section>
 
     <section class="section">
-      <div class="grid" style="grid-template-columns:repeat(2,minmax(0,520px)); justify-content:center;gap:18px;">
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(0,520px));justify-content:center;gap:18px;">
         <div class="card">
-          <div class="field" style="display:grid;gap:8px;">
+          <div style="display:grid;gap:8px;">
             <label for="walletInput" style="font-size:13px;font-weight:800;letter-spacing:.03em;color:var(--text);text-transform:uppercase;">XRPL wallet</label>
-            <input class="input" id="walletInput" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+            <input
+              id="walletInput"
+              type="text"
+              placeholder="r..."
+              autocomplete="off"
+              spellcheck="false"
+              style="width:100%;min-height:64px;border:1px solid rgba(118,156,228,.16);background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));color:var(--text);padding:0 14px;font-size:14px;font-weight:700;outline:none;border-radius:14px;"
+            />
           </div>
 
-          <div class="btn-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
             <button class="btn btn-primary" id="checkStatusBtn" type="button">Check Status</button>
             <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
           </div>
@@ -497,9 +504,7 @@
 
         <div class="card">
           <h2 style="margin:0 0 14px;">Subscription Result</h2>
-          <div class="status-box" id="statusBox" hidden>
-            <div class="kv" id="statusDetails"></div>
-          </div>
+          <div id="statusBox" hidden style="display:grid;gap:10px;"></div>
 
           <div class="card" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
             <h3 style="margin:0 0 10px;">Included Utilities</h3>
@@ -513,10 +518,11 @@
     </section>
   </main>
 
+
   <footer class="footer">
     <div class="wrap">
       <div class="footer-inner">
-        <div>AUGUR Account • XRPL intelligence infrastructure</div>
+        <div>AUGUR Developers • XRPL intelligence infrastructure</div>
         <div class="footer-links">
           <a href="/">Dashboard</a>
           <a href="/wallet/">Wallet Search</a>
@@ -526,5 +532,113 @@
       </div>
     </div>
   </footer>
+<script>
+    const API_BASE = "https://api.augurxrpl.com";
+    const walletInput = document.getElementById("walletInput");
+    const checkStatusBtn = document.getElementById("checkStatusBtn");
+    const statusBox = document.getElementById("statusBox");
+    const statusDetails = document.getElementById("statusDetails");
+    const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
+    const accountUtilityLinks = document.getElementById("accountUtilityLinks");
+
+    function safeText(value){
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function escapeHtml(value){
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+
+    function renderUtilityLinks(plan, wallet){
+      if (!accountUtilityLinks) return;
+
+      const links = [];
+
+      if (["starter","pro","developer"].includes(plan)) {
+        links.push({
+          href: `/starter.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Starter Utility"
+        });
+      }
+
+      if (["pro","developer"].includes(plan)) {
+        links.push({
+          href: `/pro.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Pro Utility"
+        });
+      }
+
+      if (plan === "developer") {
+        links.push({
+          href: `/developer.html?wallet=${encodeURIComponent(wallet)}`,
+          label: "Open Developer Utility"
+        });
+      }
+
+      accountUtilityLinks.innerHTML = links.map((item) => `
+        <a class="btn btn-primary" href="${item.href}" style="text-decoration:none;">${item.label}</a>
+      `).join("");
+    }
+
+    function renderRows(rows){
+      statusBox.hidden = false;
+      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
+        <div class="kv-row">
+          <strong>${escapeHtml(label)}</strong>
+          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
+        </div>
+      `).join("");
+    }
+
+    checkStatusBtn.addEventListener("click", async () => {
+      const wallet = walletInput.value.trim();
+
+      if (!wallet) {
+        renderRows([["Error", "Enter an XRPL wallet address.", false]]);
+        return;
+      }
+
+      checkStatusBtn.disabled = true;
+      accountUtilityLauncher.hidden = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || data.message || "Status lookup failed");
+        }
+
+        const plan = String(data.planCode || "").toLowerCase();
+        const allowed = data.active === true && ["starter","pro","developer"].includes(plan);
+
+        renderRows([
+          ["Wallet", safeText(data.walletAddress), true],
+          ["Plan", safeText(data.planCode), false],
+          ["Status", safeText(data.status), false],
+          ["Active", safeText(data.active), false],
+          ["Destination Tag", safeText(data.destinationTag), true],
+          ["Started", safeText(data.startedAt), false],
+          ["Expires", safeText(data.expiresAt), false]
+        ]);
+
+        if (allowed) {
+          accountUtilityLauncher.hidden = false;
+          renderUtilityLinks(plan, wallet);
+        }
+      } catch (err) {
+        renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
+      } finally {
+        checkStatusBtn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
