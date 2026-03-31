@@ -667,9 +667,15 @@
           ["Expires", safeText(data.expiresAt), false]
         ]);
 
+        accountUtilityLauncher.hidden = false;
+
         if (allowed) {
-          accountUtilityLauncher.hidden = false;
           renderUtilityLinks(plan, wallet);
+        } else {
+          accountUtilityLinks.innerHTML = `
+            <a class="btn btn-primary" href="/pricing.html" style="text-decoration:none;">View Plans</a>
+            <a class="btn btn-secondary" href="/wallet/?wallet=${encodeURIComponent(wallet)}" style="text-decoration:none;">Use Public Entry</a>
+          `;
         }
       } catch (err) {
         renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);

@@ -628,12 +628,29 @@ utils/
         </div>
       </div>
     </section>
+    <section class="section">
+      <div class="card">
+        <h3>Starter Wallet Utility</h3>
+        <p>Run subscribed-wallet reads here without going back to Public Entry.</p>
+        <div class="field">
+          <label for="starterWallet">XRPL wallet address</label>
+          <input class="input" id="starterWallet" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-primary" id="starterRunBtn" type="button">Run Starter Utility</button>
+          <button class="btn btn-secondary" id="starterExampleBtn" type="button">Load Example Wallet</button>
+        </div>
+        <p id="starterStatus" style="margin-top:12px;color:#9fb0c3;">Starter utility ready.</p>
+        <div id="starterOutput" class="code-card" style="margin-top:12px;white-space:pre-wrap;">No Starter report loaded yet.</div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer">
     <div class="wrap">
       <div class="footer-inner">
-        <div>AUGUR Developers • XRPL intelligence infrastructure</div>
+        <div>AUGUR Starter • XRPL intelligence utility</div>
         <div class="footer-links">
           <a href="/">Dashboard</a>
           <a href="/wallet/">Wallet Search</a>
@@ -643,5 +660,6 @@ utils/
       </div>
     </div>
   </footer>
+  <script src="/assets/starter.js"></script>
 </body>
 </html>
