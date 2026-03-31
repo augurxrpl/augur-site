@@ -35,7 +35,7 @@
     if (!v) { setStatus("Enter an XRPL wallet address."); return; }
     run.disabled = true; ex.disabled = true; setStatus(`Running Starter utility for ${v} ...`);
     try {
-      const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(v)}`, { headers: { accept: "application/json" } });
+      const res = await fetch(`${API_BASE}/api/starter/report?wallet=${encodeURIComponent(v)}&address=${encodeURIComponent(v)}`, { headers: { accept: "application/json" } });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || data?.error || `Request failed with status ${res.status}`);
       renderReport(data); setStatus("Starter utility loaded.");
