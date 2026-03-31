@@ -1585,6 +1585,9 @@
         });
 
         if (!res.ok){
+          if (res.status === 429){
+            throw new Error("FREE_LIMIT_REACHED");
+          }
           throw new Error(`Request failed with status ${res.status}`);
         }
 
@@ -1598,7 +1601,11 @@
       } catch (err){
         console.error("AUGUR wallet analyze error:", err);
         setPill("Error", "red");
-        setStatus("Report request failed. Check the address and try again.");
+        if (err instanceof Error && err.message === "FREE_LIMIT_REACHED"){
+          setStatus("Daily free wallet searches are capped at 3 per day. Upgrade to Starter, Pro, or Developer for expanded access. The Example Wallet always remains available.");
+        } else {
+          setStatus("Report request failed. Check the address and try again.");
+        }
       } finally {
         analyzeBtn.disabled = false;
         exampleBtn.disabled = false;
