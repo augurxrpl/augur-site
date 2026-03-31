@@ -10,6 +10,26 @@
   if (!wallet || !run || !ex || !status || !out) return;
   const setStatus = (t) => status.textContent = t;
   const setOut = (v) => out.textContent = typeof v === "string" ? v : JSON.stringify(v, null, 2);
+  const renderReport = (data) => {
+    const r = data?.report || data || {};
+    const lines = [
+      `Classification: ${r.classification || "Unknown"}`,
+      `Confidence: ${r.confidence ?? "Unknown"}`,
+      `Activity: ${r.activityLevel || r.activity?.trend || r.activity?.level || "Unknown"}`,
+      `Risk: ${r.risk?.level || "Unknown"}`,
+      "",
+      `Statement: ${Array.isArray(r.statement) ? r.statement.join(" ") : (r.statement || "No statement available.")}`,
+      "",
+      `XRP Balance: ${r.summary?.balanceXRP ?? r.balanceXRP ?? "Unknown"}`,
+      `Trustlines: ${r.summary?.trustlineCount ?? r.trustlines ?? "Unknown"}`,
+      `Owner Count: ${r.summary?.ownerCount ?? r.ownerCount ?? "Unknown"}`,
+      `NFT Count: ${r.summary?.nftCount ?? r.nftCount ?? "Unknown"}`,
+      "",
+      `Token Holdings: ${Array.isArray(r.tokenHoldings) ? r.tokenHoldings.length : 0}`,
+      `Transactions: ${Array.isArray(r.transactionBreakdown) ? r.transactionBreakdown.length : 0}`
+    ];
+    out.textContent = lines.join("\n");
+  };
   async function go(v) {
     v = String(v || "").trim();
     if (!v) { setStatus("Enter an XRPL wallet address."); return; }
@@ -18,7 +38,7 @@
       const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(v)}`, { headers: { accept: "application/json" } });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || data?.error || `Request failed with status ${res.status}`);
-      setOut(data); setStatus("Starter utility loaded.");
+      renderReport(data); setStatus("Starter utility loaded.");
     } catch (err) {
       setOut("Starter utility request failed.");
       setStatus(err instanceof Error ? err.message : "Starter utility request failed.");

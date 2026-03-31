@@ -534,8 +534,8 @@
           </div>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
-            <button class="btn btn-primary" id="checkStatusBtn" type="button">Check Status</button>
-            <a class="btn btn-secondary" href="/pricing.html">View Plans</a>
+            <button class="btn btn-primary btn-hud" id="checkStatusBtn" type="button">Check Status</button>
+            <a class="btn btn-secondary btn-hud" href="/pricing.html">View Plans</a>
           </div>
         </div>
 
@@ -673,8 +673,8 @@
           renderUtilityLinks(plan, wallet);
         } else {
           accountUtilityLinks.innerHTML = `
-            <a class="btn btn-primary" href="/pricing.html" style="text-decoration:none;">View Plans</a>
-            <a class="btn btn-secondary" href="/wallet/?wallet=${encodeURIComponent(wallet)}" style="text-decoration:none;">Use Public Entry</a>
+            <a class="btn btn-primary btn-hud" href="/pricing.html" style="text-decoration:none;">View Plans</a>
+            <a class="btn btn-secondary btn-hud" href="/wallet/?wallet=${encodeURIComponent(wallet)}" style="text-decoration:none;">Use Public Entry</a>
           `;
         }
       } catch (err) {
