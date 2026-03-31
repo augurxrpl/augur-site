@@ -422,9 +422,13 @@
     .plan > a.btn,
     .plan > button.btn{
       display:flex;
-      width:100%;
+      width:min(100%, 300px);
       justify-content:center;
-      min-height:44px;
+      align-items:center;
+      text-align:center;
+      min-height:38px;
+      margin-left:auto;
+      margin-right:auto;
     }
 
     .btn:hover{transform:translateY(-1px);filter:brightness(1.03)}
