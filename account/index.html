@@ -414,6 +414,21 @@
     .footer-links a{color:var(--muted)}
     .footer-links a:hover{color:var(--text)}
 
+    .account-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .account-actions .btn{
+      min-height:48px;
+      min-width:170px;
+      justify-content:center;
+      text-align:center;
+      text-decoration:none;
+    }
+
     @media (max-width:1080px){
       .grid-3,
       .grid-2{
@@ -538,7 +553,7 @@
             />
           </div>
 
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
+          <div class="account-actions">
             <button class="btn btn-primary btn-hud" id="checkStatusBtn" type="button">Check Status</button>
             <a class="btn btn-secondary btn-hud" href="/pricing.html">View Plans</a>
           </div>
