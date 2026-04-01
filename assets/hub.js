@@ -1,76 +1,631 @@
-(() => {
-  const API_BASE = "https://api.augurxrpl.com";
-  const EXAMPLE = "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe";
-  const q = new URLSearchParams(location.search);
-  const wallet = document.getElementById("starterWallet");
-  const run = document.getElementById("starterRunBtn");
-  const ex = document.getElementById("starterExampleBtn");
-  const status = document.getElementById("starterStatus");
-  const out = document.getElementById("starterOutput");
-  const hubAccessStatus = document.getElementById("hubAccessStatus");
-  const proSection = document.getElementById("proSection");
-  const developerSection = document.getElementById("developerSection");
-  if (!wallet || !run || !ex || !status || !out) return;
-  if (proSection) proSection.style.display = "none";
-  if (developerSection) developerSection.style.display = "none";
-  const setStatus = (t) => status.textContent = t;
-  const setOut = (v) => out.textContent = typeof v === "string" ? v : JSON.stringify(v, null, 2);
-  function renderAccess(plan, active, expires){
-    if (hubAccessStatus) hubAccessStatus.textContent = `Plan: ${plan || "free"} | Active: ${active ? "true" : "false"} | Expires: ${expires || "—"}`;
-    if (proSection) proSection.style.display = (["pro","developer"].includes(plan) && active) ? "block" : "none";
-    if (developerSection) developerSection.style.display = (plan === "developer" && active) ? "block" : "none";
-  }
-  async function loadAccess(v){
-    const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(v)}`, { headers: { accept: "application/json" } });
-    const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data?.error || data?.message || "Status lookup failed.");
-    const plan = String(data.planCode || "").toLowerCase();
-    const active = data.active === true && ["starter","pro","developer"].includes(plan);
-    renderAccess(plan, active, data.expiresAt);
-    if (!active) throw new Error("This wallet does not have active paid hub access.");
-    return { plan, active };
+(function () {
+  "use strict";
+
+  const qs = (sel) => document.querySelector(sel);
+
+  const state = {
+    wallet: "",
+    tier: "unknown",
+    active: false,
+    expiry: "",
+    rawStatus: null,
+  };
+
+  const ITEMS_PER_PAGE = 5;
+  let tokenHoldingsData = [];
+  let transactionBreakdownData = [];
+  let tokenHoldingsPage = 1;
+  let transactionBreakdownPage = 1;
+
+  const el = {
+    heroWallet: qs("#heroWallet"),
+    heroTier: qs("#heroTier"),
+    heroStatus: qs("#heroStatus"),
+    heroExpiry: qs("#heroExpiry"),
+    heroPill: qs("#heroPill"),
+    hubAccessStatus: qs("#hubAccessStatus"),
+    hubTierAccess: qs("#hubTierAccess"),
+    walletInput: qs("#walletInput"),
+    loadWalletBtn: qs("#loadWalletBtn"),
+    runStarterBtn: qs("#runStarterBtn"),
+    useWorkspaceWalletBtn: qs("#useWorkspaceWalletBtn"),
+    starterStatus: qs("#starterStatus"),
+
+    walletClassPill: qs("#walletClassPill"),
+    walletAddress: qs("#walletAddress"),
+    walletIdentity: qs("#walletIdentity"),
+    walletBalance: qs("#walletBalance"),
+    walletTx: qs("#walletTx"),
+    walletRisk: qs("#walletRisk"),
+    walletTrustlines: qs("#walletTrustlines"),
+    walletOwnerCount: qs("#walletOwnerCount"),
+
+    blackholeTierPill: qs("#blackholeTierPill"),
+    blackholeSummaryNote: qs("#blackholeSummaryNote"),
+    blackholeTierValue: qs("#blackholeTierValue"),
+    blackholeStatusLabel: qs("#blackholeStatusLabel"),
+    blackholeConfirmedValue: qs("#blackholeConfirmedValue"),
+    blackholeMasterKeyValue: qs("#blackholeMasterKeyValue"),
+    blackholeRegularKeyValue: qs("#blackholeRegularKeyValue"),
+    blackholeRegularKeyLooksValue: qs("#blackholeRegularKeyLooksValue"),
+
+    tokenHoldingsList: qs("#tokenHoldingsList"),
+    transactionBreakdownList: qs("#transactionBreakdownList"),
+    tokenPrevBtn: qs("#tokenPrevBtn"),
+    tokenNextBtn: qs("#tokenNextBtn"),
+    tokenPageInfo: qs("#tokenPageInfo"),
+    txPrevBtn: qs("#txPrevBtn"),
+    txNextBtn: qs("#txNextBtn"),
+    txPageInfo: qs("#txPageInfo"),
+
+    recentActivityList: qs("#recentActivityList"),
+    confidencePill: qs("#confidencePill"),
+    signalList: qs("#signalList"),
+    statementText: qs("#statementText"),
+    classificationValue: qs("#classificationValue"),
+    confidenceValue: qs("#confidenceValue"),
+    riskLevelValue: qs("#riskLevelValue"),
+    riskScoreValue: qs("#riskScoreValue"),
+    riskFlagsRow: qs("#riskFlagsRow"),
+    riskNotesList: qs("#riskNotesList"),
+
+    metricActivity: qs("#metricActivity"),
+    metricStatementShort: qs("#metricStatementShort"),
+    nftCount: qs("#nftCount"),
+    blackholeTier: qs("#blackholeTier"),
+
+    starterErrorBox: qs("#starterErrorBox"),
+    proWorkspace: qs("#proWorkspace"),
+    developerWorkspace: qs("#developerWorkspace"),
+    proBadge: qs("#proBadge"),
+    developerBadge: qs("#developerBadge"),
+  };
+
+  function getQueryWallet() {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get("wallet") || params.get("address") || "").trim();
   }
 
-  const renderReport = (data) => {
-    const r = data?.report || data || {};
-    const lines = [
-      `Classification: ${r.classification || "Unknown"}`,
-      `Confidence: ${r.confidence ?? "Unknown"}`,
-      `Activity: ${r.activityLevel || r.activity?.trend || r.activity?.level || "Unknown"}`,
-      `Risk: ${r.risk?.level || "Unknown"}`,
-      "",
-      `Statement: ${Array.isArray(r.statement) ? r.statement.join(" ") : (r.statement || "No statement available.")}`,
-      "",
-      `XRP Balance: ${r.summary?.balanceXRP ?? r.balanceXRP ?? "Unknown"}`,
-      `Trustlines: ${r.summary?.trustlineCount ?? r.trustlines ?? "Unknown"}`,
-      `Owner Count: ${r.summary?.ownerCount ?? r.ownerCount ?? "Unknown"}`,
-      `NFT Count: ${r.summary?.nftCount ?? r.nftCount ?? "Unknown"}`,
-      "",
-      `Token Holdings: ${Array.isArray(r.tokenHoldings) ? r.tokenHoldings.length : 0}`,
-      `Transactions: ${Array.isArray(r.transactionBreakdown) ? r.transactionBreakdown.length : 0}`
-    ];
-    out.textContent = lines.join("\n");
-  };
-  async function go(v) {
-    v = String(v || "").trim();
-    if (!v) { setStatus("Enter an XRPL wallet address."); return; }
-    run.disabled = true; ex.disabled = true; setStatus(`Running paid hub for ${v} ...`);
-    try {
-      await loadAccess(v);
-      const res = await fetch(`${API_BASE}/api/starter/report?wallet=${encodeURIComponent(v)}&address=${encodeURIComponent(v)}`, { headers: { accept: "application/json" } });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || data?.error || `Request failed with status ${res.status}`);
-      renderReport(data); setStatus("Paid hub loaded.");
-    } catch (err) {
-      setOut("Paid hub request failed.");
-      setStatus(err instanceof Error ? err.message : "Paid hub request failed.");
-    } finally {
-      run.disabled = false; ex.disabled = false;
+  function safeText(value, fallback = "-") {
+    if (value === undefined || value === null || value === "") return fallback;
+    return String(value);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatNumber(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return safeText(value, "—");
+    return n.toLocaleString(undefined, { maximumFractionDigits: 6 });
+  }
+
+  function capitalize(str) {
+    const value = String(str || "");
+    if (!value) return "Unknown";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  function shortWallet(wallet) {
+    if (!wallet) return "Waiting";
+    if (wallet.length < 12) return wallet;
+    return `${wallet.slice(0, 8)}...${wallet.slice(-8)}`;
+  }
+
+  function tierRank(tier) {
+    const t = String(tier || "").toLowerCase();
+    if (t === "developer") return 3;
+    if (t === "pro") return 2;
+    if (t === "starter") return 1;
+    return 0;
+  }
+
+  function setPill(elm, text, tone) {
+    if (!elm) return;
+    elm.className = tone ? `badge ${tone}` : "badge";
+    elm.textContent = text;
+  }
+
+  function renderBadgeRow(target, items, emptyText, tone = "") {
+    if (!target) return;
+    if (!Array.isArray(items) || !items.length) {
+      target.innerHTML = `<span class="badge">${escapeHtml(emptyText)}</span>`;
+      return;
+    }
+    target.innerHTML = items
+      .map((item) => `<span class="badge ${tone}">${escapeHtml(String(item))}</span>`)
+      .join("");
+  }
+
+  function renderList(target, items, emptyText) {
+    if (!target) return;
+    if (!Array.isArray(items) || !items.length) {
+      target.innerHTML = `<li class="empty">${escapeHtml(emptyText)}</li>`;
+      return;
+    }
+    target.innerHTML = items.map((item) => `<li>${escapeHtml(String(item))}</li>`).join("");
+  }
+
+  function extractActivities(data) {
+    const items =
+      Array.isArray(data?.activity?.highlights) ? data.activity.highlights :
+      Array.isArray(data?.activity?.items) ? data.activity.items :
+      Array.isArray(data?.activity?.summary) ? data.activity.summary :
+      Array.isArray(data?.activity) ? data.activity :
+      [];
+    return items.map((item) => safeText(item)).filter(Boolean);
+  }
+
+  function buildIdentityBadges(data) {
+    const items = [];
+    if (data?.classification) items.push(data.classification);
+    if (data?.blackholeTier && String(data.blackholeTier).toLowerCase() !== "none") {
+      items.push(`Blackhole: ${String(data.blackholeTier).toUpperCase()}`);
+    }
+    if (data?.risk?.level) items.push(`Risk: ${data.risk.level}`);
+    if (!items.length) items.push("Awaiting analysis");
+    return items;
+  }
+
+  function getBlackholePresentation(data) {
+    const tier = String(data?.blackholeTier || "none").toLowerCase();
+    const confirmed = !!data?.blackholeStatus;
+    const masterKeyDisabled = data?.accountFlags?.includes?.("lsfDisableMaster") ? "Yes" : safeText(data?.masterKeyDisabled, "Unknown");
+    const regularKey = safeText(data?.regularKey, "None");
+    const regularKeyLooks = data?.regularKeyLooksBlackholed === true ? "Yes" : data?.regularKeyLooksBlackholed === false ? "No" : "Unknown";
+
+    let pill = "green";
+    let label = "No blackhole pattern detected";
+    let note = "No blackhole pattern detected from current wallet flags and key state.";
+    let tierLabel = String(tier || "none").toUpperCase();
+
+    if (confirmed || tier === "confirmed") {
+      pill = "red";
+      label = "Confirmed blackhole state detected";
+      note = "Confirmed blackhole state detected from current wallet flags and key state.";
+      tierLabel = "CONFIRMED";
+    } else if (tier === "likely") {
+      pill = "amber";
+      label = "Likely blackhole pattern detected";
+      note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
+      tierLabel = "LIKELY";
+    } else if (tier === "partial") {
+      pill = "amber";
+      label = "Partial blackhole pattern detected";
+      note = "Partial blackhole pattern detected. Some blackhole signals are present, but the state is not confirmed.";
+      tierLabel = "PARTIAL";
+    } else {
+      tierLabel = "NONE";
+    }
+
+    return {
+      pill,
+      tier: tierLabel,
+      label,
+      note,
+      confirmed: confirmed ? "Yes" : "No",
+      masterKeyDisabled,
+      regularKey,
+      regularKeyLooks
+    };
+  }
+
+  function riskTone(level) {
+    const value = String(level || "").toLowerCase();
+    if (value.includes("high")) return "red";
+    if (value.includes("medium") || value.includes("moderate")) return "amber";
+    if (value.includes("low")) return "green";
+    return "blue";
+  }
+
+  function setHero() {
+    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.wallet);
+    if (el.heroTier) el.heroTier.textContent = capitalize(state.tier);
+    if (el.heroStatus) el.heroStatus.textContent = state.active ? "Active" : "Inactive";
+    if (el.heroExpiry) el.heroExpiry.textContent = state.expiry || "—";
+
+    if (state.active) {
+      setPill(el.heroPill, `${capitalize(state.tier)} active`, "green");
+    } else if (state.wallet) {
+      setPill(el.heroPill, "Inactive wallet", "red");
+    } else {
+      setPill(el.heroPill, "Wallet required", "amber");
+    }
+
+    if (el.hubAccessStatus) {
+      el.hubAccessStatus.textContent = state.wallet
+        ? `${shortWallet(state.wallet)} resolved. ${state.active ? "Paid access is active." : "No active paid access found."}`
+        : "No wallet loaded yet.";
+    }
+
+    if (el.hubTierAccess) {
+      if (!state.active) {
+        el.hubTierAccess.textContent = "Starter, Pro, and Developer remain locked until a paid wallet is resolved.";
+      } else if (state.tier === "developer") {
+        el.hubTierAccess.textContent = "Developer wallet resolved. Starter, Pro, and Developer are all unlocked.";
+      } else if (state.tier === "pro") {
+        el.hubTierAccess.textContent = "Pro wallet resolved. Starter and Pro are unlocked. Developer remains visible and locked.";
+      } else if (state.tier === "starter") {
+        el.hubTierAccess.textContent = "Starter wallet resolved. Starter is unlocked. Pro and Developer remain visible and locked.";
+      } else {
+        el.hubTierAccess.textContent = "Tier could not be resolved cleanly.";
+      }
     }
   }
-  run.addEventListener("click", () => go(wallet.value));
-  ex.addEventListener("click", () => { wallet.value = EXAMPLE; go(EXAMPLE); });
-  wallet.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); go(wallet.value); } });
-  const incoming = (q.get("wallet") || "").trim();
-  if (incoming) { wallet.value = incoming; go(incoming); }
+
+  function setModuleVisibility() {
+    const rank = state.active ? tierRank(state.tier) : 0;
+    if (el.proBadge) setPill(el.proBadge, rank >= 2 ? "Unlocked" : "Locked", rank >= 2 ? "green" : "amber");
+    if (el.developerBadge) setPill(el.developerBadge, rank >= 3 ? "Unlocked" : "Locked", rank >= 3 ? "green" : "amber");
+  }
+
+  function setLoadingState(isLoading) {
+    if (!el.runStarterBtn) return;
+    el.runStarterBtn.disabled = isLoading;
+    el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Utility";
+    if (el.starterStatus && isLoading) {
+      el.starterStatus.textContent = `Running paid report for ${state.wallet || "wallet"}...`;
+    }
+  }
+
+  function setStarterError(message) {
+    if (el.starterErrorBox) {
+      el.starterErrorBox.textContent = message || "Unable to load paid wallet intelligence.";
+    }
+    if (el.starterStatus) {
+      el.starterStatus.textContent = message || "Unable to load paid wallet intelligence.";
+    }
+  }
+
+  function clearStarterError() {
+    if (el.starterErrorBox) {
+      el.starterErrorBox.textContent = "No current utility errors.";
+    }
+  }
+
+  function renderTokenHoldings(items) {
+    tokenHoldingsData = Array.isArray(items) ? items : [];
+    const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
+    if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
+    if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
+
+    if (!el.tokenHoldingsList) return;
+    if (!tokenHoldingsData.length) {
+      el.tokenHoldingsList.innerHTML = `<div class="empty">No XRPL token holdings detected.</div>`;
+      if (el.tokenPageInfo) el.tokenPageInfo.textContent = `Page 1 of 1`;
+      if (el.tokenPrevBtn) el.tokenPrevBtn.disabled = true;
+      if (el.tokenNextBtn) el.tokenNextBtn.disabled = true;
+      return;
+    }
+
+    const startIndex = (tokenHoldingsPage - 1) * ITEMS_PER_PAGE;
+    const pageItems = tokenHoldingsData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    el.tokenHoldingsList.innerHTML = pageItems.map((item) => `
+      <div class="tracker-item">
+        <div>
+          <strong>${escapeHtml(item.currency || "Unknown Token")}</strong>
+          <span>Issuer: ${escapeHtml(item.issuer || "—")}</span>
+          <small>Limit: ${escapeHtml(formatNumber(item.limit ?? "—"))}</small>
+        </div>
+        <div class="flow">${escapeHtml(formatNumber(item.balance ?? "—"))}</div>
+      </div>
+    `).join("");
+
+    if (el.tokenPageInfo) el.tokenPageInfo.textContent = `Page ${tokenHoldingsPage} of ${totalPages}`;
+    if (el.tokenPrevBtn) el.tokenPrevBtn.disabled = tokenHoldingsPage <= 1;
+    if (el.tokenNextBtn) el.tokenNextBtn.disabled = tokenHoldingsPage >= totalPages;
+  }
+
+  function renderTransactionBreakdown(items) {
+    transactionBreakdownData = Array.isArray(items) ? items : [];
+    const totalPages = Math.max(1, Math.ceil(transactionBreakdownData.length / ITEMS_PER_PAGE));
+    if (transactionBreakdownPage > totalPages) transactionBreakdownPage = totalPages;
+    if (transactionBreakdownPage < 1) transactionBreakdownPage = 1;
+
+    if (!el.transactionBreakdownList) return;
+    if (!transactionBreakdownData.length) {
+      el.transactionBreakdownList.innerHTML = `<div class="empty">No recent transaction breakdown available.</div>`;
+      if (el.txPageInfo) el.txPageInfo.textContent = `Page 1 of 1`;
+      if (el.txPrevBtn) el.txPrevBtn.disabled = true;
+      if (el.txNextBtn) el.txNextBtn.disabled = true;
+      return;
+    }
+
+    const startIndex = (transactionBreakdownPage - 1) * ITEMS_PER_PAGE;
+    const pageItems = transactionBreakdownData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    el.transactionBreakdownList.innerHTML = pageItems.map((item) => {
+      const amount = item.amount !== undefined && item.amount !== null
+        ? `${formatNumber(item.amount)} ${item.currency || ""}`.trim()
+        : "—";
+
+      return `
+        <div class="tracker-item">
+          <div>
+            <strong>${escapeHtml(item.type || "Unknown")}</strong>
+            <span>${escapeHtml(item.summary || "No summary")}</span>
+            <small>${escapeHtml(item.timestamp || "—")} • ${escapeHtml(item.result || "—")}</small>
+            <small>${escapeHtml(item.counterparty || "—")}</small>
+          </div>
+          <div class="flow">${escapeHtml(amount)}</div>
+        </div>
+      `;
+    }).join("");
+
+    if (el.txPageInfo) el.txPageInfo.textContent = `Page ${transactionBreakdownPage} of ${totalPages}`;
+    if (el.txPrevBtn) el.txPrevBtn.disabled = transactionBreakdownPage <= 1;
+    if (el.txNextBtn) el.txNextBtn.disabled = transactionBreakdownPage >= totalPages;
+  }
+
+  function resetReportUI() {
+    if (el.walletClassPill) setPill(el.walletClassPill, "No Report", "blue");
+    if (el.walletAddress) el.walletAddress.textContent = "No wallet loaded";
+    renderBadgeRow(el.walletIdentity, [], "Awaiting analysis");
+    if (el.walletBalance) el.walletBalance.textContent = "-";
+    if (el.walletTx) el.walletTx.textContent = "-";
+    if (el.walletRisk) el.walletRisk.textContent = "-";
+    if (el.walletTrustlines) el.walletTrustlines.textContent = "-";
+    if (el.walletOwnerCount) el.walletOwnerCount.textContent = "-";
+
+    setPill(el.blackholeTierPill, "NONE", "green");
+    if (el.blackholeSummaryNote) el.blackholeSummaryNote.textContent = "Run a wallet analysis to evaluate blackhole state.";
+    if (el.blackholeTierValue) el.blackholeTierValue.textContent = "-";
+    if (el.blackholeStatusLabel) el.blackholeStatusLabel.textContent = "-";
+    if (el.blackholeConfirmedValue) el.blackholeConfirmedValue.textContent = "-";
+    if (el.blackholeMasterKeyValue) el.blackholeMasterKeyValue.textContent = "-";
+    if (el.blackholeRegularKeyValue) el.blackholeRegularKeyValue.textContent = "-";
+    if (el.blackholeRegularKeyLooksValue) el.blackholeRegularKeyLooksValue.textContent = "-";
+
+    renderTokenHoldings([]);
+    renderTransactionBreakdown([]);
+    renderList(el.recentActivityList, [], "Run a wallet analysis to populate activity insights.");
+    setPill(el.confidencePill, "Confidence -", "");
+    renderList(el.signalList, [], "No signals yet.");
+    if (el.statementText) el.statementText.textContent = "Run a wallet analysis to generate a statement.";
+    if (el.classificationValue) el.classificationValue.textContent = "-";
+    if (el.confidenceValue) el.confidenceValue.textContent = "-";
+    if (el.riskLevelValue) el.riskLevelValue.textContent = "-";
+    if (el.riskScoreValue) el.riskScoreValue.textContent = "-";
+    renderBadgeRow(el.riskFlagsRow, [], "No risk flags yet");
+    renderList(el.riskNotesList, [], "No risk notes yet.");
+
+    if (el.metricActivity) el.metricActivity.textContent = "-";
+    if (el.metricStatementShort) el.metricStatementShort.textContent = "-";
+    if (el.nftCount) el.nftCount.textContent = "-";
+    if (el.blackholeTier) el.blackholeTier.textContent = "-";
+  }
+
+  function renderReport(data) {
+    tokenHoldingsPage = 1;
+    transactionBreakdownPage = 1;
+
+    const classification = safeText(data?.classification, "Unknown");
+    const confidence = safeText(data?.confidence, "-");
+    const riskLevel = safeText(data?.risk?.level, "-");
+    const riskScore = safeText(data?.risk?.score ?? data?.risk?.level, "-");
+    const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
+    const activityItems = extractActivities(data);
+    const activitySummary = Array.isArray(data?.activity?.summary) ? data.activity.summary : [];
+    const riskFlags = Array.isArray(data?.risk?.flags) ? data.risk.flags : [];
+    const riskNotes = Array.isArray(data?.risk?.notes) ? data.risk.notes : [];
+    const tokenHoldings = Array.isArray(data?.tokenHoldings) ? data.tokenHoldings : [];
+    const txs = Array.isArray(data?.transactionBreakdown) ? data.transactionBreakdown : [];
+    const blackholeView = getBlackholePresentation(data);
+    const badgeTone = riskTone(riskLevel);
+    const identityBadges = buildIdentityBadges(data);
+    const signals = Array.isArray(data?.signals) ? data.signals : Array.isArray(data?.signalsSummary) ? data.signalsSummary : [];
+    const recentTx = safeText(
+      data?.activity?.sampledRecentTransactions ??
+      data?.activity?.recentTransactions ??
+      data?.activity?.recentTransactionCount,
+      "-"
+    );
+
+    if (el.walletClassPill) setPill(el.walletClassPill, classification, badgeTone);
+    if (el.walletAddress) el.walletAddress.textContent = state.wallet || "No wallet loaded";
+    renderBadgeRow(el.walletIdentity, identityBadges, "Awaiting analysis");
+    if (el.walletBalance) el.walletBalance.textContent = safeText(data?.balanceXRP ?? data?.summary?.balanceXRP, "-");
+    if (el.walletTx) el.walletTx.textContent = recentTx;
+    if (el.walletRisk) el.walletRisk.textContent = riskScore;
+    if (el.walletTrustlines) el.walletTrustlines.textContent = safeText(data?.trustlines ?? data?.summary?.trustlineCount ?? data?.activity?.trustlines, "-");
+    if (el.walletOwnerCount) el.walletOwnerCount.textContent = safeText(data?.ownerCount ?? data?.summary?.ownerCount, "-");
+
+    if (el.blackholeTierPill) setPill(el.blackholeTierPill, blackholeView.tier, blackholeView.pill);
+    if (el.blackholeSummaryNote) el.blackholeSummaryNote.textContent = blackholeView.note;
+    if (el.blackholeTierValue) el.blackholeTierValue.textContent = blackholeView.tier;
+    if (el.blackholeStatusLabel) el.blackholeStatusLabel.textContent = blackholeView.label;
+    if (el.blackholeConfirmedValue) el.blackholeConfirmedValue.textContent = blackholeView.confirmed;
+    if (el.blackholeMasterKeyValue) el.blackholeMasterKeyValue.textContent = blackholeView.masterKeyDisabled;
+    if (el.blackholeRegularKeyValue) el.blackholeRegularKeyValue.textContent = blackholeView.regularKey;
+    if (el.blackholeRegularKeyLooksValue) el.blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
+
+    renderTokenHoldings(tokenHoldings);
+    renderTransactionBreakdown(txs);
+    renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
+    setPill(el.confidencePill, `Confidence ${confidence}`, "");
+    renderList(el.signalList, signals, "No signals yet.");
+    if (el.statementText) el.statementText.textContent = statement;
+    if (el.classificationValue) el.classificationValue.textContent = classification;
+    if (el.confidenceValue) el.confidenceValue.textContent = confidence;
+    if (el.riskLevelValue) el.riskLevelValue.textContent = riskLevel;
+    if (el.riskScoreValue) el.riskScoreValue.textContent = riskScore;
+    renderBadgeRow(el.riskFlagsRow, riskFlags, "No explicit risk flags returned for this wallet.", badgeTone);
+    renderList(el.riskNotesList, riskNotes, "No additional risk notes.");
+
+    if (el.metricActivity) el.metricActivity.textContent = activitySummary.length ? safeText(activitySummary[0]) : safeText(data?.activity?.level ?? data?.activity, "-");
+    if (el.metricStatementShort) el.metricStatementShort.textContent = statement.slice(0, 42) || "-";
+    if (el.nftCount) el.nftCount.textContent = safeText(data?.nftCount ?? data?.summary?.nftCount, "-");
+    if (el.blackholeTier) el.blackholeTier.textContent = blackholeView.tier;
+
+    if (el.starterStatus) {
+      el.starterStatus.textContent = `Paid report loaded for ${state.wallet}.`;
+    }
+  }
+
+  async function loadAccess() {
+    setHero();
+    setModuleVisibility();
+
+    if (!state.wallet) return;
+
+    try {
+      const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      const planCode = String(
+        data.planCode ||
+        data.plan ||
+        data.tier ||
+        data.subscription?.planCode ||
+        data.subscription?.plan ||
+        ""
+      ).toLowerCase();
+
+      const active = Boolean(
+        data.active ||
+        data.isActive ||
+        data.subscription?.active ||
+        data.subscription?.isActive ||
+        data.status === "active"
+      );
+
+      const expiry = String(
+        data.expiresAt ||
+        data.expiry ||
+        data.subscription?.expiresAt ||
+        data.subscription?.expiry ||
+        ""
+      );
+
+      state.rawStatus = data;
+      state.tier = planCode || "unknown";
+      state.active = active;
+      state.expiry = expiry;
+
+      setHero();
+      setModuleVisibility();
+    } catch (err) {
+      state.tier = "unknown";
+      state.active = false;
+      state.expiry = "";
+      setHero();
+      setModuleVisibility();
+    }
+  }
+
+  async function runStarter() {
+    clearStarterError();
+
+    const wallet = (el.walletInput?.value || state.wallet || "").trim();
+    if (!wallet) {
+      setStarterError("Enter a wallet first.");
+      return;
+    }
+
+    state.wallet = wallet;
+    setHero();
+    setLoadingState(true);
+
+    try {
+      const url = `/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const message = data.error || data.message || `Starter route failed with ${res.status}`;
+        throw new Error(message);
+      }
+
+      renderReport(data?.report || data);
+      clearStarterError();
+    } catch (err) {
+      resetReportUI();
+      setStarterError(err.message || "Unable to load paid wallet intelligence.");
+    } finally {
+      setLoadingState(false);
+    }
+  }
+
+  function bind() {
+    el.loadWalletBtn?.addEventListener("click", async () => {
+      state.wallet = (el.walletInput?.value || "").trim();
+      if (!state.wallet) {
+        setStarterError("Enter a wallet first.");
+        return;
+      }
+      clearStarterError();
+      const url = new URL(window.location.href);
+      url.searchParams.set("wallet", state.wallet);
+      window.history.replaceState({}, "", url);
+      await loadAccess();
+    });
+
+    el.runStarterBtn?.addEventListener("click", runStarter);
+
+    el.useWorkspaceWalletBtn?.addEventListener("click", () => {
+      if (!state.wallet || !el.walletInput) return;
+      el.walletInput.value = state.wallet;
+    });
+
+    el.walletInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        runStarter();
+      }
+    });
+
+    el.tokenPrevBtn?.addEventListener("click", () => {
+      tokenHoldingsPage -= 1;
+      renderTokenHoldings(tokenHoldingsData);
+    });
+
+    el.tokenNextBtn?.addEventListener("click", () => {
+      tokenHoldingsPage += 1;
+      renderTokenHoldings(tokenHoldingsData);
+    });
+
+    el.txPrevBtn?.addEventListener("click", () => {
+      transactionBreakdownPage -= 1;
+      renderTransactionBreakdown(transactionBreakdownData);
+    });
+
+    el.txNextBtn?.addEventListener("click", () => {
+      transactionBreakdownPage += 1;
+      renderTransactionBreakdown(transactionBreakdownData);
+    });
+  }
+
+  async function init() {
+    resetReportUI();
+
+    const qWallet = getQueryWallet();
+    if (qWallet) {
+      state.wallet = qWallet;
+      if (el.walletInput) el.walletInput.value = qWallet;
+    }
+
+    bind();
+    await loadAccess();
+
+    if (state.wallet && state.active) {
+      await runStarter();
+    }
+  }
+
+  init();
 })();

@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AUGUR Hub</title>
-  <meta name="description" content="Use AUGUR as XRPL intelligence infrastructure. Structured XRPL wallet intelligence, issuer-state detection, blackhole-aware analysis, and API access for apps, dashboards, bots, and internal tools." />
+  <meta name="description" content="AUGUR paid workspace for XRPL wallet intelligence." />
   <style>
     :root{
       --bg:#050b14;
@@ -24,42 +24,31 @@
       --glow:0 0 0 1px rgba(87,166,255,.14), 0 0 28px rgba(45,108,223,.10);
       --radius:22px;
     }
-
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
+    html,body{margin:0;padding:0}
     body{
-      margin:0;
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:
         radial-gradient(circle at top, rgba(56,104,198,.18), transparent 30%),
         linear-gradient(180deg, #09111f 0%, var(--bg) 100%);
       color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      line-height:1.55;
     }
-
     a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
 
     .wrap{
       width:min(1240px, calc(100% - 36px));
       margin:0 auto;
-      padding:0 18px;
+      padding:18px 18px 48px;
     }
 
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:50;
-      backdrop-filter:blur(14px);
-      background:rgba(5,11,21,.84);
-      border-bottom:1px solid rgba(118,156,228,.12);
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-
-    .nav{
-      min-height:74px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:16px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
@@ -71,19 +60,17 @@
     }
 
     .brand-mark{
-      width:168px;
-      height:64px;
+      width:48px;
+      height:48px;
       display:grid;
       place-items:center;
-      color:var(--blue-2);
-    }
-
-    .brand-mark img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-      transform:translateY(-48px);
+      border-radius:14px;
+      background:linear-gradient(180deg, rgba(89,166,255,.18), rgba(45,108,223,.12));
+      border:1px solid rgba(87,166,255,.18);
+      box-shadow:var(--shadow);
+      color:var(--blue);
+      font-weight:900;
+      font-size:18px;
     }
 
     .brand-copy{
@@ -105,93 +92,75 @@
       font-size:22px;
       letter-spacing:.8px;
       line-height:1;
+      font-weight:900;
     }
 
-    .nav-links{
+    .top-actions{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:10px;
       flex-wrap:wrap;
     }
 
-    .nav-link{
-      color:var(--muted);
-      padding:10px 14px;
-      border-radius:12px;
+    .btn{
+      height:50px;
+      padding:0 18px;
+      border-radius:15px;
+      border:0;
+      cursor:pointer;
+      font-weight:800;
       font-size:14px;
-      font-weight:700;
-      border:1px solid transparent;
-      transition:.15s ease;
-    }
-
-    .nav-link:hover{
-      color:var(--text);
-      background:rgba(255,255,255,.03);
-      border-color:rgba(118,156,228,.10);
-    }
-
-    .nav-link.active{
-      color:#fff;
-      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
-      border-color:rgba(87,166,255,.20);
-      box-shadow:var(--glow);
-    }
-
-    .mobile-nav{
-  display:flex;
-  gap:10px;
-  overflow-x:visible;
-      flex-wrap:wrap;
-  padding-bottom:6px;
-
-      display:none;
-      width:100%;
-      gap:8px;
-      padding-top:12px;
-      border-top:1px solid rgba(118,156,228,.10);
-    }
-
-    .mobile-nav::-webkit-scrollbar{
-  display:none;
-}
-
-.mobile-nav a{
-  flex:0 0 auto;
-
-  flex:0 0 auto;
-
-      min-height:64px;
-      display:flex;
+      letter-spacing:.2px;
+      transition:transform .15s ease, opacity .15s ease, background .15s ease;
+      display:inline-flex;
       align-items:center;
       justify-content:center;
-      text-align:center;
-      padding:0 8px;
-      border-radius:12px;
       text-decoration:none;
-      color:var(--muted);
-      background:rgba(255,255,255,.04);
-      font-size:13px;
-      font-weight:700;
     }
 
-    .mobile-nav a:hover,
-    .mobile-nav a.active{
+    .btn:hover{transform:translateY(-1px)}
+
+    .btn-primary{
+      color:#fff;
+      background:linear-gradient(180deg,#2891ff,#1876d8);
+    }
+
+    .btn-secondary{
       color:var(--text);
-      background:rgba(118,156,228,.12);
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(118,156,228,.10);
     }
 
-    .hero{
-      padding:16px 0 8px;
+    .btn-ghost{
+      color:var(--muted);
+      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
+      border:1px solid rgba(92,128,190,.32);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
     }
 
     .hero-card,
-    .card{
+    .panel,
+    .card,
+    .module,
+    .locked-card{
       background:linear-gradient(180deg,rgba(17,28,49,.96),rgba(11,19,35,.96));
       border:1px solid var(--line);
       border-radius:22px;
       box-shadow:var(--shadow);
-      padding:14px;
     }
+
+    .hero{
+      padding:8px 0 12px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    .hero-card{padding:16px}
 
     .eyebrow{
       display:inline-flex;
@@ -205,31 +174,56 @@
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:.8px;
+      font-weight:800;
     }
 
-    h1,h2,h3,p,pre{margin:0}
+    h1,h2,h3,h4,p,ul{margin:0}
 
     h1{
       margin:14px 0 10px;
       font-size:42px;
       line-height:1.02;
       letter-spacing:-1.1px;
-      max-width:900px;
+      max-width:820px;
     }
 
     .lede{
-      margin:0;
       color:var(--muted);
       font-size:17px;
-      max-width:940px;
+      max-width:760px;
+      margin:0 0 16px;
       line-height:1.55;
+    }
+
+    .search{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:10px 0 10px;
+    }
+
+    .search input{
+      flex:1 1 420px;
+      min-width:280px;
+      height:54px;
+      border-radius:15px;
+      border:1px solid rgba(130,160,220,.14);
+      background:rgba(6,11,21,.72);
+      color:var(--text);
+      padding:0 18px;
+      outline:none;
+      font-size:15px;
+    }
+
+    .search input:focus{
+      border-color:rgba(91,167,255,.45);
     }
 
     .trust{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
-      margin-top:12px;
+      margin-top:10px;
     }
 
     .pill{
@@ -245,293 +239,766 @@
       font-weight:700;
     }
 
+    .status{
+      margin-top:10px;
+      padding:12px 14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+      color:var(--text);
+      font-size:14px;
+      border-radius:16px;
+    }
+
+    .mini-grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .mini-card{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+    }
+
+    .mini-label{
+      color:var(--soft);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .mini-value{
+      color:#fff;
+      font-size:22px;
+      line-height:1.05;
+      letter-spacing:-.03em;
+    }
+
+    .mini-sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .hero-side{
+      display:grid;
+      gap:12px;
+    }
+
     .section{
-      padding:8px 0 14px;
+      padding:6px 0 12px;
     }
 
     .section-head{
       display:flex;
-      align-items:end;
       justify-content:space-between;
-      gap:16px;
+      align-items:flex-start;
+      gap:12px;
       margin-bottom:12px;
       flex-wrap:wrap;
     }
 
     .section-head h2{
-      font-size:28px;
-      letter-spacing:-.6px;
+      font-size:24px;
+      letter-spacing:-.04em;
     }
 
     .section-head p{
       color:var(--muted);
-      line-height:1.45;
+      font-size:14px;
+      max-width:820px;
     }
 
-    .grid-3{
+    .workspace-grid{
       display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
+      grid-template-columns:repeat(2,minmax(0,1fr));
       gap:12px;
     }
 
-    .grid-2{
+    .panel{
+      padding:16px;
+    }
+
+    .panel h3{
+      font-size:18px;
+      margin-bottom:8px;
+    }
+
+    .panel p{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .results-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);
+      gap:12px;
+    }
+
+    .stack{
       display:grid;
       gap:12px;
     }
 
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      width:max-content;
-      padding:8px 10px;
-      border-radius:999px;
-      font-size:11px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#dfe9ff;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line-soft);
+    .card,
+    .module,
+    .locked-card{
+      padding:16px;
+    }
+
+    .card-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
       margin-bottom:12px;
     }
 
-    .tag.blue{
-      color:#dcebff;
-      background:rgba(49,108,214,.18);
-      border-color:rgba(89,166,255,.20);
-    }
-
-    .tag.green{
-      color:#dcffef;
-      background:rgba(34,111,76,.22);
-      border-color:rgba(78,227,154,.20);
-    }
-
-    .tag.amber{
-      color:#fff2cf;
-      background:rgba(125,95,28,.24);
-      border-color:rgba(255,204,102,.18);
-    }
-
-    .card h3{
+    .card-header h3{
       font-size:22px;
       letter-spacing:-.02em;
-      margin-bottom:10px;
     }
 
-    .card p{
+    .subhead{
+      margin-top:4px;
       color:var(--muted);
-      line-height:1.55;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      min-height:30px;
+      padding:0 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      background:rgba(255,255,255,.05);
+      color:#dbe8ff;
+      border:1px solid rgba(255,255,255,.08);
+      white-space:nowrap;
+    }
+
+    .badge.blue{background:rgba(45,108,223,.18);border-color:rgba(89,166,255,.18)}
+    .badge.green{background:rgba(34,111,76,.22);border-color:rgba(78,227,154,.18)}
+    .badge.amber{background:rgba(125,95,28,.24);border-color:rgba(255,204,102,.18)}
+    .badge.red{background:rgba(120,29,29,.26);border-color:rgba(255,120,120,.18)}
+
+    .kbd{
+      display:inline-flex;
+      align-items:center;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#dbe8ff;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:13px;
+      overflow:auto;
+      max-width:100%;
+    }
+
+    .wallet-summary{
+      display:grid;
+      gap:10px;
+    }
+
+    .badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .stat-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .stat-line{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      padding:11px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .stat-line:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .stat-line .name{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    .stat-line .val{
+      color:#fff;
+      font-size:14px;
+      font-weight:800;
+      text-align:right;
+      line-height:1.4;
+    }
+
+    .analysis-grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .note{
+      color:var(--muted);
+      line-height:1.6;
       font-size:14px;
     }
 
-    .code-card{
-      background:linear-gradient(180deg,rgba(9,15,26,.98),rgba(7,12,22,.98));
-      border:1px solid rgba(118,156,228,.14);
-      border-radius:18px;
+    .tracker-item{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
       padding:14px;
-      overflow:auto;
+      border-radius:18px;
+      border:1px solid rgba(118,156,228,.10);
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
     }
 
-    pre{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      font-size:12px;
-      line-height:1.6;
-      color:#dbe8ff;
-      white-space:pre-wrap;
+    .tracker-item > div{
+      min-width:0;
+    }
+
+    .tracker-item strong,
+    .tracker-item span,
+    .tracker-item small,
+    .tracker-item .flow{
+      overflow-wrap:anywhere;
       word-break:break-word;
     }
 
-    .list{
-      margin:0;
-      padding-left:18px;
-      color:var(--muted);
-      display:grid;
-      gap:10px;
-      line-height:1.55;
-      font-size:14px;
+    #tokenHoldingsList .tracker-item,
+    #transactionBreakdownList .tracker-item{
+      padding:14px 14px;
+      gap:12px;
+      align-items:flex-start;
     }
 
-    .list li small{
+    #tokenHoldingsList .tracker-item strong,
+    #transactionBreakdownList .tracker-item strong{
+      font-size:13px;
+      line-height:1.45;
       display:block;
-      color:var(--soft);
-      margin-top:4px;
+      margin-bottom:4px;
     }
 
-    .endpoint-list{
+    #tokenHoldingsList .tracker-item span,
+    #transactionBreakdownList .tracker-item span,
+    #transactionBreakdownList .tracker-item small{
+      font-size:12px;
+      line-height:1.45;
+      display:block;
+    }
+
+    #tokenHoldingsList .tracker-item .flow,
+    #transactionBreakdownList .tracker-item .flow{
+      font-size:11px;
+      line-height:1.3;
+      align-self:flex-start;
+      margin-top:2px;
+      white-space:normal;
+    }
+
+    .list{
+      list-style:none;
+      padding:0;
+      margin:0;
       display:grid;
       gap:10px;
     }
 
-    .endpoint{
-      padding:14px;
-      border-radius:16px;
+    .list li,
+    .list .empty{
+      padding:12px 14px;
       background:rgba(255,255,255,.03);
       border:1px solid rgba(255,255,255,.06);
+      color:#dbe8ff;
+      line-height:1.5;
+      font-size:14px;
+      border-radius:16px;
     }
 
-    .endpoint .path{
-      display:inline-block;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    .list .empty{color:var(--muted)}
+
+    .pager{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .pager-info{
+      color:var(--muted);
       font-size:13px;
-      font-weight:800;
-      color:#dbe8ff;
+      font-weight:700;
+    }
+
+    .pager-btn{
+      width:36px;
+      height:36px;
+      border-radius:999px;
+      border:1px solid rgba(118,156,228,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-size:18px;
+      cursor:pointer;
+    }
+
+    .pager-btn:disabled{
+      opacity:.35;
+      cursor:default;
+    }
+
+    .locked-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .locked-tile{
+      padding:16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(118,156,228,.10);
+    }
+
+    .locked-tile h4{
+      font-size:15px;
       margin-bottom:6px;
     }
 
-    .endpoint p{
-      color:var(--muted);
-      line-height:1.5;
-      font-size:13px;
-    }
-
-    .footer{
-      padding:18px 0 42px;
-      color:var(--muted);
+    .locked-tile p{
       font-size:14px;
+      color:var(--muted);
     }
 
-    .footer-inner{
-      padding-top:18px;
-      border-top:1px solid rgba(118,156,228,.10);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-    }
+    .hidden{display:none !important}
 
-    .footer-links{
-      display:flex;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-
-    .footer-links a{color:var(--muted)}
-    .footer-links a:hover{color:var(--text)}
-
-    @media (max-width:1080px){
-      .grid-3,
-      .grid-2{
+    @media (max-width:1180px){
+      .hero-grid,
+      .results-grid,
+      .workspace-grid{
         grid-template-columns:1fr;
       }
     }
 
     @media (max-width:760px){
-      .wrap{padding:0 14px}
-      .nav-links{display:none}
-      .mobile-nav{
-        display:flex;
-        gap:10px;
-        overflow-x:visible;
-      flex-wrap:wrap;
-        padding-bottom:6px;
-      }
-      .hero{padding:12px 0 6px}
-      .hero-card,.card{padding:12px}
-      .section{padding:6px 0 10px}
-      .section-head{margin-bottom:10px}
-      .section-head h2{font-size:24px}
-      .card h3{font-size:19px}
-      .card p,.list,.endpoint p{font-size:13px}
+      .wrap{padding:18px 14px 42px}
       h1{font-size:30px}
-      .lede{font-size:15px}
-      .brand-copy span{font-size:18px}
+      .search input,.btn{height:48px}
+      .topbar{align-items:flex-start;flex-direction:column}
+      .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .hero-card,.card,.module,.locked-card,.panel{padding:12px}
+      .mini-card{padding:10px;border-radius:12px}
+      .mini-label{font-size:10px;letter-spacing:.08em}
+      .mini-value{font-size:18px}
+      .mini-sub{font-size:11px;line-height:1.3}
+      .locked-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="wrap">
-      <div class="nav">
-        <a class="brand" href="/">
-          <div class="brand-mark"><img src="/assets/augur_logo.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_logo.png';" /></div>
-          <div class="brand-copy">
-            <small>XRPL Intelligence</small>
-            <span>AUGUR</span>
-          </div>
-        </a>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand" href="/">
+        <div class="brand-mark">A</div>
+        <div class="brand-copy">
+          <small>Paid Workspace</small>
+          <span>AUGUR Hub</span>
+        </div>
+      </a>
 
-<div class="nav-links">
-  <a class="nav-link" href="/">Dashboard</a>
-  <a class="nav-link" href="/wallet/">Wallet Search</a>
-  <a class="nav-link" href="/pricing.html">Pricing</a>
-  <a class="nav-link" href="/developers.html">Developers</a>
-  <a class="nav-link active" href="/account/">Account</a>
-</div>
-
-<div class="mobile-nav">
-  <a href="/">Dashboard</a>
-  <a href="/wallet/">Wallet Search</a>
-  <a href="/pricing.html">Pricing</a>
-  <a href="/developers.html">Developers</a>
-  <a class="active" href="/account/">Account</a>
-</div>
+      <div class="top-actions">
+        <a class="btn btn-ghost" href="/wallet/">Wallet Search</a>
+        <a class="btn btn-secondary" href="/account/">Account</a>
+        <a class="btn btn-primary" href="/pricing.html">View Plans</a>
       </div>
     </div>
+
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow">Starter Tier Utility</div>
+          <h1>Starter is the premium Wallet Search surface inside Hub.</h1>
+          <p class="lede">
+            This is where paid users should work. Stronger structure, denser intelligence, and better XRPL wallet reads than the public teaser flow.
+          </p>
+
+          <div class="search">
+            <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
+            <button id="runStarterBtn" class="btn btn-primary" type="button">Run Utility</button>
+            <button id="loadWalletBtn" class="btn btn-secondary" type="button">Load Wallet</button>
+          </div>
+
+          <div class="trust">
+            <span class="pill">Paid access</span>
+            <span class="pill">Public ledger only</span>
+            <span class="pill">Read-only</span>
+            <span class="pill">Issuer detection</span>
+            <span class="pill">Blackhole detection</span>
+          </div>
+
+          <div id="starterStatus" class="status">Resolve a paid wallet and run a premium report.</div>
+        </div>
+
+        <div class="hero-card hero-side">
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">Wallet</div>
+              <div id="heroWallet" class="mini-value">Waiting</div>
+              <div class="mini-sub">Current workspace target</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Tier</div>
+              <div id="heroTier" class="mini-value">Unknown</div>
+              <div class="mini-sub">Resolved from subscription state</div>
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">Status</div>
+              <div id="heroStatus" class="mini-value">Checking</div>
+              <div class="mini-sub">Live paid access status</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Expires</div>
+              <div id="heroExpiry" class="mini-value">—</div>
+              <div class="mini-sub">Current access window</div>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-label">Workspace Law</div>
+            <div id="heroPill" class="badge blue">Checking access</div>
+            <div class="mini-sub" style="margin-top:10px">Account is the gate. Hub is the control center. Starter must beat Wallet Search.</div>
+          </div>
+
+          <button class="btn btn-secondary" id="useWorkspaceWalletBtn" type="button">Use Workspace Wallet</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="module">
+        <div class="section-head">
+          <div>
+            <h2>Workspace Access</h2>
+            <p>Live paid status and tier visibility for the wallet attached to this Hub session.</p>
+          </div>
+        </div>
+
+        <div class="workspace-grid">
+          <div class="panel">
+            <h3>Access State</h3>
+            <p id="hubAccessStatus">Checking subscription status...</p>
+          </div>
+          <div class="panel">
+            <h3>Tier Visibility</h3>
+            <p id="hubTierAccess">Starter, Pro, and Developer visibility is being resolved...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="results-grid">
+        <div class="stack">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Wallet Overview</h3>
+                <div class="subhead">Live paid report summary</div>
+              </div>
+              <span id="walletClassPill" class="badge blue">No Report</span>
+            </div>
+
+            <div class="wallet-summary">
+              <span id="walletAddress" class="kbd">No wallet loaded</span>
+              <div id="walletIdentity" class="badge-row">
+                <span class="badge">Awaiting analysis</span>
+              </div>
+            </div>
+
+            <div class="stat-list" style="margin-top:14px">
+              <div class="stat-line">
+                <div class="name">Balance</div>
+                <div id="walletBalance" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Recent Transactions</div>
+                <div id="walletTx" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Risk Score</div>
+                <div id="walletRisk" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Trustlines</div>
+                <div id="walletTrustlines" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Owner Count</div>
+                <div id="walletOwnerCount" class="val">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Blackhole Status</h3>
+                <div class="subhead">Tiered blackhole assessment from current wallet state</div>
+              </div>
+              <span id="blackholeTierPill" class="badge green">NONE</span>
+            </div>
+            <div id="blackholeSummaryNote" class="note">Run a wallet analysis to evaluate blackhole state.</div>
+            <div class="stat-list" style="margin-top:14px;">
+              <div class="stat-line">
+                <div class="name">Tier</div>
+                <div id="blackholeTierValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Status</div>
+                <div id="blackholeStatusLabel" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Confirmed</div>
+                <div id="blackholeConfirmedValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Master Key Disabled</div>
+                <div id="blackholeMasterKeyValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">RegularKey</div>
+                <div id="blackholeRegularKeyValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">RegularKey Looks Blackholed</div>
+                <div id="blackholeRegularKeyLooksValue" class="val">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Token Holdings</h3>
+                <div class="subhead">Issued assets and trustline balances held by this wallet</div>
+              </div>
+            </div>
+            <div id="tokenHoldingsList" class="list">
+              <div class="empty">No XRPL token holdings detected.</div>
+            </div>
+            <div class="pager">
+              <button id="tokenPrevBtn" class="pager-btn" type="button">‹</button>
+              <div id="tokenPageInfo" class="pager-info">Page 1 of 1</div>
+              <button id="tokenNextBtn" class="pager-btn" type="button">›</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Recent Activity</h3>
+                <div class="subhead">Live wallet behavior summary</div>
+              </div>
+            </div>
+            <ul id="recentActivityList" class="list">
+              <li class="empty">Run a wallet analysis to populate activity insights.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Signals and Statement</h3>
+                <div class="subhead">Readable intelligence from public ledger activity</div>
+              </div>
+            </div>
+            <div class="analysis-grid">
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Signals</div>
+                <ul id="signalList" class="list">
+                  <li class="empty">No signals yet.</li>
+                </ul>
+              </div>
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Plain-English Statement</div>
+                <div id="statementText" class="note">Run a wallet analysis to generate a statement.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Transaction Breakdown</h3>
+                <div class="subhead">Recent ledger actions rendered in readable form</div>
+              </div>
+            </div>
+            <div id="transactionBreakdownList" class="list">
+              <div class="empty">No recent transaction breakdown available.</div>
+            </div>
+            <div class="pager">
+              <button id="txPrevBtn" class="pager-btn" type="button">‹</button>
+              <div id="txPageInfo" class="pager-info">Page 1 of 1</div>
+              <button id="txNextBtn" class="pager-btn" type="button">›</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Risk and Classification</h3>
+                <div class="subhead">Behavioral and issuer-state intelligence</div>
+              </div>
+              <span id="confidencePill" class="badge">Confidence -</span>
+            </div>
+            <div class="stat-list">
+              <div class="stat-line">
+                <div class="name">Classification</div>
+                <div id="classificationValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Confidence</div>
+                <div id="confidenceValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Risk Level</div>
+                <div id="riskLevelValue" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Risk Score</div>
+                <div id="riskScoreValue" class="val">-</div>
+              </div>
+            </div>
+            <div id="riskFlagsRow" class="badge-row" style="margin-top:14px;">
+              <span class="badge">No risk flags yet</span>
+            </div>
+            <ul id="riskNotesList" class="list" style="margin-top:12px;">
+              <li class="empty">No risk notes yet.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Starter Metrics</h3>
+                <div class="subhead">Immediate paid utility readouts</div>
+              </div>
+            </div>
+            <div class="stat-list">
+              <div class="stat-line">
+                <div class="name">Activity</div>
+                <div id="metricActivity" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Statement Preview</div>
+                <div id="metricStatementShort" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">NFT Count</div>
+                <div id="nftCount" class="val">-</div>
+              </div>
+              <div class="stat-line">
+                <div class="name">Blackhole Tier</div>
+                <div id="blackholeTier" class="val">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Starter Error State</h3>
+                <div class="subhead">Surface paid route failures cleanly</div>
+              </div>
+            </div>
+            <div id="starterErrorBox" class="note">No current utility errors.</div>
+          </div>
+
+          <div class="locked-card" id="proWorkspace">
+            <div class="card-header">
+              <div>
+                <h3>Pro Workspace</h3>
+                <div class="subhead">Compare wallets, save targets, and work from a stronger workflow layer.</div>
+              </div>
+              <span class="badge amber" id="proBadge">Locked</span>
+            </div>
+            <div class="locked-grid">
+              <div class="locked-tile">
+                <h4>Compare Wallets</h4>
+                <p>Stack two or more wallets side by side and surface differences in behavior, risk, and holdings.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Saved Wallets</h4>
+                <p>Keep recurring targets in one workspace instead of typing them every time.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Watchlist</h4>
+                <p>Track repeated wallets and rotate them through your workflow fast.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Workflow Panels</h4>
+                <p>Upgrade beyond one-off lookups into a real daily operating surface.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="locked-card" id="developerWorkspace">
+            <div class="card-header">
+              <div>
+                <h3>Developer Workspace</h3>
+                <div class="subhead">Direct endpoint tooling for builders who need structured output, faster testing, and cleaner requests.</div>
+              </div>
+              <span class="badge amber" id="developerBadge">Locked</span>
+            </div>
+            <div class="locked-grid">
+              <div class="locked-tile">
+                <h4>Endpoint Runner</h4>
+                <p>Hit core intelligence routes directly from a clean utility layer.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Formatted JSON Viewer</h4>
+                <p>Inspect responses without falling back to a raw dump workflow.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Copy Request Tools</h4>
+                <p>Generate repeatable request patterns for faster dev loops.</p>
+              </div>
+              <div class="locked-tile">
+                <h4>Quick Endpoint Utilities</h4>
+                <p>Move from browsing the product to operating it like a tool.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <main class="wrap">
-    <section class="section">
-      <div class="card" id="hubAccessCard">
-        <h3>Workspace Access</h3>
-        <div id="hubAccessStatus" class="code-card" style="margin-top:12px;">Checking wallet access...</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="card" id="starterSection">
-        <h3>Paid Wallet Utility</h3>
-        <p>Run subscribed-wallet reads here without going back to Public Entry.</p>
-        <div class="field">
-          <label for="starterWallet">XRPL wallet address</label>
-          <input class="input" id="starterWallet" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
-        </div>
-        <div class="btn-row" style="margin-top:14px;">
-          <button class="btn btn-primary btn-hud" id="starterRunBtn" type="button">Run Paid Utility</button>
-          <button class="btn btn-secondary btn-hud" id="starterExampleBtn" type="button">Load Example Wallet</button>
-        </div>
-        <p id="starterStatus" style="margin-top:12px;color:#9fb0c3;">Paid hub ready.</p>
-        <div id="starterOutput" class="code-card" style="margin-top:12px;white-space:pre-wrap;">No paid report loaded yet.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="card" id="proSection">
-        <h3>Pro Workspace</h3>
-        <p>Compare wallets, track saved wallets, and work inside a deeper paid workflow.</p>
-        <div class="code-card" style="margin-top:12px;">
-          <strong>Locked</strong><br />
-          This section unlocks with Pro or Developer.
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="card" id="developerSection">
-        <h3>Developer Workspace</h3>
-        <p>Run endpoint tools, inspect JSON output, and access the highest utility tier.</p>
-        <div class="code-card" style="margin-top:12px;">
-          <strong>Locked</strong><br />
-          This section unlocks with Developer.
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <div class="wrap">
-      <div class="footer-inner">
-        <div>AUGUR Hub • Paid XRPL intelligence workspace</div>
-        <div class="footer-links">
-          <a href="/">Dashboard</a>
-          <a href="/wallet/">Wallet Search</a>
-          <a href="/pricing.html">Pricing</a>
-          <a href="https://api.augurxrpl.com/api/health" target="_blank" rel="noopener">API Health</a>
-        </div>
-      </div>
-    </div>
-  </footer>
   <script src="/assets/hub.js"></script>
 </body>
 </html>
