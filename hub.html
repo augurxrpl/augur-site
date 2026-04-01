@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>AUGUR Account Status</title>
-  <meta name="description" content="Check AUGUR subscription status for any XRPL wallet. Wallet-based access. No login. No custody." />
+  <title>AUGUR Hub</title>
+  <meta name="description" content="Use AUGUR as XRPL intelligence infrastructure. Structured XRPL wallet intelligence, issuer-state detection, blackhole-aware analysis, and API access for apps, dashboards, bots, and internal tools." />
   <style>
     :root{
       --bg:#050b14;
@@ -33,7 +33,7 @@
       background:
         radial-gradient(circle at top, rgba(56,104,198,.18), transparent 30%),
         linear-gradient(180deg, #09111f 0%, var(--bg) 100%);
-      color:#f5fbff;
+      color:var(--text);
     }
 
     a{color:inherit;text-decoration:none}
@@ -120,24 +120,21 @@
       border-radius:12px;
       font-size:14px;
       font-weight:700;
-      border:1px solid rgba(92,128,190,.32);
+      border:1px solid transparent;
       transition:.15s ease;
-      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
     }
 
     .nav-link:hover{
       color:var(--text);
-      transform:translateY(-1px);
-      border-color:rgba(120,190,255,.45);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 24px rgba(20,60,160,.18);
+      background:rgba(255,255,255,.03);
+      border-color:rgba(118,156,228,.10);
     }
 
     .nav-link.active{
       color:#fff;
-      background:linear-gradient(180deg,rgba(90,160,255,.95) 0%,rgba(35,92,190,.95) 100%);
-      border-color:rgba(120,190,255,.6);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 10px 26px rgba(20,60,160,.28);
+      background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));
+      border-color:rgba(87,166,255,.20);
+      box-shadow:var(--glow);
     }
 
     .mobile-nav{
@@ -163,7 +160,7 @@
 
   flex:0 0 auto;
 
-      min-height:46px;
+      min-height:64px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -172,9 +169,7 @@
       border-radius:12px;
       text-decoration:none;
       color:var(--muted);
-      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
-      border:1px solid rgba(92,128,190,.32);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
+      background:rgba(255,255,255,.04);
       font-size:13px;
       font-weight:700;
     }
@@ -478,40 +473,17 @@
   <main class="wrap">
     <section class="hero">
       <div class="hero-card">
-        <div class="eyebrow">Wallet-Based Access</div>
-        <h1>Account Status</h1>
+        <div class="eyebrow">Paid Hub</div>
+        <h1>Open your paid AUGUR workspace.</h1>
         <p class="lede">
-          Check subscription status for any XRPL wallet tied to AUGUR. No login. No custody. Wallet in, status out.
+          Your paid hub gives subscribed wallets one professional workspace with every utility unlocked by the active tier.
         </p>
-
         <div class="trust">
-          <span class="pill">Read-only</span>
+          <span class="pill">Paid workspace access</span>
+          <span class="pill">Tier-based utilities</span>
+          <span class="pill">Starter • Pro • Developer</span>
           <span class="pill">Public ledger only</span>
-          <span class="pill">Wallet-based access</span>
-          <span class="pill">No custody</span>
-          <span class="pill">XRPL-native</span>
-        </div>
-      </div>
-
-      <div class="section-head" style="margin-top:18px;">
-        <div>
-          <h2>What You Unlock</h2>
-          <p>Access expands based on your active AUGUR tier.</p>
-        </div>
-      </div>
-
-      <div class="grid-3">
-        <div class="card">
-          <h3>Starter</h3>
-          <p>Wallet intelligence, structured reports, and deeper signal visibility.</p>
-        </div>
-        <div class="card">
-          <h3>Pro</h3>
-          <p>Watchlists, behavioral tracking, and expanded analysis depth.</p>
-        </div>
-        <div class="card">
-          <h3>Developer</h3>
-          <p>Structured API access for apps, dashboards, and automation.</p>
+          <span class="pill">No login</span>
         </div>
       </div>
     </section>
@@ -519,53 +491,194 @@
     <section class="section">
       <div class="section-head">
         <div>
-          <h2>Wallet Access</h2>
-          <p>Verify subscription state directly from XRPL-linked records and open your paid workspace.</p>
+          <h2>What your paid hub includes</h2>
+          <p>Your paid hub is the main workspace for subscribed wallets and the utilities unlocked by the active tier.</p>
         </div>
       </div>
 
+      <div class="grid-3">
+        <div class="card">
+          <span class="tag blue">Usage</span>
+          <h3>10 searches per day</h3>
+          <p>Paid access opens a stronger workflow than the public entry page.</p>
+        </div>
+
+        <div class="card">
+          <span class="tag green">Utility</span>
+          <h3>Deeper report access</h3>
+          <p>Use AUGUR beyond the public entry layer with more useful report-driven workflow access.</p>
+        </div>
+
+        <div class="card">
+          <span class="tag amber">Access</span>
+          <h3>Wallet-based routing</h3>
+          <p>No traditional login. Subscribed wallets get routed into the correct utility tier automatically.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
       <div class="grid-2">
         <div class="card">
-          <div style="display:grid;gap:8px;">
-            <label for="walletInput" style="font-size:13px;font-weight:800;letter-spacing:.03em;color:var(--text);text-transform:uppercase;">XRPL wallet</label>
-            <input
-              id="walletInput"
-              type="text"
-              placeholder="r..."
-              autocomplete="off"
-              spellcheck="false"
-              style="width:100%;min-height:64px;border:1px solid rgba(118,156,228,.16);background:linear-gradient(180deg,rgba(38,88,173,.38),rgba(18,43,87,.38));color:var(--text);padding:0 14px;font-size:14px;font-weight:700;outline:none;border-radius:14px;"
-            />
-          </div>
-
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
-            <button class="btn btn-primary btn-hud" id="checkStatusBtn" type="button">Check Status</button>
-            <a class="btn btn-secondary btn-hud" href="/pricing.html">View Plans</a>
+          <h3>Core live endpoints</h3>
+          <div class="endpoint-list">
+            <div class="endpoint">
+              <div class="path">/api/health</div>
+              <p>Runtime health and availability check for services and integrations.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/version</div>
+              <p>Backend release visibility for versioning and deployment tracking.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/report</div>
+              <p>Canonical intelligence response with classification, signals, activity, risk, and statement layers.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/classification</div>
+              <p>Wallet classification surface for fast categorization workflows.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/statement</div>
+              <p>Plain-English interpretation layer for readable outputs.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/activity</div>
+              <p>Activity summary endpoint for behavioral snapshots.</p>
+            </div>
+            <div class="endpoint">
+              <div class="path">/api/risk</div>
+              <p>Risk-focused output for monitoring and review pipelines.</p>
+            </div>
           </div>
         </div>
 
         <div class="card">
-          <h2 style="margin:0 0 14px;">Subscription Result</h2>
-          <div id="statusBox" hidden class="status-box">
-            <div class="kv" id="statusDetails"></div>
-          </div>
+          <h3>Current engine shape</h3>
+          <div class="code-card">
+<pre>apps/api/src/index.ts
 
-          <div class="card" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
-            <h3 style="margin:0 0 10px;">Paid Workspace</h3>
-            <p style="margin:0;color:var(--muted);line-height:1.55;">
-              This wallet has paid access. Open your main hub to access every utility included with your tier.
-            </p>
-            <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
+engine/
+  xrplReader.ts
+  signalExtractor.ts
+  activityEngine.ts
+  classificationEngine.ts
+  riskEngine.ts
+  statementEngine.ts
+  reportEngine.ts
+
+utils/
+  validateAddress.ts
+  response.ts</pre>
           </div>
         </div>
       </div>
     </section>
+
+    <section class="section">
+      <div class="grid-2">
+        <div class="card">
+          <h3>What makes AUGUR useful</h3>
+          <ul class="list">
+            <li>It reads public XRPL wallets and explains what they are doing in plain English.</li>
+            <li>It detects issuer-state behavior, including blackholed issuer patterns.</li>
+            <li>It turns raw ledger behavior into structured intelligence your own products can use.</li>
+            <li>It gives you a path to build dashboards, bots, alerts, research tools, and internal monitoring around one engine.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Who this tier is for</h3>
+          <ul class="list">
+            <li>Internal tools<small>Use AUGUR inside treasury, research, compliance, or operations workflows.</small></li>
+            <li>Dashboards and analytics<small>Build frontends, terminals, and monitoring systems on top of structured intelligence.</small></li>
+            <li>Bots and automation<small>Use endpoint outputs to trigger actions, flags, or notifications.</small></li>
+            <li>XRPL infrastructure users<small>Turn AUGUR into a reusable intelligence layer inside your own stack.</small></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card">
+        <h3>Example response shape</h3>
+        <div class="code-card" style="margin-top:12px;">
+<pre>{
+  "ok": true,
+  "address": "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+  "network": "xrpl-mainnet",
+  "classification": "Exchange Wallet",
+  "confidence": "high",
+  "signals": [
+    "high_transaction_count",
+    "large_balance_profile",
+    "issuer_state_detected"
+  ],
+  "activity": {
+    "recentTransactions": 25,
+    "trustlines": 9
+  },
+  "risk": {
+    "score": 28,
+    "level": "low"
+  },
+  "statement": "This wallet appears highly active and operational, with behavior consistent with a known service or exchange-style profile."
+}</pre>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="card" id="hubAccessCard">
+        <h3>Workspace Access</h3>
+        <div id="hubAccessStatus" class="code-card" style="margin-top:12px;">Checking wallet access...</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card" id="starterSection">
+        <h3>Paid Wallet Utility</h3>
+        <p>Run subscribed-wallet reads here without going back to Public Entry.</p>
+        <div class="field">
+          <label for="starterWallet">XRPL wallet address</label>
+          <input class="input" id="starterWallet" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-primary btn-hud" id="starterRunBtn" type="button">Run Paid Utility</button>
+          <button class="btn btn-secondary btn-hud" id="starterExampleBtn" type="button">Load Example Wallet</button>
+        </div>
+        <p id="starterStatus" style="margin-top:12px;color:#9fb0c3;">Paid hub ready.</p>
+        <div id="starterOutput" class="code-card" style="margin-top:12px;white-space:pre-wrap;">No paid report loaded yet.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card" id="proSection">
+        <h3>Pro Workspace</h3>
+        <p>Compare wallets, track saved wallets, and work inside a deeper paid workflow.</p>
+        <div class="code-card" style="margin-top:12px;">
+          <strong>Locked</strong><br />
+          This section unlocks with Pro or Developer.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card" id="developerSection">
+        <h3>Developer Workspace</h3>
+        <p>Run endpoint tools, inspect JSON output, and access the highest utility tier.</p>
+        <div class="code-card" style="margin-top:12px;">
+          <strong>Locked</strong><br />
+          This section unlocks with Developer.
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer">
     <div class="wrap">
       <div class="footer-inner">
-        <div>AUGUR Account • Wallet-based access status</div>
+        <div>AUGUR Hub • Paid XRPL intelligence workspace</div>
         <div class="footer-links">
           <a href="/">Dashboard</a>
           <a href="/wallet/">Wallet Search</a>
@@ -575,105 +688,6 @@
       </div>
     </div>
   </footer>
-<script>
-    const API_BASE = "https://api.augurxrpl.com";
-    const walletInput = document.getElementById("walletInput");
-    const checkStatusBtn = document.getElementById("checkStatusBtn");
-    const statusBox = document.getElementById("statusBox");
-    const statusDetails = document.getElementById("statusDetails");
-    const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
-    const accountUtilityLinks = document.getElementById("accountUtilityLinks");
-
-    function safeText(value){
-      if (value === null || value === undefined || value === "") return "—";
-      return String(value);
-    }
-
-    function escapeHtml(value){
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-
-    function renderUtilityLinks(plan, wallet){
-      if (!accountUtilityLinks) return;
-
-      const links = [];
-
-      if (["starter","pro","developer"].includes(plan)) {
-        links.push({
-          href: `/hub.html?wallet=${encodeURIComponent(wallet)}`,
-          label: "Open My Hub"
-        });
-      }
-
-      accountUtilityLinks.innerHTML = links.map((item) => `
-        <a class="btn btn-primary btn-hud" href="${item.href}" style="text-decoration:none;">${item.label}</a>
-      `).join("");
-    }
-
-    function renderRows(rows){
-      statusBox.hidden = false;
-      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
-        <div class="kv-row">
-          <strong>${escapeHtml(label)}</strong>
-          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
-        </div>
-      `).join("");
-    }
-
-    checkStatusBtn.addEventListener("click", async () => {
-      const wallet = walletInput.value.trim();
-
-      if (!wallet) {
-        renderRows([["Error", "Enter an XRPL wallet address.", false]]);
-        return;
-      }
-
-      checkStatusBtn.disabled = true;
-      accountUtilityLauncher.hidden = true;
-
-      try {
-        const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
-        const data = await res.json();
-
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || data.message || "Status lookup failed");
-        }
-
-        const plan = String(data.planCode || "").toLowerCase();
-        const allowed = data.active === true && ["starter","pro","developer"].includes(plan);
-
-        renderRows([
-          ["Wallet", safeText(data.walletAddress), true],
-          ["Plan", safeText(data.planCode), false],
-          ["Status", safeText(data.status), false],
-          ["Active", safeText(data.active), false],
-          ["Destination Tag", safeText(data.destinationTag), true],
-          ["Started", safeText(data.startedAt), false],
-          ["Expires", safeText(data.expiresAt), false]
-        ]);
-
-        accountUtilityLauncher.hidden = false;
-
-        if (allowed) {
-          renderUtilityLinks(plan, wallet);
-          window.location.href = `/hub.html?wallet=${encodeURIComponent(wallet)}`;
-        } else {
-          accountUtilityLinks.innerHTML = `
-            <a class="btn btn-primary btn-hud" href="/pricing.html" style="text-decoration:none;">View Plans</a>
-          `;
-        }
-      } catch (err) {
-        renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
-      } finally {
-        checkStatusBtn.disabled = false;
-      }
-    });
-  </script>
+  <script src="/assets/hub.js"></script>
 </body>
 </html>
