@@ -11,7 +11,7 @@
     rawStatus: null,
   };
 
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 10;
   let tokenHoldingsData = [];
   let transactionBreakdownData = [];
   let tokenHoldingsPage = 1;
@@ -91,6 +91,41 @@
     return String(value);
   }
 
+  function decodeCurrencyCode(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "-";
+    if (/^[A-Z0-9]{3}$/.test(raw)) return raw;
+    if (!/^[A-Fa-f0-9]{40}$/.test(raw)) return raw;
+    try {
+      const bytes = raw.match(/.{1,2}/g) || [];
+      return bytes
+        .map((b) => String.fromCharCode(parseInt(b, 16)))
+        .join("")
+        .replace(/\0+$/g, "")
+        .trim() || raw;
+    } catch {
+      return raw;
+    }
+  }
+
+  function normalizeAmount(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "0";
+    const num = Number(raw);
+    if (!Number.isFinite(num)) return raw;
+    return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 6 });
+  }
+
+  function formatTxTime(value) {
+    if (value === undefined || value === null || value === "") return "";
+    const num = Number(value);
+    if (!Number.isFinite(num)) return "";
+    const ms = num > 1000000000000 ? num : (946684800 + num) * 1000;
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString();
+  }
+
   function escapeHtml(value) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -138,9 +173,8 @@
       target.innerHTML = `<span class="badge">${escapeHtml(emptyText)}</span>`;
       return;
     }
-    target.innerHTML = items
-      .map((item) => `<span class="badge ${tone}">${escapeHtml(String(item))}</span>`)
-      .join("");
+    const cls = tone ? `badge ${tone}` : "badge";
+    target.innerHTML = items.map((item) => `<span class="${cls}">${escapeHtml(String(item))}</span>`).join("");
   }
 
   function renderList(target, items, emptyText) {
@@ -159,7 +193,44 @@
       Array.isArray(data?.activity?.summary) ? data.activity.summary :
       Array.isArray(data?.activity) ? data.activity :
       [];
-    return items.map((item) => safeText(item)).filter(Boolean);
+    return items.map((v) => {
+      if (typeof v === "string") return v;
+      if (!v || typeof v !== "object") return safeText(v);
+      const parts = [
+        v.line,
+        v.label,
+        v.name,
+        v.title,
+        v.type,
+        v.category,
+        v.value !== undefined && v.value !== null && v.value !== "" ? String(v.value) : "",
+        v.interpretation,
+        v.detail,
+        v.reason
+      ].filter(Boolean);
+      return parts.join(" • ");
+    }).filter(Boolean);
+  }
+
+  function extractSignals(data) {
+    if (!Array.isArray(data?.signals)) return [];
+    return data.signals.map((v) => {
+      if (typeof v === "string") return v;
+      if (!v || typeof v !== "object") return safeText(v);
+      const parts = [
+        v.line,
+        v.label,
+        v.name,
+        v.signal,
+        v.type,
+        v.category,
+        v.value !== undefined && v.value !== null && v.value !== "" ? String(v.value) : "",
+        v.interpretation,
+        v.detail,
+        v.reason
+      ].filter(Boolean);
+      return parts.join(" • ");
+    }).filter(Boolean);
   }
 
   function buildIdentityBadges(data) {
@@ -174,42 +245,37 @@
   }
 
   function getBlackholePresentation(data) {
+    const flags = data?.accountFlags || {};
     const tier = String(data?.blackholeTier || "none").toLowerCase();
     const confirmed = !!data?.blackholeStatus;
-    const masterKeyDisabled = data?.accountFlags?.includes?.("lsfDisableMaster") ? "Yes" : safeText(data?.masterKeyDisabled, "Unknown");
-    const regularKey = safeText(data?.regularKey, "None");
-    const regularKeyLooks = data?.regularKeyLooksBlackholed === true ? "Yes" : data?.regularKeyLooksBlackholed === false ? "No" : "Unknown";
+    const masterKeyDisabled = "masterKeyDisabled" in flags ? (flags.masterKeyDisabled ? "True" : "False") : "-";
+    const regularKey = "regularKey" in flags ? (flags.regularKey || "None") : "-";
+    const regularKeyLooks = "regularKeyLooksBlackholed" in flags ? (flags.regularKeyLooksBlackholed ? "True" : "False") : "-";
 
     let pill = "green";
     let label = "No blackhole pattern detected";
     let note = "No blackhole pattern detected from current wallet flags and key state.";
-    let tierLabel = String(tier || "none").toUpperCase();
 
-    if (confirmed || tier === "confirmed") {
+    if (tier === "confirmed") {
       pill = "red";
       label = "Confirmed blackhole state detected";
       note = "Confirmed blackhole state detected from current wallet flags and key state.";
-      tierLabel = "CONFIRMED";
     } else if (tier === "likely") {
       pill = "amber";
       label = "Likely blackhole pattern detected";
       note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
-      tierLabel = "LIKELY";
     } else if (tier === "partial") {
-      pill = "amber";
+      pill = "blue";
       label = "Partial blackhole pattern detected";
       note = "Partial blackhole pattern detected. Some blackhole signals are present, but the state is not confirmed.";
-      tierLabel = "PARTIAL";
-    } else {
-      tierLabel = "NONE";
     }
 
     return {
+      tier: tier.toUpperCase(),
       pill,
-      tier: tierLabel,
       label,
       note,
-      confirmed: confirmed ? "Yes" : "No",
+      confirmed: confirmed ? "True" : "False",
       masterKeyDisabled,
       regularKey,
       regularKeyLooks
@@ -290,7 +356,9 @@
   }
 
   function renderTokenHoldings(items) {
-    tokenHoldingsData = Array.isArray(items) ? items : [];
+    tokenHoldingsData = Array.isArray(items)
+      ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
+      : [];
     const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
     if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
     if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
@@ -307,16 +375,18 @@
     const startIndex = (tokenHoldingsPage - 1) * ITEMS_PER_PAGE;
     const pageItems = tokenHoldingsData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    el.tokenHoldingsList.innerHTML = pageItems.map((item) => `
-      <div class="tracker-item">
+    el.tokenHoldingsList.innerHTML = pageItems.map((item) => {
+      const currency = escapeHtml(decodeCurrencyCode(item?.currency || "-"));
+      const issuer = escapeHtml(String(item?.issuer || "-"));
+      const balance = escapeHtml(normalizeAmount(item?.balance || "0"));
+      return `<div class="tracker-item">
         <div>
-          <strong>${escapeHtml(item.currency || "Unknown Token")}</strong>
-          <span>Issuer: ${escapeHtml(item.issuer || "—")}</span>
-          <small>Limit: ${escapeHtml(formatNumber(item.limit ?? "—"))}</small>
+          <strong>${currency}</strong>
+          <span>${issuer}</span>
         </div>
-        <div class="flow">${escapeHtml(formatNumber(item.balance ?? "—"))}</div>
-      </div>
-    `).join("");
+        <div class="flow pos">${balance}</div>
+      </div>`;
+    }).join("");
 
     if (el.tokenPageInfo) el.tokenPageInfo.textContent = `Page ${tokenHoldingsPage} of ${totalPages}`;
     if (el.tokenPrevBtn) el.tokenPrevBtn.disabled = tokenHoldingsPage <= 1;
@@ -342,21 +412,20 @@
     const pageItems = transactionBreakdownData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     el.transactionBreakdownList.innerHTML = pageItems.map((item) => {
-      const amount = item.amount !== undefined && item.amount !== null
-        ? `${formatNumber(item.amount)} ${item.currency || ""}`.trim()
-        : "—";
-
-      return `
-        <div class="tracker-item">
-          <div>
-            <strong>${escapeHtml(item.type || "Unknown")}</strong>
-            <span>${escapeHtml(item.summary || "No summary")}</span>
-            <small>${escapeHtml(item.timestamp || "—")} • ${escapeHtml(item.result || "—")}</small>
-            <small>${escapeHtml(item.counterparty || "—")}</small>
-          </div>
-          <div class="flow">${escapeHtml(amount)}</div>
+      const hash = escapeHtml(String(item?.hash || "-"));
+      const type = escapeHtml(String(item?.type || "Unknown"));
+      const result = escapeHtml(String(item?.result || "-"));
+      const summary = escapeHtml(String(item?.summary || "Transaction detected."));
+      const when = escapeHtml(formatTxTime(item?.timestamp));
+      return `<div class="tracker-item">
+        <div>
+          <strong>${type}</strong>
+          <span>${summary}</span>
+          <small>${when}</small>
+          <small>Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
         </div>
-      `;
+        <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
+      </div>`;
     }).join("");
 
     if (el.txPageInfo) el.txPageInfo.textContent = `Page ${transactionBreakdownPage} of ${totalPages}`;
@@ -374,7 +443,7 @@
     if (el.walletTrustlines) el.walletTrustlines.textContent = "-";
     if (el.walletOwnerCount) el.walletOwnerCount.textContent = "-";
 
-    setPill(el.blackholeTierPill, "NONE", "green");
+    if (el.blackholeTierPill) setPill(el.blackholeTierPill, "NONE", "green");
     if (el.blackholeSummaryNote) el.blackholeSummaryNote.textContent = "Run a wallet analysis to evaluate blackhole state.";
     if (el.blackholeTierValue) el.blackholeTierValue.textContent = "-";
     if (el.blackholeStatusLabel) el.blackholeStatusLabel.textContent = "-";
@@ -386,7 +455,7 @@
     renderTokenHoldings([]);
     renderTransactionBreakdown([]);
     renderList(el.recentActivityList, [], "Run a wallet analysis to populate activity insights.");
-    setPill(el.confidencePill, "Confidence -", "");
+    if (el.confidencePill) setPill(el.confidencePill, "Confidence -", "");
     renderList(el.signalList, [], "No signals yet.");
     if (el.statementText) el.statementText.textContent = "Run a wallet analysis to generate a statement.";
     if (el.classificationValue) el.classificationValue.textContent = "-";
@@ -420,7 +489,7 @@
     const blackholeView = getBlackholePresentation(data);
     const badgeTone = riskTone(riskLevel);
     const identityBadges = buildIdentityBadges(data);
-    const signals = Array.isArray(data?.signals) ? data.signals : Array.isArray(data?.signalsSummary) ? data.signalsSummary : [];
+    const signals = extractSignals(data);
     const recentTx = safeText(
       data?.activity?.sampledRecentTransactions ??
       data?.activity?.recentTransactions ??
@@ -449,7 +518,7 @@
     renderTokenHoldings(tokenHoldings);
     renderTransactionBreakdown(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
-    setPill(el.confidencePill, `Confidence ${confidence}`, "");
+    if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidence}`, "");
     renderList(el.signalList, signals, "No signals yet.");
     if (el.statementText) el.statementText.textContent = statement;
     if (el.classificationValue) el.classificationValue.textContent = classification;
@@ -459,7 +528,11 @@
     renderBadgeRow(el.riskFlagsRow, riskFlags, "No explicit risk flags returned for this wallet.", badgeTone);
     renderList(el.riskNotesList, riskNotes, "No additional risk notes.");
 
-    if (el.metricActivity) el.metricActivity.textContent = activitySummary.length ? safeText(activitySummary[0]) : safeText(data?.activity?.level ?? data?.activity, "-");
+    if (el.metricActivity) {
+      el.metricActivity.textContent = activitySummary.length
+        ? safeText(activitySummary[0])
+        : safeText(data?.activity?.level ?? data?.activity, "-");
+    }
     if (el.metricStatementShort) el.metricStatementShort.textContent = statement.slice(0, 42) || "-";
     if (el.nftCount) el.nftCount.textContent = safeText(data?.nftCount ?? data?.summary?.nftCount, "-");
     if (el.blackholeTier) el.blackholeTier.textContent = blackholeView.tier;
