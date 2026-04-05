@@ -123,6 +123,15 @@
     return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 6 });
   }
 
+  function formatDateTime(value) {
+    if (!value) return "";
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return String(value);
+    }
+  }
+
   function formatTxTime(value) {
     if (value === undefined || value === null || value === "") return "";
     const num = Number(value);
@@ -591,7 +600,7 @@
       state.rawStatus = data;
       state.tier = planCode || "unknown";
       state.active = active;
-      state.expiry = expiry;
+      state.expiry = formatDateTime(expiry);
 
       setHero();
       setModuleVisibility();
