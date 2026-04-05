@@ -748,8 +748,7 @@
   </style>
 </head>
 <body>
-  <div class="site-shell">
-    <div class="wrap">
+      <div class="wrap">
       <div class="nav">
         <a class="brand" href="/">
           <div class="brand-mark"><img src="/assets/augur_logo.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_logo.png';" /></div>
@@ -759,24 +758,39 @@
           </div>
         </a>
 
-        <div class="nav-links">
-          <a class="nav-link" href="/">Dashboard</a>
-          <a class="nav-link" href="/wallet/">Wallet Search</a>
-          <a class="nav-link" href="/pricing.html">Pricing</a>
-          <a class="nav-link" href="/developers.html">Developers</a>
-          <a class="nav-link active" href="/account/">Account</a>
-        </div>
+<div class="nav-links">
+  <a class="nav-link" href="/">Dashboard</a>
+  <a class="nav-link active" href="/wallet/">Wallet Search</a>
+  <a class="nav-link" href="/pricing.html">Pricing</a>
+  <a class="nav-link" href="/developers.html">Developers</a>
+  <a class="nav-link" href="/account/">Account</a>
+</div>
 
-        <div class="mobile-nav">
-          <a href="/">Dashboard</a>
-          <a href="/wallet/">Wallet Search</a>
-          <a href="/pricing.html">Pricing</a>
-          <a href="/developers.html">Developers</a>
-          <a class="active" href="/account/">Account</a>
-        </div>
+<div class="mobile-nav">
+  <a href="/">Dashboard</a>
+  <a class="active" href="/wallet/">Wallet Search</a>
+  <a href="/pricing.html">Pricing</a>
+  <a href="/developers.html">Developers</a>
+  <a href="/account/">Account</a>
+</div>
       </div>
     </div>
   </div>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow">Live XRPL Wallet Intelligence</div>
+          <h1>AUGUR reads public XRPL wallets and explains what they’re doing in plain English.</h1>
+          <p class="lede">
+            Analyze wallet behavior, issuer state, activity, and risk using public XRPL ledger data only.
+            No wallet connection. No keys. No custody.
+          </p>
+
+          <div id="analyze" class="search">
+            <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
+            <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Analyze Wallet</button>
 
   <main class="wrap">
     <section class="hero">
