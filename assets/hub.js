@@ -2,6 +2,13 @@
   "use strict";
 
   const qs = (sel) => document.querySelector(sel);
+  const API_BASE = (
+    window.location.hostname === "augurxrpl.com" ||
+    window.location.hostname === "www.augurxrpl.com"
+  )
+    ? "https://api.augurxrpl.com"
+    : "";
+
 
   const state = {
     wallet: "",
@@ -549,7 +556,7 @@
     if (!state.wallet) return;
 
     try {
-      const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
+      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
@@ -611,7 +618,7 @@
     setLoadingState(true);
 
     try {
-      const url = `/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
+      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
       const res = await fetch(url, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
