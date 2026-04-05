@@ -35,7 +35,6 @@
     walletInput: qs("#walletInput"),
     loadWalletBtn: qs("#loadWalletBtn"),
     runStarterBtn: qs("#runStarterBtn"),
-    useWorkspaceWalletBtn: qs("#useWorkspaceWalletBtn"),
     starterStatus: qs("#starterStatus"),
 
     walletClassPill: qs("#walletClassPill"),
@@ -665,11 +664,6 @@
     });
 
     el.runStarterBtn?.addEventListener("click", runStarter);
-
-    el.useWorkspaceWalletBtn?.addEventListener("click", () => {
-      if (!state.wallet || !el.walletInput) return;
-      el.walletInput.value = state.wallet;
-    });
 
     el.walletInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
