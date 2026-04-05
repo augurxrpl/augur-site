@@ -43,16 +43,12 @@
       padding:18px 18px 48px;
     }
 
-    .site-shell{
-      padding-top:14px;
-    }
-
-    .nav{
+    .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:18px;
-      padding:0 0 14px;
+      gap:16px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
@@ -72,14 +68,9 @@
       background:linear-gradient(180deg, rgba(89,166,255,.18), rgba(45,108,223,.12));
       border:1px solid rgba(87,166,255,.18);
       box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .brand-mark img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
+      color:var(--blue);
+      font-weight:900;
+      font-size:18px;
     }
 
     .brand-copy{
@@ -104,52 +95,11 @@
       font-weight:900;
     }
 
-    .nav-links{
+    .top-actions{
       display:flex;
       align-items:center;
       gap:10px;
       flex-wrap:wrap;
-    }
-
-    .nav-link{
-      color:var(--muted);
-      font-size:14px;
-      font-weight:700;
-      padding:10px 12px;
-      border-radius:12px;
-      transition:background .15s ease, color .15s ease;
-    }
-
-    .nav-link:hover{
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-    }
-
-    .nav-link.active{
-      background:rgba(87,166,255,.10);
-      color:var(--text);
-      border:1px solid rgba(87,166,255,.14);
-    }
-
-    .mobile-nav{
-      display:none;
-      width:100%;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .mobile-nav a{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:700;
-      padding:8px 10px;
-      border-radius:10px;
-    }
-
-    .mobile-nav a.active{
-      background:rgba(87,166,255,.10);
-      color:var(--text);
-      border:1px solid rgba(87,166,255,.14);
     }
 
     .btn{
@@ -737,6 +687,7 @@
       .wrap{padding:18px 14px 42px}
       h1{font-size:30px}
       .search input,.btn{height:48px}
+      .topbar{align-items:flex-start;flex-direction:column}
       .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .hero-card,.card,.module,.locked-card,.panel{padding:12px}
       .mini-card{padding:10px;border-radius:12px}
@@ -748,51 +699,23 @@
   </style>
 </head>
 <body>
-      <div class="wrap">
-      <div class="nav">
-        <a class="brand" href="/">
-          <div class="brand-mark"><img src="/assets/augur_logo.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_logo.png';" /></div>
-          <div class="brand-copy">
-            <small>XRPL Intelligence</small>
-            <span>AUGUR</span>
-          </div>
-        </a>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand" href="/">
+        <div class="brand-mark">A</div>
+        <div class="brand-copy">
+          <small>Paid Workspace</small>
+          <span>AUGUR Hub</span>
+        </div>
+      </a>
 
-<div class="nav-links">
-  <a class="nav-link" href="/">Dashboard</a>
-  <a class="nav-link active" href="/wallet/">Wallet Search</a>
-  <a class="nav-link" href="/pricing.html">Pricing</a>
-  <a class="nav-link" href="/developers.html">Developers</a>
-  <a class="nav-link" href="/account/">Account</a>
-</div>
-
-<div class="mobile-nav">
-  <a href="/">Dashboard</a>
-  <a class="active" href="/wallet/">Wallet Search</a>
-  <a href="/pricing.html">Pricing</a>
-  <a href="/developers.html">Developers</a>
-  <a href="/account/">Account</a>
-</div>
+      <div class="top-actions">
+        <a class="btn btn-ghost" href="/wallet/">Wallet Search</a>
+        <a class="btn btn-secondary" href="/account/">Account</a>
+        <a class="btn btn-primary" href="/pricing.html">View Plans</a>
       </div>
     </div>
-  </div>
 
-  <main class="wrap">
-    <section class="hero">
-      <div class="hero-grid">
-        <div class="hero-card">
-          <div class="eyebrow">Live XRPL Wallet Intelligence</div>
-          <h1>AUGUR reads public XRPL wallets and explains what they’re doing in plain English.</h1>
-          <p class="lede">
-            Analyze wallet behavior, issuer state, activity, and risk using public XRPL ledger data only.
-            No wallet connection. No keys. No custody.
-          </p>
-
-          <div id="analyze" class="search">
-            <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
-            <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Analyze Wallet</button>
-
-  <main class="wrap">
     <section class="hero">
       <div class="hero-grid">
         <div class="hero-card">
