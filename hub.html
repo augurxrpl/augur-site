@@ -286,7 +286,31 @@
 
     .hero-side{
       display:grid;
-      gap:12px;
+      gap:10px;
+      align-content:start;
+    }
+
+    .compact-top-strip{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .compact-top-strip .mini-card{
+      min-height:0;
+    }
+
+    .compact-top-strip .mini-value{
+      font-size:16px;
+      line-height:1.15;
+    }
+
+    .compact-actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:4px 0 0;
     }
 
     .section{
@@ -719,39 +743,29 @@
         </div>
 
         <div class="hero-card hero-side">
-          <div class="mini-grid">
+          <div class="mini-grid compact-top-strip">
             <div class="mini-card">
               <div class="mini-label">Wallet</div>
               <div id="heroWallet" class="mini-value">Waiting</div>
-              <div class="mini-sub">Current workspace target</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">Tier</div>
               <div id="heroTier" class="mini-value">Unknown</div>
-              <div class="mini-sub">Resolved from subscription state</div>
             </div>
-          </div>
-
-          <div class="mini-grid">
             <div class="mini-card">
               <div class="mini-label">Status</div>
               <div id="heroStatus" class="mini-value">Checking</div>
-              <div class="mini-sub">Live paid access status</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">Expires</div>
               <div id="heroExpiry" class="mini-value">—</div>
-              <div class="mini-sub">Current access window</div>
             </div>
           </div>
 
-          <div class="mini-card">
-            <div class="mini-label">Workspace Law</div>
+          <div class="compact-actions">
             <div id="heroPill" class="badge blue">Checking access</div>
-            <div class="mini-sub" style="margin-top:10px">Account is the gate. Hub is the control center. Starter must beat Wallet Search.</div>
+            <button class="btn btn-secondary" id="useWorkspaceWalletBtn" type="button">Use Workspace Wallet</button>
           </div>
-
-          <button class="btn btn-secondary" id="useWorkspaceWalletBtn" type="button">Use Workspace Wallet</button>
         </div>
       </div>
     </section>
