@@ -1590,10 +1590,13 @@
       confidenceValue.textContent = confidenceDisplay;
       riskLevelValue.textContent = riskLevelDisplay;
       riskScoreValue.textContent = riskScoreDisplay;
+      const oldNote = riskScoreValue.parentElement.querySelector(".risk-score-helper");
+      if (oldNote) oldNote.remove();
       const note = document.createElement("div");
-      note.style.fontSize="11px";
-      note.style.opacity=".7";
-      note.textContent="Higher = more dangerous behavior";
+      note.className = "risk-score-helper";
+      note.style.fontSize = "11px";
+      note.style.opacity = ".7";
+      note.textContent = "Higher = more dangerous behavior";
       riskScoreValue.parentElement.appendChild(note);
 
       setPill(classification, riskTone(riskLevel));
