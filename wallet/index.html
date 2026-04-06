@@ -991,7 +991,7 @@
                 <div id="classificationValue" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Confidence</div>
+                <div class="name">Confidence (classification accuracy)</div>
                 <div id="confidenceValue" class="val">-</div>
               </div>
               <div class="stat-line">
@@ -1590,6 +1590,11 @@
       confidenceValue.textContent = confidenceDisplay;
       riskLevelValue.textContent = riskLevelDisplay;
       riskScoreValue.textContent = riskScoreDisplay;
+      const note = document.createElement("div");
+      note.style.fontSize="11px";
+      note.style.opacity=".7";
+      note.textContent="Higher = more dangerous behavior";
+      riskScoreValue.parentElement.appendChild(note);
 
       setPill(classification, riskTone(riskLevel));
       setStatus(`Report loaded for ${safeText(data?.address, "wallet")}.`);
