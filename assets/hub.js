@@ -498,6 +498,12 @@
     const confidence = safeText(data?.confidence, "-");
     const riskLevel = safeText(data?.risk?.level, "-");
     const riskScore = safeText(data?.risk?.score ?? data?.risk?.level, "-");
+    const blackholeFlag = !!data?.blackholeStatus;
+    const blackholeTierRaw = String(data?.blackholeTier || "").toLowerCase();
+    const blackholeClass = String(classification || "").toLowerCase().includes("blackhole");
+    const blackholeSafe = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
+    const safetyDisplay = blackholeSafe ? "High" : riskLevel;
+    const riskProfileDisplay = blackholeSafe ? "Minimal" : riskScore;
     const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
     const activityItems = extractActivities(data);
     const activitySummary = Array.isArray(data?.activity?.summary) ? data.activity.summary : [];
@@ -542,8 +548,8 @@
     if (el.statementText) el.statementText.textContent = statement;
     if (el.classificationValue) el.classificationValue.textContent = classification;
     if (el.confidenceValue) el.confidenceValue.textContent = confidence;
-    if (el.riskLevelValue) el.riskLevelValue.textContent = riskLevel;
-    if (el.riskScoreValue) el.riskScoreValue.textContent = riskScore;
+    if (el.riskLevelValue) el.riskLevelValue.textContent = safetyDisplay;
+    if (el.riskScoreValue) el.riskScoreValue.textContent = riskProfileDisplay;
     renderBadgeRow(el.riskFlagsRow, riskFlags, "No explicit risk flags returned for this wallet.", badgeTone);
     renderList(el.riskNotesList, riskNotes, "No additional risk notes.");
 

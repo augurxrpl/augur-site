@@ -841,7 +841,7 @@
                 <div id="walletTx" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Risk Score</div>
+                <div class="name">Risk Profile</div>
                 <div id="walletRisk" class="val">-</div>
               </div>
               <div class="stat-line">
@@ -991,11 +991,11 @@
                 <div id="classificationValue" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Confidence</div>
+                <div class="name">Classification Confidence</div>
                 <div id="confidenceValue" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Risk Level</div>
+                <div class="name">Safety Level</div>
                 <div id="riskLevelValue" class="val">-</div>
               </div>
               <div class="stat-line">
@@ -1500,6 +1500,12 @@
       const confidence = safeText(data?.confidence, "-");
       const riskLevel = safeText(data?.risk?.level, "-");
       const riskScore = safeText(data?.risk?.score ?? data?.risk?.level, "-");
+      const blackholeFlag = !!data?.blackholeStatus;
+      const blackholeTierRaw = String(data?.blackholeTier || "").toLowerCase();
+      const blackholeClass = String(classification || "").toLowerCase().includes("blackhole");
+      const blackholeSafe = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
+      const safetyDisplay = blackholeSafe ? "High" : riskLevel;
+      const riskProfileDisplay = blackholeSafe ? "Minimal" : riskScore;
       const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
       const signals = extractSignals(data);
       const activityItems = extractActivities(data);
@@ -1568,8 +1574,8 @@
 
       classificationValue.textContent = classification;
       confidenceValue.textContent = confidence;
-      riskLevelValue.textContent = riskLevel;
-      riskScoreValue.textContent = riskScore;
+      riskLevelValue.textContent = safetyDisplay;
+      riskScoreValue.textContent = riskProfileDisplay;
 
       setPill(classification, riskTone(riskLevel));
       setStatus(`Report loaded for ${safeText(data?.address, "wallet")}.`);
