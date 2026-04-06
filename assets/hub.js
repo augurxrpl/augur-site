@@ -433,13 +433,17 @@
       const summary = escapeHtml(String(item?.summary || "Transaction detected."));
       const when = escapeHtml(formatTxTime(item?.timestamp));
       return `<div class="tracker-item">
-        <div>
+        <div class="tracker-left">
           <strong>${type}</strong>
           <span>${summary}</span>
-          <small>${when}</small>
-          <small>Hash: ${hash === "-" ? "-" : `${hash.slice(0, 12)}...${hash.slice(-8)}`}</small>
+          <div class="meta">
+            <small>${when}</small>
+            <small>Hash: ${hash === "-" ? "-" : `${hash.slice(0, 6)}...${hash.slice(-6)}`}</small>
+          </div>
         </div>
-        <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
+        <div class="tracker-right">
+          <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
+        </div>
       </div>`;
     }).join("");
 
