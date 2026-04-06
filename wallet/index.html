@@ -841,7 +841,7 @@
                 <div id="walletTx" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Risk Profile</div>
+                <div class="name">Risk Score</div>
                 <div id="walletRisk" class="val">-</div>
               </div>
               <div class="stat-line">
@@ -991,11 +991,11 @@
                 <div id="classificationValue" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Classification Confidence</div>
+                <div class="name">Confidence</div>
                 <div id="confidenceValue" class="val">-</div>
               </div>
               <div class="stat-line">
-                <div class="name">Safety Level</div>
+                <div class="name">Risk Level</div>
                 <div id="riskLevelValue" class="val">-</div>
               </div>
               <div class="stat-line">
@@ -1503,9 +1503,23 @@
       const blackholeFlag = !!data?.blackholeStatus;
       const blackholeTierRaw = String(data?.blackholeTier || "").toLowerCase();
       const blackholeClass = String(classification || "").toLowerCase().includes("blackhole");
-      const blackholeSafe = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
-      const safetyDisplay = blackholeSafe ? "High" : riskLevel;
-      const riskProfileDisplay = blackholeSafe ? "Minimal" : riskScore;
+      const blackholeDetected = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
+
+      function humanRiskScore(value){
+        const raw = String(value ?? "").trim();
+        if (!raw) return "-";
+        const num = Number(raw);
+        if (Number.isFinite(num)) return String(num);
+        const v = raw.toLowerCase();
+        if (v.includes("low")) return "25";
+        if (v.includes("medium") || v.includes("moderate")) return "60";
+        if (v.includes("high")) return "90";
+        return raw;
+      }
+
+      const confidenceDisplay = blackholeDetected ? "5" : confidence;
+      const riskLevelDisplay = blackholeDetected ? "High" : riskLevel;
+      const riskScoreDisplay = blackholeDetected ? "95" : humanRiskScore(riskScore);
       const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
       const signals = extractSignals(data);
       const activityItems = extractActivities(data);
@@ -1573,9 +1587,9 @@
       renderTransactionBreakdown(Array.isArray(data?.transactionBreakdown) ? data.transactionBreakdown : []);
 
       classificationValue.textContent = classification;
-      confidenceValue.textContent = confidence;
-      riskLevelValue.textContent = safetyDisplay;
-      riskScoreValue.textContent = riskProfileDisplay;
+      confidenceValue.textContent = confidenceDisplay;
+      riskLevelValue.textContent = riskLevelDisplay;
+      riskScoreValue.textContent = riskScoreDisplay;
 
       setPill(classification, riskTone(riskLevel));
       setStatus(`Report loaded for ${safeText(data?.address, "wallet")}.`);

@@ -501,9 +501,23 @@
     const blackholeFlag = !!data?.blackholeStatus;
     const blackholeTierRaw = String(data?.blackholeTier || "").toLowerCase();
     const blackholeClass = String(classification || "").toLowerCase().includes("blackhole");
-    const blackholeSafe = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
-    const safetyDisplay = blackholeSafe ? "High" : riskLevel;
-    const riskProfileDisplay = blackholeSafe ? "Minimal" : riskScore;
+    const blackholeDetected = blackholeFlag || ["confirmed","likely","partial"].includes(blackholeTierRaw) || blackholeClass;
+
+    function humanRiskScore(value){
+      const raw = String(value ?? "").trim();
+      if (!raw) return "-";
+      const num = Number(raw);
+      if (Number.isFinite(num)) return String(num);
+      const v = raw.toLowerCase();
+      if (v.includes("low")) return "25";
+      if (v.includes("medium") || v.includes("moderate")) return "60";
+      if (v.includes("high")) return "90";
+      return raw;
+    }
+
+    const confidenceDisplay = blackholeDetected ? "5" : confidence;
+    const riskLevelDisplay = blackholeDetected ? "High" : riskLevel;
+    const riskScoreDisplay = blackholeDetected ? "95" : humanRiskScore(riskScore);
     const statement = Array.isArray(data?.statement) ? data.statement.join(" ") : safeText(data?.statement, "No statement returned.");
     const activityItems = extractActivities(data);
     const activitySummary = Array.isArray(data?.activity?.summary) ? data.activity.summary : [];
@@ -547,9 +561,9 @@
     renderList(el.signalList, signals, "No signals yet.");
     if (el.statementText) el.statementText.textContent = statement;
     if (el.classificationValue) el.classificationValue.textContent = classification;
-    if (el.confidenceValue) el.confidenceValue.textContent = confidence;
-    if (el.riskLevelValue) el.riskLevelValue.textContent = safetyDisplay;
-    if (el.riskScoreValue) el.riskScoreValue.textContent = riskProfileDisplay;
+    if (el.confidenceValue) el.confidenceValue.textContent = confidenceDisplay;
+    if (el.riskLevelValue) el.riskLevelValue.textContent = riskLevelDisplay;
+    if (el.riskScoreValue) el.riskScoreValue.textContent = riskScoreDisplay;
     renderBadgeRow(el.riskFlagsRow, riskFlags, "No explicit risk flags returned for this wallet.", badgeTone);
     renderList(el.riskNotesList, riskNotes, "No additional risk notes.");
 
