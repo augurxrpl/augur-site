@@ -762,7 +762,7 @@
           <div id="analyze" class="search">
             <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
             <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Analyze Wallet</button>
-            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Try Example</button>
+            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Load Example Wallet</button>
           </div>
 
           <div class="trust">
@@ -1611,7 +1611,7 @@
 
       analyzeBtn.disabled = true;
       exampleBtn.disabled = true;
-      setStatus(`Analyzing ${trimmed} ...`);
+      setStatus("Analyzing wallet...");
 
       try{
         const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(trimmed)}`, {
