@@ -778,9 +778,10 @@
           </p>
 
           <div id="analyze" class="search">
-            <input id="walletInput" type="text" placeholder="Paste a wallet address or load an example" autocomplete="off" spellcheck="false" />
+            <div style="font-size:12px;opacity:.7;margin-bottom:6px;">Paste any XRPL wallet to analyze instantly</div>
+<input id="walletInput" type="text" placeholder="Paste a wallet address or load an example" autocomplete="off" spellcheck="false" />
             <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Analyze Wallet</button>
-            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Load Example Wallet</button>
+            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Load Example Wallet (See it instantly)</button>
           </div>
 
           <div class="trust">
@@ -1622,7 +1623,7 @@
       riskScoreValue.parentElement.appendChild(note);
 
       setPill(classification, riskTone(riskLevel));
-      setStatus(`Report loaded for ${safeText(data?.address, "wallet")}.`);
+      setStatus(`Live report for ${safeText(data?.address, "wallet")}.`);
     }
 
     async function fetchHealthAndVersion(){
