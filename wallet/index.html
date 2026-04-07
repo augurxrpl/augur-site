@@ -1210,8 +1210,12 @@
       return d.toLocaleString();
     }
 
-    function setStatus(message){
-      statusEl.textContent = message;
+    function setStatus(message, allowHtml = false){
+      if (allowHtml) {
+        statusEl.innerHTML = message;
+      } else {
+        statusEl.textContent = message;
+      }
     }
 
     function escapeHtml(value){
@@ -1657,7 +1661,7 @@
 
       analyzeBtn.disabled = true;
       exampleBtn.disabled = true;
-      setStatus('<span class="loading-inline"><span class="spinner"></span>Analyzing wallet...</span>');
+      setStatus('<span class="loading-inline"><span class="spinner"></span>Analyzing wallet...</span>', true);
 
       try{
         const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(trimmed)}`, {
