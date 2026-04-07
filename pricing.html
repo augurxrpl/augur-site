@@ -768,7 +768,28 @@
       .lede{font-size:15px}
       .brand-copy span{font-size:18px}
     }
-  </style>
+  
+.pricing-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:20px 0;
+}
+.tier{
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  text-align:center;
+  font-weight:700;
+}
+.tier small{
+  display:block;
+  font-weight:400;
+  opacity:.7;
+  margin-top:4px;
+}
+
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -801,7 +822,14 @@
     </div>
   </div>
 
-  <main class="wrap">
+  <div class="pricing-strip">
+  <div class="tier">Free<br><small>Basic wallet reads</small></div>
+  <div class="tier">Starter<br><small>Full wallet intelligence</small></div>
+  <div class="tier">Pro<br><small>Advanced workflows</small></div>
+  <div class="tier">Developer<br><small>API + deep access</small></div>
+</div>
+
+<main class="wrap">
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">AUGUR Plans</div>
