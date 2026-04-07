@@ -715,7 +715,25 @@
       .search input,.btn{height:48px}
       .brand-copy span{font-size:18px}
     }
-  </style>
+  
+    .loading-inline{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .spinner{
+      width:14px;
+      height:14px;
+      border:2px solid rgba(255,255,255,.2);
+      border-top:2px solid #59a6ff;
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin{
+      to{transform:rotate(360deg);}
+    }
+
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -1639,7 +1657,7 @@
 
       analyzeBtn.disabled = true;
       exampleBtn.disabled = true;
-      setStatus("Analyzing wallet...");
+      setStatus('<span class="loading-inline"><span class="spinner"></span>Analyzing wallet...</span>');
 
       try{
         const res = await fetch(`${API_BASE}/api/report?address=${encodeURIComponent(trimmed)}`, {
