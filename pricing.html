@@ -941,7 +941,7 @@
       <div class="section-head">
         <div>
           <h2>Start a Subscription</h2>
-          <p>Enter your XRPL wallet, choose a paid plan, generate a quote, send the exact $XRP payment, then activate.</p>
+          <p>Enter your XRPL wallet, choose a paid plan, pay with Xaman, then activate once payment is matched.</p>
         </div>
       </div>
 
@@ -949,7 +949,7 @@
         <div class="tier tier-featured">
           <div class="eyebrow">Live Subscription</div>
           <h3>Subscribe with XRPL</h3>
-          <p class="subtitle">No wallet connection. No custody. Generate a quote, pay the exact amount, then activate.</p>
+          <p class="subtitle">No wallet connection. No custody. Choose a plan, pay with Xaman, then activate.</p>
 
           <div class="selected-plan" id="selectedPlanPill">Selected Plan: starter</div>
 
@@ -969,25 +969,17 @@
 
           <div class="action-row">
             
-            <a class="btn btn-primary btn-hud" id="payXamanBtn" href="#" target="_blank" rel="noopener" hidden>Pay with Xaman</a>
+            <a class="btn btn-primary btn-hud" id="startPaymentBtn" type="button">Pay with Xaman</button>
             <button class="btn btn-secondary btn-hud" id="checkPaymentBtn" type="button" hidden disabled>Check Payment</button>
             <button class="btn btn-secondary btn-hud" id="activateBtn" type="button" hidden disabled>Activate</button>
           </div>
 
           <p class="sub-note">
-            Use the exact subscription wallet, destination tag, amount, and quote reference shown below.
+            Complete payment in Xaman, then return here to check and activate your subscription.
           </p>
         </div>
 
         <div class="tier">
-          <div class="eyebrow">Quote + Status</div>
-          <h3>Payment Instructions</h3>
-          <div class="quote-box" id="quoteBox" hidden>
-            <div class="kv" id="quoteDetails"></div>
-          </div>
-
-          <div class="sub-divider"></div>
-
           <h3>Subscription Status</h3>
           <div class="status-box" id="statusBox" hidden>
             <div class="kv" id="statusDetails"></div>
@@ -1016,12 +1008,9 @@
     const subWallet = document.getElementById("subWallet");
     const subPlan = document.getElementById("subPlan");
     const selectedPlanPill = document.getElementById("selectedPlanPill");
-    const generateQuoteBtn = document.getElementById("generateQuoteBtn");
-    const payXamanBtn = document.getElementById("payXamanBtn");
-    const checkPaymentBtn = document.getElementById("checkPaymentBtn");
+    const startPaymentBtn = document.getElementById("startPaymentBtn");
+        const checkPaymentBtn = document.getElementById("checkPaymentBtn");
     const activateBtn = document.getElementById("activateBtn");
-    const quoteBox = document.getElementById("quoteBox");
-    const quoteDetails = document.getElementById("quoteDetails");
     const statusBox = document.getElementById("statusBox");
     const statusDetails = document.getElementById("statusDetails");
     const planButtons = document.querySelectorAll("[data-plan-select]");
@@ -1072,23 +1061,21 @@
 
     subPlan.addEventListener("change", () => setSelectedPlan(subPlan.value));
 
-    generateQuoteBtn.addEventListener("click", async () => {
+    startPaymentBtn.addEventListener("click", async () => {
       const walletAddress = subWallet.value.trim();
       const planCode = subPlan.value.trim();
 
       if (!walletAddress) {
-        showStatus([["Error", "Enter an XRPL wallet address before generating a quote.", false]]);
+        showStatus([["Error", "Enter an XRPL wallet address before starting payment.", false]]);
         return;
       }
 
-      generateQuoteBtn.disabled = true;
-      payXamanBtn.hidden = true;
-      checkPaymentBtn.hidden = true;
+      startPaymentBtn.disabled = true;
+            checkPaymentBtn.hidden = true;
       activateBtn.hidden = true;
       checkPaymentBtn.disabled = true;
       activateBtn.disabled = true;
-      quoteBox.hidden = true;
-      currentQuote = null;
+            currentQuote = null;
 
       try {
         const res = await fetch(`${API_BASE}/api/subscription/quote`, {
@@ -1104,43 +1091,32 @@
         }
 
         currentQuote = data;
-        quoteBox.hidden = false;
 
-        renderRows(quoteDetails, [
+        showStatus([
           ["Plan", `${safeText(data.planName)} (${safeText(data.planCode)})`, false],
           ["Wallet", safeText(data.walletAddress), true],
-          ["Subscription Wallet", safeText(data.subscriptionWallet), true],
-          ["Destination Tag", safeText(data.destinationTag), true],
-          ["Amount", `${safeText(data.amountXrp)} XRP`, true],
-          ["Quote Reference", safeText(data.quoteReference), true],
-          ["Created", safeText(data.quoteCreatedAt), false],
-          ["Expires", safeText(data.quoteExpiresAt), false],
-          ["Payment Request ID", safeText(data.paymentRequestId), true]
+          ["Amount", `${safeText(data.amountXrp)} XRP`, false],
+          ["Status", "Opening Xaman payment request.", false]
         ]);
 
         const xamanUrl = `https://xaman.app/detect/request:${encodeURIComponent(data.subscriptionWallet)}?amount=${encodeURIComponent(data.amountXrp)}&network=XRPL&dt=${encodeURIComponent(data.destinationTag)}`;
-        payXamanBtn.href = xamanUrl;
-        payXamanBtn.hidden = false;
-
-        showStatus([
-          ["Next Step", "Tap Pay with Xaman or send the exact XRP amount manually using the destination tag shown above.", false],
-          ["Memo", "Include the quote reference as memo when possible.", false]
-        ]);
 
         checkPaymentBtn.hidden = false;
         checkPaymentBtn.disabled = false;
         activateBtn.hidden = true;
         activateBtn.disabled = true;
+
+        window.location.href = xamanUrl;
       } catch (err) {
         showStatus([["Error", err instanceof Error ? err.message : "Quote request failed", false]]);
       } finally {
-        generateQuoteBtn.disabled = false;
+        startPaymentBtn.disabled = false;
       }
     });
 
     checkPaymentBtn.addEventListener("click", async () => {
       if (!currentQuote?.paymentRequestId) {
-        showStatus([["Error", "Generate a quote first.", false]]);
+        showStatus([["Error", "Start payment first.", false]]);
         return;
       }
 
@@ -1182,7 +1158,7 @@
 
     activateBtn.addEventListener("click", async () => {
       if (!currentQuote?.paymentRequestId) {
-        showStatus([["Error", "Generate a quote first.", false]]);
+        showStatus([["Error", "Start payment first.", false]]);
         return;
       }
 
