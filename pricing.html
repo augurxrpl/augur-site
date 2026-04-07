@@ -1078,7 +1078,7 @@
             currentQuote = null;
 
       try {
-        const res = await fetch(`${API_BASE}/api/subscription/quote`, {
+        const res = await fetch(`${API_BASE}/api/subscription/start-payment`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ walletAddress, planCode })
