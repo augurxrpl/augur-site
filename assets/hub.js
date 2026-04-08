@@ -70,6 +70,8 @@
     legendBalance: qs("#legendBalance"),
     legendTokens: qs("#legendTokens"),
     behaviorList: qs("#behaviorList"),
+    topHoldingsChart: qs("#topHoldingsChart"),
+    txMixChart: qs("#txMixChart"),
     signalList: qs("#signalList"),
     statementText: qs("#statementText"),
     classificationValue: qs("#classificationValue"),
@@ -374,6 +376,68 @@
     }
   }
 
+  function renderTopHoldingsChart(items) {
+    if (!el.topHoldingsChart) return;
+    const rows = Array.isArray(items) ? [...items] : [];
+    if (!rows.length) {
+      el.topHoldingsChart.innerHTML = `<div class="empty">No XRPL token holdings detected.</div>`;
+      return;
+    }
+    const top = rows
+      .map((item) => ({
+        label: decodeCurrencyCode(item?.currency),
+        value: Number(item?.balance || 0) || 0
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+    const max = Math.max(...top.map(x => x.value), 1);
+    el.topHoldingsChart.innerHTML = top.map((item) => `
+      <div class="tracker-item">
+        <div class="tracker-left">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${item.value}</span>
+        </div>
+        <div class="tracker-right" style="min-width:140px;width:140px;">
+          <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="height:100%;width:${Math.max(8, (item.value / max) * 100)}%;background:linear-gradient(180deg,#2891ff,#1876d8);border-radius:999px;"></div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderTxMixChart(items) {
+    if (!el.txMixChart) return;
+    const rows = Array.isArray(items) ? items : [];
+    if (!rows.length) {
+      el.txMixChart.innerHTML = `<div class="empty">No recent transaction breakdown available.</div>`;
+      return;
+    }
+    const counts = {};
+    rows.forEach((item) => {
+      const key = safeText(item?.type, "Unknown");
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const mix = Object.entries(counts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+    const max = Math.max(...mix.map(x => x.value), 1);
+    el.txMixChart.innerHTML = mix.map((item) => `
+      <div class="tracker-item">
+        <div class="tracker-left">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${item.value} tx</span>
+        </div>
+        <div class="tracker-right" style="min-width:140px;width:140px;">
+          <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="height:100%;width:${Math.max(8, (item.value / max) * 100)}%;background:linear-gradient(180deg,#4ecdc4,#2aa99d);border-radius:999px;"></div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
   function renderTokenHoldings(items) {
     tokenHoldingsData = Array.isArray(items)
       ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
@@ -571,7 +635,9 @@
     if (el.blackholeRegularKeyLooksValue) el.blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
 
     renderTokenHoldings(tokenHoldings);
+    renderTopHoldingsChart(tokenHoldings);
     renderTransactionBreakdown(txs);
+    renderTxMixChart(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
     if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
     if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
@@ -597,7 +663,7 @@
     if (el.blackholeTier) el.blackholeTier.textContent = blackholeView.tier;
 
     if (el.starterStatus) {
-      el.starterStatus.textContent = `Paid report loaded for ${state.wallet}.`;
+      el.starterStatus.textContent = `Premium report loaded for ${state.wallet}.`;
     }
   }
 
