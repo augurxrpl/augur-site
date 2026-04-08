@@ -671,6 +671,60 @@
       cursor:default;
     }
 
+    .donut{
+      --xrp-pct:100%;
+      width:220px;
+      height:220px;
+      margin:8px auto 0;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at center, #0c1526 0 31%, transparent 32%),
+        conic-gradient(
+          #4f8fff 0 var(--xrp-pct),
+          #4ecdc4 var(--xrp-pct) 100%
+        );
+      position:relative;
+    }
+
+    .donut::after{
+      content:"Assets";
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      color:var(--text);
+      font-size:14px;
+      letter-spacing:.5px;
+    }
+
+    .legend{
+      display:grid;
+      gap:8px;
+      margin-top:16px;
+    }
+
+    .legend-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .legend-left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      flex:0 0 auto;
+    }
+
     .locked-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -920,6 +974,38 @@
             <ul id="recentActivityList" class="list">
               <li class="empty">Run a wallet analysis to populate activity insights.</li>
             </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Analytics Report</h3>
+                <div class="subhead">Classification, balance, and behavior context</div>
+              </div>
+              <span id="confidencePill" class="badge">Confidence -</span>
+            </div>
+            <div class="analysis-grid">
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Asset Mix Approximation</div>
+                <div class="donut"></div>
+                <div class="legend">
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#4f8fff"></span><span>XRP</span></div>
+                    <strong id="legendBalance">-</strong>
+                  </div>
+                  <div class="legend-line">
+                    <div class="legend-left"><span class="dot" style="background:#4ecdc4"></span><span>Token Holdings Count</span></div>
+                    <strong id="legendTokens">-</strong>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="subhead" style="margin-bottom:10px;">Behavior Analysis</div>
+                <ul id="behaviorList" class="list">
+                  <li class="empty">Behavior analysis will appear here after a premium report.</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div class="card">

@@ -66,6 +66,10 @@
 
     recentActivityList: qs("#recentActivityList"),
     confidencePill: qs("#confidencePill"),
+    donutEl: qs(".donut"),
+    legendBalance: qs("#legendBalance"),
+    legendTokens: qs("#legendTokens"),
+    behaviorList: qs("#behaviorList"),
     signalList: qs("#signalList"),
     statementText: qs("#statementText"),
     classificationValue: qs("#classificationValue"),
@@ -525,6 +529,18 @@
     const riskNotes = Array.isArray(data?.risk?.notes) ? data.risk.notes : [];
     const tokenHoldings = Array.isArray(data?.tokenHoldings) ? data.tokenHoldings : [];
     const txs = Array.isArray(data?.transactionBreakdown) ? data.transactionBreakdown : [];
+    const behaviorItems = [
+      `Classification: ${classification}`,
+      `Confidence: ${confidence}`,
+      `Risk Level: ${riskLevel}`,
+      `Risk Score: ${riskScore}`
+    ];
+    activitySummary.forEach(item => behaviorItems.push(safeText(item)));
+    const xrpBalanceRaw = Number(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP ?? 0) || 0;
+    const tokenCount = tokenHoldings.length;
+    const tokenSlice = tokenCount > 0 ? tokenCount : 0;
+    const totalSlice = xrpBalanceRaw + tokenSlice;
+    const xrpPct = totalSlice > 0 ? ((xrpBalanceRaw / totalSlice) * 100) : 100;
     const blackholeView = getBlackholePresentation(data);
     const badgeTone = riskTone(riskLevel);
     const identityBadges = buildIdentityBadges(data);
@@ -558,6 +574,10 @@
     renderTransactionBreakdown(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
     if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidence}`, "");
+    if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
+    if (el.legendTokens) el.legendTokens.textContent = `${tokenCount} holdings`;
+    if (el.donutEl) el.donutEl.style.setProperty("--xrp-pct", `${Math.max(0, Math.min(100, xrpPct))}%`);
+    if (el.behaviorList) renderList(el.behaviorList, behaviorItems, "No behavior data available.");
     renderList(el.signalList, signals, "No signals yet.");
     if (el.statementText) el.statementText.textContent = statement;
     if (el.classificationValue) el.classificationValue.textContent = classification;
