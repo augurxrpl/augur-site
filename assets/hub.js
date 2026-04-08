@@ -349,18 +349,18 @@
   function setLoadingState(isLoading) {
     if (!el.runStarterBtn) return;
     el.runStarterBtn.disabled = isLoading;
-    el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Utility";
+    el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Report";
     if (el.starterStatus && isLoading) {
-      el.starterStatus.textContent = `Running paid report for ${state.wallet || "wallet"}...`;
+      el.starterStatus.textContent = `Running premium report for ${state.wallet || "wallet"}...`;
     }
   }
 
   function setStarterError(message) {
     if (el.starterErrorBox) {
-      el.starterErrorBox.textContent = message || "Unable to load paid wallet intelligence.";
+      el.starterErrorBox.textContent = message || "Unable to load premium wallet report.";
     }
     if (el.starterStatus) {
-      el.starterStatus.textContent = message || "Unable to load paid wallet intelligence.";
+      el.starterStatus.textContent = message || "Unable to load premium wallet report.";
     }
   }
 
@@ -667,7 +667,7 @@
       clearStarterError();
     } catch (err) {
       resetReportUI();
-      setStarterError(err.message || "Unable to load paid wallet intelligence.");
+      setStarterError(err.message || "Unable to load premium wallet report.");
     } finally {
       setLoadingState(false);
     }
