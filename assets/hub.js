@@ -685,6 +685,9 @@
       url.searchParams.set("wallet", state.wallet);
       window.history.replaceState({}, "", url);
       await loadAccess();
+      if (state.wallet && state.active) {
+        await runStarter();
+      }
     });
 
     el.runStarterBtn?.addEventListener("click", runStarter);
