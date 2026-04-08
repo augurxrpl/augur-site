@@ -70,6 +70,8 @@
     legendBalance: qs("#legendBalance"),
     legendTokens: qs("#legendTokens"),
     behaviorList: qs("#behaviorList"),
+    legendBalance: qs("#legendBalance"),
+    legendTokens: qs("#legendTokens"),
     topHoldingsChart: qs("#topHoldingsChart"),
     txMixChart: qs("#txMixChart"),
     counterpartyChart: qs("#counterpartyChart"),
@@ -378,31 +380,36 @@
     }
   }
 
-  function renderTopHoldingsChart(items) {
+  function renderTopHoldingsChart(valuations) {
     if (!el.topHoldingsChart) return;
-    const rows = Array.isArray(items) ? [...items] : [];
+    const rows = Array.isArray(valuations?.holdings) ? valuations.holdings : [];
     if (!rows.length) {
-      el.topHoldingsChart.innerHTML = `<div class="empty">No XRPL token holdings detected.</div>`;
+      el.topHoldingsChart.innerHTML = `<div class="empty">No holdings valuation data available.</div>`;
       return;
     }
     const top = rows
+      .filter((item) => Number(item?.valueUsd || 0) > 0)
+      .sort((a, b) => (Number(b?.valueUsd || 0) || 0) - (Number(a?.valueUsd || 0) || 0))
+      .slice(0, 8)
       .map((item) => ({
-        label: decodeCurrencyCode(item?.currency),
-        value: Number(item?.balance || 0) || 0
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-    const max = Math.max(...top.map(x => x.value), 1);
-    const total = top.reduce((sum, item) => sum + item.value, 0) || 1;
+        label: item?.symbol === "XRP" ? "XRP" : decodeCurrencyCode(item?.symbol || item?.currency || ""),
+        valueUsd: Number(item?.valueUsd || 0) || 0,
+        portfolioPct: Number(item?.portfolioPct || 0) || 0,
+        priced: Boolean(item?.priced)
+      }));
+    if (!top.length) {
+      el.topHoldingsChart.innerHTML = `<div class="empty">No priced holdings available yet.</div>`;
+      return;
+    }
     el.topHoldingsChart.innerHTML = top.map((item) => `
       <div class="tracker-item">
         <div class="tracker-left">
           <strong>${escapeHtml(item.label)}</strong>
-          <span>${item.value} • ${((item.value / total) * 100).toFixed(1)}%</span>
+          <span>$${item.valueUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} • ${item.portfolioPct.toFixed(1)}%</span>
         </div>
         <div class="tracker-right" style="min-width:140px;width:140px;">
           <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
-            <div style="height:100%;width:${Math.max(8, (item.value / max) * 100)}%;background:linear-gradient(180deg,#2891ff,#1876d8);border-radius:999px;"></div>
+            <div style="height:100%;width:${Math.max(8, item.portfolioPct)}%;background:linear-gradient(180deg,#2891ff,#1876d8);border-radius:999px;"></div>
           </div>
         </div>
       </div>
@@ -539,12 +546,13 @@
       const currency = escapeHtml(decodeCurrencyCode(item?.currency || "-"));
       const issuer = escapeHtml(String(item?.issuer || "-"));
       const balance = escapeHtml(normalizeAmount(item?.balance || "0"));
+      const valueUsd = item?.valueUsd != null ? `$${Number(item.valueUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : "Unpriced";
       return `<div class="tracker-item">
         <div>
           <strong>${currency}</strong>
           <span>${issuer}</span>
         </div>
-        <div class="flow pos">${balance}</div>
+        <div class="flow pos">${balance} • ${valueUsd}</div>
       </div>`;
     }).join("");
 
@@ -711,17 +719,24 @@
     if (el.blackholeRegularKeyValue) el.blackholeRegularKeyValue.textContent = blackholeView.regularKey;
     if (el.blackholeRegularKeyLooksValue) el.blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
 
+    const valuations = data?.valuations || null;
     renderTokenHoldings(tokenHoldings);
-    renderTopHoldingsChart(tokenHoldings);
+    renderTopHoldingsChart(valuations);
     renderTransactionBreakdown(txs);
     renderTxMixChart(txs);
     renderCounterpartyChart(txs);
     renderXrpFlowChart(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
     if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
-    if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
-    if (el.legendTokens) el.legendTokens.textContent = `${tokenCount} holdings`;
-    if (el.donutEl) el.donutEl.style.setProperty("--xrp-pct", `${Math.max(0, Math.min(100, xrpPct))}%`);
+    if (el.legendBalance) el.legendBalance.textContent = valuations?.holdings?.find((h) => h.symbol === "XRP")?.valueUsd != null
+      ? `$${Number(valuations.holdings.find((h) => h.symbol === "XRP").valueUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`
+      : safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
+    if (el.legendTokens) el.legendTokens.textContent = valuations ? `${valuations.unpricedCount || 0} unpriced assets` : `${tokenCount} holdings`;
+    if (el.donutEl) {
+      const xrpHolding = valuations?.holdings?.find((h) => h.symbol === "XRP");
+      const xrpPctValue = Number(xrpHolding?.portfolioPct || 0) || 0;
+      el.donutEl.style.setProperty("--xrp-pct", `${Math.max(0, Math.min(100, xrpPctValue || xrpPct))}%`);
+    }
     if (el.behaviorList) renderList(el.behaviorList, behaviorItems, "No behavior data available.");
     renderList(el.signalList, signals, "No signals yet.");
     if (el.statementText) el.statementText.textContent = statement;
