@@ -388,8 +388,12 @@
       return;
     }
     const top = rows
-      .filter((item) => Number(item?.valueUsd || 0) > 0)
-      .sort((a, b) => (Number(b?.valueUsd || 0) || 0) - (Number(a?.valueUsd || 0) || 0))
+      .sort((a, b) => {
+        const ap = Number(a?.valueUsd || 0) > 0 ? 1 : 0;
+        const bp = Number(b?.valueUsd || 0) > 0 ? 1 : 0;
+        if (bp !== ap) return bp - ap;
+        return (Number(b?.valueUsd || 0) || 0) - (Number(a?.valueUsd || 0) || 0);
+      })
       .slice(0, 8)
       .map((item) => ({
         label: item?.symbol === "XRP" ? "XRP" : decodeCurrencyCode(item?.symbol || item?.currency || ""),
@@ -398,18 +402,18 @@
         priced: Boolean(item?.priced)
       }));
     if (!top.length) {
-      el.topHoldingsChart.innerHTML = `<div class="empty">No priced holdings available yet.</div>`;
+      el.topHoldingsChart.innerHTML = `<div class="empty">No holdings available yet.</div>`;
       return;
     }
     el.topHoldingsChart.innerHTML = top.map((item) => `
       <div class="tracker-item">
         <div class="tracker-left">
           <strong>${escapeHtml(item.label)}</strong>
-          <span>$${item.valueUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} • ${item.portfolioPct.toFixed(1)}%</span>
+          <span>${item.priced ? `$${item.valueUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} • ${item.portfolioPct.toFixed(1)}%` : "Live quote unavailable"}</span>
         </div>
         <div class="tracker-right" style="min-width:140px;width:140px;">
           <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
-            <div style="height:100%;width:${Math.max(8, item.portfolioPct)}%;background:linear-gradient(180deg,#2891ff,#1876d8);border-radius:999px;"></div>
+            <div style="height:100%;width:${Math.max(8, item.priced ? item.portfolioPct : 8)}%;background:linear-gradient(180deg,#2891ff,#1876d8);border-radius:999px;"></div>
           </div>
         </div>
       </div>
