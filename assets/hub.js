@@ -522,10 +522,38 @@
     `).join("");
   }
 
-  function renderTokenHoldings(items) {
-    tokenHoldingsData = Array.isArray(items)
-      ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
-      : [];
+  function renderTokenHoldings(items, valuations) {
+    const tokenRows = Array.isArray(items) ? [...items] : [];
+    const valuationRows = Array.isArray(valuations?.holdings) ? valuations.holdings : [];
+    const xrpHolding = valuationRows.find((item) => item?.symbol === "XRP");
+    const merged = [];
+
+    if (xrpHolding) {
+      merged.push({
+        currency: "XRP",
+        issuer: "",
+        balance: String(xrpHolding.balance ?? 0),
+        valueUsd: xrpHolding.valueUsd,
+        priced: Boolean(xrpHolding.priced),
+        portfolioPct: xrpHolding.portfolioPct
+      });
+    }
+
+    tokenRows.forEach((item) => {
+      const symbol = String(item?.currency || "");
+      const issuer = String(item?.issuer || "");
+      const match = valuationRows.find((v) => String(v?.symbol || "") === symbol && String(v?.issuer || "") === issuer);
+      merged.push({
+        currency: symbol,
+        issuer,
+        balance: String(item?.balance || "0"),
+        valueUsd: match?.valueUsd ?? null,
+        priced: Boolean(match?.priced),
+        portfolioPct: match?.portfolioPct ?? null
+      });
+    });
+
+    tokenHoldingsData = merged;
     const totalPages = Math.max(1, Math.ceil(tokenHoldingsData.length / ITEMS_PER_PAGE));
     if (tokenHoldingsPage > totalPages) tokenHoldingsPage = totalPages;
     if (tokenHoldingsPage < 1) tokenHoldingsPage = 1;
@@ -544,15 +572,17 @@
 
     el.tokenHoldingsList.innerHTML = pageItems.map((item) => {
       const currency = escapeHtml(decodeCurrencyCode(item?.currency || "-"));
-      const issuer = escapeHtml(String(item?.issuer || "-"));
+      const issuer = currency === "XRP" ? "Native XRPL asset" : escapeHtml(String(item?.issuer || "-"));
       const balance = escapeHtml(normalizeAmount(item?.balance || "0"));
-      const valueUsd = item?.valueUsd != null ? `$${Number(item.valueUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : "Unpriced";
+      const valueUsd = item?.valueUsd != null ? `$${Number(item.valueUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : "Live quote unavailable";
+      const pct = item?.portfolioPct != null ? ` • ${Number(item.portfolioPct).toFixed(1)}%` : "";
+      const tone = item?.valueUsd != null ? "pos" : "warn";
       return `<div class="tracker-item">
         <div>
           <strong>${currency}</strong>
           <span>${issuer}</span>
         </div>
-        <div class="flow pos">${balance} • ${valueUsd}</div>
+        <div class="flow ${tone}">${balance} • ${valueUsd}${pct}</div>
       </div>`;
     }).join("");
 
@@ -720,7 +750,7 @@
     if (el.blackholeRegularKeyLooksValue) el.blackholeRegularKeyLooksValue.textContent = blackholeView.regularKeyLooks;
 
     const valuations = data?.valuations || null;
-    renderTokenHoldings(tokenHoldings);
+    renderTokenHoldings(tokenHoldings, valuations);
     renderTopHoldingsChart(valuations);
     renderTransactionBreakdown(txs);
     renderTxMixChart(txs);
