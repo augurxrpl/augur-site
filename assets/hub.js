@@ -391,11 +391,12 @@
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
     const max = Math.max(...top.map(x => x.value), 1);
+    const total = top.reduce((sum, item) => sum + item.value, 0) || 1;
     el.topHoldingsChart.innerHTML = top.map((item) => `
       <div class="tracker-item">
         <div class="tracker-left">
           <strong>${escapeHtml(item.label)}</strong>
-          <span>${item.value}</span>
+          <span>${item.value} • ${((item.value / total) * 100).toFixed(1)}%</span>
         </div>
         <div class="tracker-right" style="min-width:140px;width:140px;">
           <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
@@ -423,11 +424,12 @@
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
     const max = Math.max(...mix.map(x => x.value), 1);
+    const total = mix.reduce((sum, item) => sum + item.value, 0) || 1;
     el.txMixChart.innerHTML = mix.map((item) => `
       <div class="tracker-item">
         <div class="tracker-left">
           <strong>${escapeHtml(item.label)}</strong>
-          <span>${item.value} tx</span>
+          <span>${item.value} tx • ${((item.value / total) * 100).toFixed(1)}%</span>
         </div>
         <div class="tracker-right" style="min-width:140px;width:140px;">
           <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
