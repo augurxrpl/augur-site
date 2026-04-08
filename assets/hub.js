@@ -72,6 +72,7 @@
     behaviorList: qs("#behaviorList"),
     topHoldingsChart: qs("#topHoldingsChart"),
     txMixChart: qs("#txMixChart"),
+    counterpartyChart: qs("#counterpartyChart"),
     signalList: qs("#signalList"),
     statementText: qs("#statementText"),
     classificationValue: qs("#classificationValue"),
@@ -440,6 +441,39 @@
     `).join("");
   }
 
+  function renderCounterpartyChart(items) {
+    if (!el.counterpartyChart) return;
+    const rows = Array.isArray(items) ? items : [];
+    if (!rows.length) {
+      el.counterpartyChart.innerHTML = `<div class="empty">No counterparties detected.</div>`;
+      return;
+    }
+    const counts = {};
+    rows.forEach((item) => {
+      const key = safeText(item?.counterparty, "Unknown");
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const top = Object.entries(counts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+    const max = Math.max(...top.map(x => x.value), 1);
+    const total = top.reduce((sum, item) => sum + item.value, 0) || 1;
+    el.counterpartyChart.innerHTML = top.map((item) => `
+      <div class="tracker-item">
+        <div class="tracker-left">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${item.value} tx • ${((item.value / total) * 100).toFixed(1)}%</span>
+        </div>
+        <div class="tracker-right" style="min-width:140px;width:140px;">
+          <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="height:100%;width:${Math.max(8, (item.value / max) * 100)}%;background:linear-gradient(180deg,#ffcc66,#c7961f);border-radius:999px;"></div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
   function renderTokenHoldings(items) {
     tokenHoldingsData = Array.isArray(items)
       ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
@@ -640,6 +674,7 @@
     renderTopHoldingsChart(tokenHoldings);
     renderTransactionBreakdown(txs);
     renderTxMixChart(txs);
+    renderCounterpartyChart(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
     if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
     if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
