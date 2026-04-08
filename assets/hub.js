@@ -321,21 +321,21 @@
 
     if (el.hubAccessStatus) {
       el.hubAccessStatus.textContent = state.wallet
-        ? `${shortWallet(state.wallet)} resolved. ${state.active ? "Paid access is active." : "No active paid access found."}`
-        : "No wallet loaded yet.";
+        ? `${shortWallet(state.wallet)} resolved. ${state.active ? "Paid access confirmed." : "No active paid access on this wallet."}`
+        : "No wallet loaded.";
     }
 
     if (el.hubTierAccess) {
       if (!state.active) {
-        el.hubTierAccess.textContent = "Starter, Pro, and Developer remain locked until a paid wallet is resolved.";
+        el.hubTierAccess.textContent = "Starter, Pro, and Developer stay locked until a paid wallet is loaded.";
       } else if (state.tier === "developer") {
         el.hubTierAccess.textContent = "Developer wallet resolved. Starter, Pro, and Developer are all unlocked.";
       } else if (state.tier === "pro") {
-        el.hubTierAccess.textContent = "Pro wallet resolved. Starter and Pro are unlocked. Developer remains visible and locked.";
+        el.hubTierAccess.textContent = "Pro wallet resolved. Starter and Pro are unlocked. Developer is visible but locked.";
       } else if (state.tier === "starter") {
-        el.hubTierAccess.textContent = "Starter wallet resolved. Starter is unlocked. Pro and Developer remain visible and locked.";
+        el.hubTierAccess.textContent = "Starter wallet resolved. Starter is unlocked. Pro and Developer are visible but locked.";
       } else {
-        el.hubTierAccess.textContent = "Tier could not be resolved cleanly.";
+        el.hubTierAccess.textContent = "Tier could not be resolved.";
       }
     }
   }
