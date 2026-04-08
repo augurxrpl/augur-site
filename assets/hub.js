@@ -73,6 +73,7 @@
     topHoldingsChart: qs("#topHoldingsChart"),
     txMixChart: qs("#txMixChart"),
     counterpartyChart: qs("#counterpartyChart"),
+    xrpFlowChart: qs("#xrpFlowChart"),
     signalList: qs("#signalList"),
     statementText: qs("#statementText"),
     classificationValue: qs("#classificationValue"),
@@ -474,6 +475,46 @@
     `).join("");
   }
 
+  function renderXrpFlowChart(items) {
+    if (!el.xrpFlowChart) return;
+    const rows = Array.isArray(items) ? items : [];
+    if (!rows.length) {
+      el.xrpFlowChart.innerHTML = `<div class="empty">No XRP flow data available.</div>`;
+      return;
+    }
+    const sums = {};
+    rows.forEach((item) => {
+      const currency = String(item?.currency || "").toUpperCase();
+      const amount = Number(item?.amount || 0) || 0;
+      const counterparty = safeText(item?.counterparty, "Unknown");
+      if (currency !== "XRP" || amount <= 0) return;
+      sums[counterparty] = (sums[counterparty] || 0) + amount;
+    });
+    const top = Object.entries(sums)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+    if (!top.length) {
+      el.xrpFlowChart.innerHTML = `<div class="empty">No XRP flow data available.</div>`;
+      return;
+    }
+    const max = Math.max(...top.map(x => x.value), 1);
+    const total = top.reduce((sum, item) => sum + item.value, 0) || 1;
+    el.xrpFlowChart.innerHTML = top.map((item) => `
+      <div class="tracker-item">
+        <div class="tracker-left">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${item.value.toFixed(6)} XRP • ${((item.value / total) * 100).toFixed(1)}%</span>
+        </div>
+        <div class="tracker-right" style="min-width:140px;width:140px;">
+          <div style="width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="height:100%;width:${Math.max(8, (item.value / max) * 100)}%;background:linear-gradient(180deg,#ffcc66,#c7961f);border-radius:999px;"></div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
   function renderTokenHoldings(items) {
     tokenHoldingsData = Array.isArray(items)
       ? [...items].sort((a, b) => (Number(b?.balance || 0) || 0) - (Number(a?.balance || 0) || 0))
@@ -675,6 +716,7 @@
     renderTransactionBreakdown(txs);
     renderTxMixChart(txs);
     renderCounterpartyChart(txs);
+    renderXrpFlowChart(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
     if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
     if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
