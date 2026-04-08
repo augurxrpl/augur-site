@@ -531,9 +531,9 @@
     const txs = Array.isArray(data?.transactionBreakdown) ? data.transactionBreakdown : [];
     const behaviorItems = [
       `Classification: ${classification}`,
-      `Confidence: ${confidence}`,
-      `Risk Level: ${riskLevel}`,
-      `Risk Score: ${riskScore}`
+      `Confidence: ${confidenceDisplay}`,
+      `Risk Level: ${riskLevelDisplay}`,
+      `Risk Score: ${riskScoreDisplay}`
     ];
     activitySummary.forEach(item => behaviorItems.push(safeText(item)));
     const xrpBalanceRaw = Number(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP ?? 0) || 0;
@@ -542,7 +542,7 @@
     const totalSlice = xrpBalanceRaw + tokenSlice;
     const xrpPct = totalSlice > 0 ? ((xrpBalanceRaw / totalSlice) * 100) : 100;
     const blackholeView = getBlackholePresentation(data);
-    const badgeTone = riskTone(riskLevel);
+    const badgeTone = riskTone(riskLevelDisplay);
     const identityBadges = buildIdentityBadges(data);
     const signals = extractSignals(data);
     const recentTx = safeText(
@@ -557,7 +557,7 @@
     renderBadgeRow(el.walletIdentity, identityBadges, "Awaiting analysis");
     if (el.walletBalance) el.walletBalance.textContent = safeText(data?.balanceXRP ?? data?.summary?.balanceXRP, "-");
     if (el.walletTx) el.walletTx.textContent = recentTx;
-    if (el.walletRisk) el.walletRisk.textContent = riskScore;
+    if (el.walletRisk) el.walletRisk.textContent = safeText(riskScore);
     if (el.walletTrustlines) el.walletTrustlines.textContent = safeText(data?.trustlines ?? data?.summary?.trustlineCount ?? data?.activity?.trustlines, "-");
     if (el.walletOwnerCount) el.walletOwnerCount.textContent = safeText(data?.ownerCount ?? data?.summary?.ownerCount, "-");
 
@@ -573,7 +573,7 @@
     renderTokenHoldings(tokenHoldings);
     renderTransactionBreakdown(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
-    if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidence}`, "");
+    if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
     if (el.legendBalance) el.legendBalance.textContent = safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
     if (el.legendTokens) el.legendTokens.textContent = `${tokenCount} holdings`;
     if (el.donutEl) el.donutEl.style.setProperty("--xrp-pct", `${Math.max(0, Math.min(100, xrpPct))}%`);
