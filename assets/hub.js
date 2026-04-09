@@ -616,7 +616,8 @@
     el.transactionBreakdownList.innerHTML = pageItems.map((item) => {
       const hash = escapeHtml(String(item?.hash || "-"));
       const type = escapeHtml(String(item?.type || "Unknown"));
-      const result = escapeHtml(String(item?.result || "-"));
+      const rawResult = String(item?.result || "-");
+      const result = escapeHtml(rawResult === "tesSUCCESS" ? "Success" : rawResult);
       const summary = escapeHtml(String(item?.summary || "Transaction detected."));
       const when = escapeHtml(formatTxTime(item?.timestamp));
       return `<div class="tracker-item">
@@ -629,7 +630,7 @@
           </div>
         </div>
         <div class="tracker-right">
-          <div class="flow ${result === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
+          <div class="flow ${rawResult === "tesSUCCESS" ? "pos" : "warn"}">${result}</div>
         </div>
       </div>`;
     }).join("");
