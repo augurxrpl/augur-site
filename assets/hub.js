@@ -615,7 +615,17 @@
 
     el.transactionBreakdownList.innerHTML = pageItems.map((item) => {
       const hash = escapeHtml(String(item?.hash || "-"));
-      const type = escapeHtml(String(item?.type || "Unknown"));
+      const rawType = String(item?.type || "Unknown");
+      const humanTypeMap = {
+        Payment: "Payment",
+        TrustSet: "Trustline update",
+        OfferCreate: "DEX order placed",
+        OfferCancel: "DEX order canceled",
+        AMMDeposit: "Liquidity added",
+        AMMWithdraw: "Liquidity removed",
+        AMMVote: "AMM vote"
+      };
+      const type = escapeHtml(humanTypeMap[rawType] || rawType);
       const rawResult = String(item?.result || "-");
       const result = escapeHtml(rawResult === "tesSUCCESS" ? "Success" : rawResult);
       const summary = escapeHtml(String(item?.summary || "Transaction detected."));
