@@ -101,9 +101,11 @@
     proCompareWalletB: qs("#proCompareWalletB"),
     runWalletCompareBtn: qs("#runWalletCompareBtn"),
     proCompareOutput: qs("#proCompareOutput"),
+    proSavedWalletLabelInput: qs("#proSavedWalletLabelInput"),
     proSavedWalletInput: qs("#proSavedWalletInput"),
     addSavedWalletBtn: qs("#addSavedWalletBtn"),
     proSavedWalletsList: qs("#proSavedWalletsList"),
+    proWatchlistLabelInput: qs("#proWatchlistLabelInput"),
     proWatchlistInput: qs("#proWatchlistInput"),
     addWatchlistBtn: qs("#addWatchlistBtn"),
     proWatchlist: qs("#proWatchlist"),
@@ -934,13 +936,28 @@
   }
 
 
-  function renderProSimpleList(target, items, emptyText) {
+  function renderProSimpleList(target, items, emptyText, kind) {
     if (!target) return;
     if (!items.length) {
       target.textContent = emptyText;
       return;
     }
-    target.innerHTML = items.map((item) => `<div>${escapeHtml(item)}</div>`).join("");
+
+    target.innerHTML = items.map((item, index) => `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+        <div style="min-width:0;">
+          <div style="font-weight:800;">${escapeHtml(item.label || humanWalletLabel(item.wallet || ""))}</div>
+          <div style="color:var(--muted);word-break:break-all;">${escapeHtml(shortWallet(item.wallet || ""))}</div>
+        </div>
+        <button
+          class="btn btn-secondary"
+          type="button"
+          data-remove-kind="${escapeHtml(kind || "")}"
+          data-remove-index="${index}"
+          style="height:34px;padding:0 12px;flex:0 0 auto;"
+        >Remove</button>
+      </div>
+    `).join("");
   }
 
 
@@ -966,8 +983,8 @@
       if (node) node.disabled = !unlocked;
     });
 
-    renderProSimpleList(el.proSavedWalletsList, proSavedWallets, "No saved wallets yet.");
-    renderProSimpleList(el.proWatchlist, proWatchlistWallets, "No watchlist items yet.");
+    renderProSimpleList(el.proSavedWalletsList, proSavedWallets, "No saved wallets yet.", "saved");
+    renderProSimpleList(el.proWatchlist, proWatchlistWallets, "No watchlist items yet.", "watchlist");
   }
 
 
@@ -1028,19 +1045,51 @@
 
   function addProSavedWallet() {
     if (!hasProAccess()) return;
+    const label = (el.proSavedWalletLabelInput?.value || "").trim();
     const wallet = (el.proSavedWalletInput?.value || "").trim();
     if (!wallet) return;
-    if (!proSavedWallets.includes(wallet)) proSavedWallets.push(wallet);
+
+    if (!proSavedWallets.some((item) => item.wallet === wallet)) {
+      proSavedWallets.push({
+        label: label || humanWalletLabel(wallet),
+        wallet
+      });
+    }
+
+    if (el.proSavedWalletLabelInput) el.proSavedWalletLabelInput.value = "";
     if (el.proSavedWalletInput) el.proSavedWalletInput.value = "";
     updateProPanels();
   }
 
   function addProWatchlistWallet() {
     if (!hasProAccess()) return;
+    const label = (el.proWatchlistLabelInput?.value || "").trim();
     const wallet = (el.proWatchlistInput?.value || "").trim();
     if (!wallet) return;
-    if (!proWatchlistWallets.includes(wallet)) proWatchlistWallets.push(wallet);
+
+    if (!proWatchlistWallets.some((item) => item.wallet === wallet)) {
+      proWatchlistWallets.push({
+        label: label || humanWalletLabel(wallet),
+        wallet
+      });
+    }
+
+    if (el.proWatchlistLabelInput) el.proWatchlistLabelInput.value = "";
     if (el.proWatchlistInput) el.proWatchlistInput.value = "";
+    updateProPanels();
+  }
+
+
+  function removeProItem(kind, index) {
+    const i = Number(index);
+    if (!Number.isInteger(i) || i < 0) return;
+
+    if (kind === "saved") {
+      proSavedWallets.splice(i, 1);
+    } else if (kind === "watchlist") {
+      proWatchlistWallets.splice(i, 1);
+    }
+
     updateProPanels();
   }
 
@@ -1093,6 +1142,12 @@
     el.runWalletCompareBtn?.addEventListener("click", runProCompare);
     el.addSavedWalletBtn?.addEventListener("click", addProSavedWallet);
     el.addWatchlistBtn?.addEventListener("click", addProWatchlistWallet);
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-remove-kind][data-remove-index]");
+      if (!btn) return;
+      removeProItem(btn.getAttribute("data-remove-kind"), btn.getAttribute("data-remove-index"));
+    });
   }
 
   async function init() {
