@@ -879,14 +879,14 @@
 
       setHero();
       setModuleVisibility();
-      updateProPanels();
+      await loadProWorkspace();
     } catch (err) {
       state.tier = "unknown";
       state.active = false;
       state.expiry = "";
       setHero();
       setModuleVisibility();
-      updateProPanels();
+      await loadProWorkspace();
     }
   }
 
@@ -930,9 +930,54 @@
 
   let proSavedWallets = [];
   let proWatchlistWallets = [];
-
   function hasProAccess() {
     return tierRank(state.tier) >= 2 && state.active;
+  }
+
+  async function saveProWorkspace() {
+    if (!hasProAccess() || !state.wallet) return;
+
+    await fetch(`${API_BASE}/api/subscription/pro-workspace`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        walletAddress: state.wallet,
+        savedWallets: proSavedWallets,
+        watchlist: proWatchlistWallets
+      })
+    });
+  }
+
+
+  async function loadProWorkspace() {
+    if (!hasProAccess() || !state.wallet) {
+      proSavedWallets = [];
+      proWatchlistWallets = [];
+      updateProPanels();
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/api/subscription/pro-workspace?wallet=${encodeURIComponent(state.wallet)}`, {
+      headers: { "Accept": "application/json" },
+      credentials: "same-origin"
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data?.ok) {
+      proSavedWallets = [];
+      proWatchlistWallets = [];
+      updateProPanels();
+      return;
+    }
+
+    proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : [];
+    proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : [];
+    updateProPanels();
   }
 
 
@@ -1059,6 +1104,7 @@
     if (el.proSavedWalletLabelInput) el.proSavedWalletLabelInput.value = "";
     if (el.proSavedWalletInput) el.proSavedWalletInput.value = "";
     updateProPanels();
+    saveProWorkspace();
   }
 
   function addProWatchlistWallet() {
@@ -1077,6 +1123,7 @@
     if (el.proWatchlistLabelInput) el.proWatchlistLabelInput.value = "";
     if (el.proWatchlistInput) el.proWatchlistInput.value = "";
     updateProPanels();
+    saveProWorkspace();
   }
 
 
@@ -1091,6 +1138,7 @@
     }
 
     updateProPanels();
+    saveProWorkspace();
   }
 
   function bind() {
