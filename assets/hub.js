@@ -945,13 +945,26 @@
 
 
   function updateProPanels() {
-    const unlocked = hasProAccess();
+    const rank = state.active ? tierRank(state.tier) : 0;
+    const unlocked = rank >= 2;
 
     if (el.proBadge) setPill(el.proBadge, unlocked ? "Unlocked" : "Locked", unlocked ? "green" : "amber");
     if (el.proLockNote) el.proLockNote.style.display = unlocked ? "none" : "block";
-    if (el.proWorkspaceTierLabel) el.proWorkspaceTierLabel.textContent = unlocked ? capitalize(state.tier) : "Locked";
+    if (el.proWorkspaceTierLabel) el.proWorkspaceTierLabel.textContent = unlocked ? (state.tier === "developer" ? "Developer" : "Pro") : "Locked";
     if (el.proSavedWalletCount) el.proSavedWalletCount.textContent = String(proSavedWallets.length);
     if (el.proWatchlistCount) el.proWatchlistCount.textContent = String(proWatchlistWallets.length);
+
+    [
+      el.proCompareWalletA,
+      el.proCompareWalletB,
+      el.runWalletCompareBtn,
+      el.proSavedWalletInput,
+      el.addSavedWalletBtn,
+      el.proWatchlistInput,
+      el.addWatchlistBtn
+    ].forEach((node) => {
+      if (node) node.disabled = !unlocked;
+    });
 
     renderProSimpleList(el.proSavedWalletsList, proSavedWallets, "No saved wallets yet.");
     renderProSimpleList(el.proWatchlist, proWatchlistWallets, "No watchlist items yet.");
