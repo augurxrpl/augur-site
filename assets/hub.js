@@ -95,6 +95,21 @@
     developerWorkspace: qs("#developerWorkspace"),
     proBadge: qs("#proBadge"),
     developerBadge: qs("#developerBadge"),
+
+    proLockNote: qs("#proLockNote"),
+    proCompareWalletA: qs("#proCompareWalletA"),
+    proCompareWalletB: qs("#proCompareWalletB"),
+    runWalletCompareBtn: qs("#runWalletCompareBtn"),
+    proCompareOutput: qs("#proCompareOutput"),
+    proSavedWalletInput: qs("#proSavedWalletInput"),
+    addSavedWalletBtn: qs("#addSavedWalletBtn"),
+    proSavedWalletsList: qs("#proSavedWalletsList"),
+    proWatchlistInput: qs("#proWatchlistInput"),
+    addWatchlistBtn: qs("#addWatchlistBtn"),
+    proWatchlist: qs("#proWatchlist"),
+    proSavedWalletCount: qs("#proSavedWalletCount"),
+    proWatchlistCount: qs("#proWatchlistCount"),
+    proWorkspaceTierLabel: qs("#proWorkspaceTierLabel"),
   };
 
   function getQueryWallet() {
@@ -313,6 +328,16 @@
     if (value.includes("medium") || value.includes("moderate")) return "amber";
     if (value.includes("low")) return "green";
     return "blue";
+  }
+
+  const KNOWN_WALLET_LABELS = {
+    "rUpsEEPvfRAZC5woNHZv95R4BBJeM1Tdj1": "AUGUR Subscription Wallet"
+  };
+
+  function humanWalletLabel(address) {
+    const value = String(address || "").trim();
+    if (!value) return "Unknown wallet";
+    return KNOWN_WALLET_LABELS[value] || `${value.slice(0,6)}...${value.slice(-6)}`;
   }
 
   function setHero() {
@@ -852,12 +877,14 @@
 
       setHero();
       setModuleVisibility();
+      updateProPanels();
     } catch (err) {
       state.tier = "unknown";
       state.active = false;
       state.expiry = "";
       setHero();
       setModuleVisibility();
+      updateProPanels();
     }
   }
 
@@ -896,6 +923,112 @@
     } finally {
       setLoadingState(false);
     }
+  }
+
+
+  let proSavedWallets = [];
+  let proWatchlistWallets = [];
+
+  function hasProAccess() {
+    return tierRank(state.tier) >= 2 && state.active;
+  }
+
+
+  function renderProSimpleList(target, items, emptyText) {
+    if (!target) return;
+    if (!items.length) {
+      target.textContent = emptyText;
+      return;
+    }
+    target.innerHTML = items.map((item) => `<div>${escapeHtml(item)}</div>`).join("");
+  }
+
+
+  function updateProPanels() {
+    const unlocked = hasProAccess();
+
+    if (el.proBadge) setPill(el.proBadge, unlocked ? "Unlocked" : "Locked", unlocked ? "green" : "amber");
+    if (el.proLockNote) el.proLockNote.style.display = unlocked ? "none" : "block";
+    if (el.proWorkspaceTierLabel) el.proWorkspaceTierLabel.textContent = unlocked ? capitalize(state.tier) : "Locked";
+    if (el.proSavedWalletCount) el.proSavedWalletCount.textContent = String(proSavedWallets.length);
+    if (el.proWatchlistCount) el.proWatchlistCount.textContent = String(proWatchlistWallets.length);
+
+    renderProSimpleList(el.proSavedWalletsList, proSavedWallets, "No saved wallets yet.");
+    renderProSimpleList(el.proWatchlist, proWatchlistWallets, "No watchlist items yet.");
+  }
+
+
+  async function runProCompare() {
+    if (!hasProAccess()) {
+      if (el.proCompareOutput) el.proCompareOutput.textContent = "Upgrade to Pro to compare wallets.";
+      return;
+    }
+
+    const walletA = (el.proCompareWalletA?.value || "").trim();
+    const walletB = (el.proCompareWalletB?.value || "").trim();
+
+    if (!walletA || !walletB) {
+      if (el.proCompareOutput) el.proCompareOutput.textContent = "Enter both wallets first.";
+      return;
+    }
+
+    if (el.proCompareOutput) el.proCompareOutput.textContent = "Loading comparison...";
+
+    const [aRes, bRes] = await Promise.all([
+      fetch(`${API_BASE}/api/report?address=${encodeURIComponent(walletA)}`, {
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      }),
+      fetch(`${API_BASE}/api/report?address=${encodeURIComponent(walletB)}`, {
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      })
+    ]);
+
+    const [aData, bData] = await Promise.all([
+      aRes.json().catch(() => ({})),
+      bRes.json().catch(() => ({}))
+    ]);
+
+    const aClass = safeText(aData?.classification, "-");
+    const bClass = safeText(bData?.classification, "-");
+    const aRisk = safeText(aData?.risk?.score ?? aData?.risk?.level, "-");
+    const bRisk = safeText(bData?.risk?.score ?? bData?.risk?.level, "-");
+    const aXrp = safeText(aData?.balanceXRP ?? aData?.balance ?? aData?.summary?.balanceXRP, "-");
+    const bXrp = safeText(bData?.balanceXRP ?? bData?.balance ?? bData?.summary?.balanceXRP, "-");
+
+    if (el.proCompareOutput) {
+      el.proCompareOutput.innerHTML = `
+        <div><strong>Wallet A</strong> ${escapeHtml(shortWallet(walletA))}</div>
+        <div>Classification: ${escapeHtml(aClass)}</div>
+        <div>Risk: ${escapeHtml(String(aRisk))}</div>
+        <div>XRP: ${escapeHtml(String(aXrp))}</div>
+        <br>
+        <div><strong>Wallet B</strong> ${escapeHtml(shortWallet(walletB))}</div>
+        <div>Classification: ${escapeHtml(bClass)}</div>
+        <div>Risk: ${escapeHtml(String(bRisk))}</div>
+        <div>XRP: ${escapeHtml(String(bXrp))}</div>
+      `;
+    }
+  }
+
+
+  function addProSavedWallet() {
+    if (!hasProAccess()) return;
+    const wallet = (el.proSavedWalletInput?.value || "").trim();
+    if (!wallet) return;
+    if (!proSavedWallets.includes(wallet)) proSavedWallets.push(wallet);
+    if (el.proSavedWalletInput) el.proSavedWalletInput.value = "";
+    updateProPanels();
+  }
+
+  function addProWatchlistWallet() {
+    if (!hasProAccess()) return;
+    const wallet = (el.proWatchlistInput?.value || "").trim();
+    if (!wallet) return;
+    if (!proWatchlistWallets.includes(wallet)) proWatchlistWallets.push(wallet);
+    if (el.proWatchlistInput) el.proWatchlistInput.value = "";
+    updateProPanels();
   }
 
   function bind() {
@@ -943,10 +1076,15 @@
       transactionBreakdownPage += 1;
       renderTransactionBreakdown(transactionBreakdownData);
     });
+
+    el.runWalletCompareBtn?.addEventListener("click", runProCompare);
+    el.addSavedWalletBtn?.addEventListener("click", addProSavedWallet);
+    el.addWatchlistBtn?.addEventListener("click", addProWatchlistWallet);
   }
 
   async function init() {
     resetReportUI();
+    updateProPanels();
 
     const qWallet = getQueryWallet();
     if (qWallet) {

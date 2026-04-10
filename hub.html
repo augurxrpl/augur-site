@@ -1136,32 +1136,67 @@
           </div>
 
           <div class="locked-card" id="proWorkspace">
-            <div class="card-header">
-              <div>
-                <h3>Pro Workspace</h3>
-                <div class="subhead">Compare wallets, save targets, and work from a stronger operating layer.</div>
-              </div>
-              <span class="badge amber" id="proBadge">Locked</span>
-            </div>
-            <div class="locked-grid">
-              <div class="locked-tile">
-                <h4>Compare Wallets</h4>
-                <p>Run side-by-side wallet analysis and surface differences in behavior, risk, and holdings faster.</p>
-              </div>
-              <div class="locked-tile">
-                <h4>Saved Wallets</h4>
-                <p>Keep recurring targets inside Hub instead of rebuilding your workspace every session.</p>
-              </div>
-              <div class="locked-tile">
-                <h4>Watchlist</h4>
-                <p>Track repeated wallets and move through your operating flow faster.</p>
-              </div>
-              <div class="locked-tile">
-                <h4>Workflow Panels</h4>
-                <p>Upgrade beyond one-off lookups into a real daily operator surface.</p>
-              </div>
-            </div>
-          </div>
+  <div class="card-header">
+    <div>
+      <h3>Pro Workspace</h3>
+      <div class="subhead">Compare wallets, save targets, and work from a stronger operating layer.</div>
+    </div>
+    <span class="badge amber" id="proBadge">Locked</span>
+  </div>
+
+  <div id="proLockNote" class="note" style="margin-bottom:14px;">
+    Upgrade to Pro to unlock wallet comparison, saved wallets, watchlist flow, and faster daily operations.
+  </div>
+
+  <div class="locked-grid">
+    <div class="locked-tile">
+      <h4>Compare Wallets</h4>
+      <div style="display:grid;gap:10px;margin-top:10px;">
+        <input id="proCompareWalletA" type="text" placeholder="Wallet A" autocomplete="off" spellcheck="false" />
+        <input id="proCompareWalletB" type="text" placeholder="Wallet B" autocomplete="off" spellcheck="false" />
+        <button id="runWalletCompareBtn" class="btn btn-primary" type="button">Compare</button>
+      </div>
+      <div id="proCompareOutput" class="note" style="margin-top:12px;">No comparison loaded.</div>
+    </div>
+
+    <div class="locked-tile">
+      <h4>Saved Wallets</h4>
+      <div style="display:grid;gap:10px;margin-top:10px;">
+        <input id="proSavedWalletInput" type="text" placeholder="Add wallet to saved list" autocomplete="off" spellcheck="false" />
+        <button id="addSavedWalletBtn" class="btn btn-secondary" type="button">Add Saved Wallet</button>
+      </div>
+      <div id="proSavedWalletsList" class="note" style="margin-top:12px;">No saved wallets yet.</div>
+    </div>
+
+    <div class="locked-tile">
+      <h4>Watchlist</h4>
+      <div style="display:grid;gap:10px;margin-top:10px;">
+        <input id="proWatchlistInput" type="text" placeholder="Add wallet to watchlist" autocomplete="off" spellcheck="false" />
+        <button id="addWatchlistBtn" class="btn btn-secondary" type="button">Add Watchlist Wallet</button>
+      </div>
+      <div id="proWatchlist" class="note" style="margin-top:12px;">No watchlist items yet.</div>
+    </div>
+
+    <div class="locked-tile">
+      <h4>Quick Panels</h4>
+      <div class="stat-list" style="margin-top:10px;">
+        <div class="stat-line">
+          <div class="name">Saved Wallets</div>
+          <div id="proSavedWalletCount" class="val">0</div>
+        </div>
+        <div class="stat-line">
+          <div class="name">Watchlist Count</div>
+          <div id="proWatchlistCount" class="val">0</div>
+        </div>
+        <div class="stat-line">
+          <div class="name">Workspace Tier</div>
+          <div id="proWorkspaceTierLabel" class="val">Locked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
           <div class="locked-card" id="developerWorkspace">
             <div class="card-header">
