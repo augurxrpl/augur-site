@@ -1307,6 +1307,16 @@
       if (tokenNextBtn) tokenNextBtn.disabled = tokenHoldingsPage >= totalPages;
     }
 
+    const humanTypeMap = {
+      Payment: "Payment",
+      TrustSet: "Trustline update",
+      OfferCreate: "DEX order placed",
+      OfferCancel: "DEX order canceled",
+      AMMDeposit: "Liquidity added",
+      AMMWithdraw: "Liquidity removed",
+      AMMVote: "AMM vote"
+    };
+
     function renderTransactionBreakdown(items){
       transactionBreakdownData = Array.isArray(items) ? items : [];
       const totalPages = Math.max(1, Math.ceil(transactionBreakdownData.length / ITEMS_PER_PAGE));
@@ -1564,16 +1574,6 @@
         : (riskLevel.toLowerCase().includes("medium") || riskLevel.toLowerCase().includes("moderate"))
           ? "amber"
           : (riskLevel.toLowerCase().includes("low") ? "green" : "");
-
-      const humanTypeMap = {
-        Payment: "Payment",
-        TrustSet: "Trustline update",
-        OfferCreate: "DEX order placed",
-        OfferCancel: "DEX order canceled",
-        AMMDeposit: "Liquidity added",
-        AMMWithdraw: "Liquidity removed",
-        AMMVote: "AMM vote"
-      };
 
       walletAddress.textContent = safeText(data?.address, "No wallet loaded");
       renderBadgeRow(walletIdentity, buildIdentityBadges(data));
