@@ -984,6 +984,17 @@
           <div class="status-box" id="statusBox" hidden>
             <div class="kv" id="statusDetails"></div>
           </div>
+
+          <div class="status-box" id="xamanBox" hidden>
+            <div class="kv" id="xamanDetails"></div>
+            <div class="action-row" style="margin-top:14px;">
+              <button class="btn btn-primary btn-hud" id="openXamanBtn" type="button">Open in Xaman</button>
+              <button class="btn btn-secondary btn-hud" id="copyXamanLinkBtn" type="button">Copy Link</button>
+            </div>
+            <p class="sub-note" id="xamanHelpText" style="margin-top:12px;">
+              If Xaman does not open, copy the payment link and open it manually in Xaman.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -1013,6 +1024,11 @@
     const activateBtn = document.getElementById("activateBtn");
     const statusBox = document.getElementById("statusBox");
     const statusDetails = document.getElementById("statusDetails");
+    const xamanBox = document.getElementById("xamanBox");
+    const xamanDetails = document.getElementById("xamanDetails");
+    const openXamanBtn = document.getElementById("openXamanBtn");
+    const copyXamanLinkBtn = document.getElementById("copyXamanLinkBtn");
+    const xamanHelpText = document.getElementById("xamanHelpText");
     const planButtons = document.querySelectorAll("[data-plan-select]");
 
     let currentQuote = null;
@@ -1050,6 +1066,42 @@
       renderRows(statusDetails, rows);
     }
 
+    function hideXamanBox(){
+      if (xamanBox) xamanBox.hidden = true;
+    }
+
+    function showXamanBox(data){
+      if (!xamanBox || !xamanDetails) return;
+
+      xamanBox.hidden = false;
+      renderRows(xamanDetails, [
+        ["Plan", `${safeText(data.planName)} (${safeText(data.planCode)})`, false],
+        ["Wallet", safeText(data.walletAddress), true],
+        ["Amount", `${safeText(data.amountXrp)} XRP`, false],
+        ["Destination Tag", safeText(data.destinationTag), true]
+      ]);
+
+      if (openXamanBtn) openXamanBtn.onclick = () => {
+        if (data.xamanUrl) window.location.href = data.xamanUrl;
+      };
+
+      if (copyXamanLinkBtn) copyXamanLinkBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(String(data.xamanUrl || ""));
+          copyXamanLinkBtn.textContent = "Copied";
+          setTimeout(() => { copyXamanLinkBtn.textContent = "Copy Link"; }, 900);
+        } catch (_) {}
+      };
+
+      const ua = navigator.userAgent || "";
+      const isAndroid = /Android/i.test(ua);
+      if (xamanHelpText) {
+        xamanHelpText.textContent = isAndroid
+          ? "Android can be rough with app handoff. Tap Open in Xaman first. If it does not open cleanly, use Copy Link and open it manually in Xaman."
+          : "If Xaman does not open, copy the payment link and open it manually in Xaman.";
+      }
+    }
+
     planButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const plan = btn.getAttribute("data-plan-select");
@@ -1071,11 +1123,12 @@
       }
 
       startPaymentBtn.disabled = true;
-            checkPaymentBtn.hidden = true;
+      checkPaymentBtn.hidden = true;
       activateBtn.hidden = true;
       checkPaymentBtn.disabled = true;
       activateBtn.disabled = true;
-            currentQuote = null;
+      currentQuote = null;
+      hideXamanBox();
 
       try {
         const res = await fetch(`${API_BASE}/api/subscription/start-payment`, {
@@ -1096,7 +1149,7 @@
           ["Plan", `${safeText(data.planName)} (${safeText(data.planCode)})`, false],
           ["Wallet", safeText(data.walletAddress), true],
           ["Amount", `${safeText(data.amountXrp)} XRP`, false],
-          ["Status", "Opening Xaman payment request.", false]
+          ["Status", "Payment request created.", false]
         ]);
 
         const xamanUrl = data.xamanUrl;
@@ -1106,7 +1159,14 @@
         activateBtn.hidden = true;
         activateBtn.disabled = true;
 
-        window.location.href = xamanUrl;
+        showXamanBox(data);
+
+        const ua = navigator.userAgent || "";
+        const isAndroid = /Android/i.test(ua);
+
+        if (!isAndroid && xamanUrl) {
+          window.location.href = xamanUrl;
+        }
       } catch (err) {
         showStatus([["Error", err instanceof Error ? err.message : "Quote request failed", false]]);
       } finally {
