@@ -1021,23 +1021,42 @@
     if (el.proBadge) setPill(el.proBadge, unlocked ? "Unlocked" : "Locked", unlocked ? "green" : "amber");
     if (el.proLockNote) el.proLockNote.style.display = unlocked ? "none" : "block";
     if (el.proWorkspaceTierLabel) el.proWorkspaceTierLabel.textContent = unlocked ? (state.tier === "developer" ? "Developer" : "Pro") : "Locked";
-    if (el.proSavedWalletCount) el.proSavedWalletCount.textContent = String(proSavedWallets.length);
-    if (el.proWatchlistCount) el.proWatchlistCount.textContent = String(proWatchlistWallets.length);
+    if (el.proSavedWalletCount) el.proSavedWalletCount.textContent = unlocked ? String(proSavedWallets.length) : "Locked";
+    if (el.proWatchlistCount) el.proWatchlistCount.textContent = unlocked ? String(proWatchlistWallets.length) : "Locked";
 
     [
       el.proCompareWalletA,
       el.proCompareWalletB,
       el.runWalletCompareBtn,
+      el.proSavedWalletLabelInput,
       el.proSavedWalletInput,
       el.addSavedWalletBtn,
+      el.proWatchlistLabelInput,
       el.proWatchlistInput,
       el.addWatchlistBtn
     ].forEach((node) => {
-      if (node) node.disabled = !unlocked;
+      if (!node) return;
+      node.disabled = !unlocked;
+      node.style.display = unlocked ? "" : "none";
     });
 
-    renderProSimpleList(el.proSavedWalletsList, proSavedWallets, "No saved wallets yet.", "saved");
-    renderProSimpleList(el.proWatchlist, proWatchlistWallets, "No watchlist items yet.", "watchlist");
+    if (el.proCompareOutput && !unlocked) {
+      el.proCompareOutput.textContent = "Upgrade to Pro to unlock wallet comparison.";
+    }
+
+    renderProSimpleList(
+      el.proSavedWalletsList,
+      unlocked ? proSavedWallets : [],
+      unlocked ? "No saved wallets yet." : "Upgrade to Pro to unlock saved wallets.",
+      "saved"
+    );
+
+    renderProSimpleList(
+      el.proWatchlist,
+      unlocked ? proWatchlistWallets : [],
+      unlocked ? "No watchlist items yet." : "Upgrade to Pro to unlock watchlists.",
+      "watchlist"
+    );
   }
 
 
