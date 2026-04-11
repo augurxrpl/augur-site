@@ -730,6 +730,15 @@
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:12px;
       margin-top:14px;
+      width:100%;
+      max-width:100%;
+      align-items:start;
+    }
+
+    .locked-grid > *{
+      min-width:0;
+      width:100%;
+      max-width:100%;
     }
 
     .locked-tile{
@@ -737,6 +746,41 @@
       border-radius:16px;
       background:rgba(255,255,255,.03);
       border:1px solid rgba(118,156,228,.10);
+      min-width:0;
+      width:100%;
+      max-width:100%;
+      overflow:hidden;
+      box-sizing:border-box;
+    }
+
+    .locked-tile > *{
+      min-width:0;
+      max-width:100%;
+      box-sizing:border-box;
+    }
+
+    .locked-tile > div[style*="display:grid"]{
+      min-width:0;
+      width:100%;
+      max-width:100%;
+    }
+
+    .locked-tile input,
+    .locked-tile button{
+      display:block;
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      box-sizing:border-box;
+    }
+
+    .locked-tile .note{
+      min-width:0;
+      width:100%;
+      max-width:100%;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      box-sizing:border-box;
     }
 
     .locked-tile h4{
