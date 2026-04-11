@@ -667,15 +667,13 @@
           ["Expires", safeText(data.expiresAt), false]
         ]);
 
-        accountUtilityLauncher.hidden = false;
-
         if (allowed) {
+          accountUtilityLauncher.hidden = false;
           renderUtilityLinks(plan, wallet);
           window.location.href = `/hub.html?wallet=${encodeURIComponent(wallet)}`;
         } else {
-          accountUtilityLinks.innerHTML = `
-            <a class="btn btn-primary btn-hud" href="/pricing.html" style="text-decoration:none;">View Plans</a>
-          `;
+          accountUtilityLauncher.hidden = true;
+          accountUtilityLinks.innerHTML = "";
         }
       } catch (err) {
         renderRows([["Error", err instanceof Error ? err.message : "Status lookup failed", false]]);
