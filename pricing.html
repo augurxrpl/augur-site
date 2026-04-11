@@ -1099,7 +1099,7 @@
           ["Status", "Opening Xaman payment request.", false]
         ]);
 
-        const xamanUrl = `https://xaman.app/detect/request:${encodeURIComponent(data.subscriptionWallet)}?amount=${encodeURIComponent(data.amountXrp)}&network=XRPL&dt=${encodeURIComponent(data.destinationTag)}`;
+        const xamanUrl = data.xamanUrl;
 
         checkPaymentBtn.hidden = false;
         checkPaymentBtn.disabled = false;
