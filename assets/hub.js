@@ -9,9 +9,13 @@
     ? "https://api.augurxrpl.com"
     : "";
 
+  const AUGUR_SUBSCRIBER_WALLET_KEY = "augurSubscriberWallet";
+  const AUGUR_LAST_REPORT_WALLET_KEY = "augurLastReportWallet";
 
   const state = {
     wallet: "",
+    subscriberWallet: "",
+    reportWallet: "",
     tier: "unknown",
     active: false,
     expiry: "",
@@ -343,7 +347,7 @@
   }
 
   function setHero() {
-    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.wallet);
+    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.subscriberWallet || state.wallet);
     if (el.heroTier) el.heroTier.textContent = capitalize(state.tier);
     if (el.heroStatus) el.heroStatus.textContent = state.active ? "Active" : "Inactive";
     if (el.heroExpiry) el.heroExpiry.textContent = state.expiry || "—";
@@ -357,8 +361,8 @@
     }
 
     if (el.hubAccessStatus) {
-      el.hubAccessStatus.textContent = state.wallet
-        ? `${shortWallet(state.wallet)} resolved. ${state.active ? "Paid access confirmed." : "No active paid access on this wallet."}`
+      el.hubAccessStatus.textContent = state.subscriberWallet
+        ? `${shortWallet(state.subscriberWallet)} resolved. ${state.active ? "Paid access confirmed." : "No active paid access on this wallet."}`
         : "No wallet loaded.";
     }
 
@@ -388,7 +392,7 @@
     el.runStarterBtn.disabled = isLoading;
     el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Report";
     if (el.starterStatus && isLoading) {
-      el.starterStatus.textContent = `Running premium report for ${state.wallet || "wallet"}...`;
+      el.starterStatus.textContent = `Running premium report for ${state.reportWallet || state.wallet || "wallet"}...`;
     }
   }
 
@@ -774,7 +778,7 @@
     );
 
     if (el.walletClassPill) setPill(el.walletClassPill, classification, badgeTone);
-    if (el.walletAddress) el.walletAddress.textContent = state.wallet || "No wallet loaded";
+    if (el.walletAddress) el.walletAddress.textContent = state.reportWallet || state.wallet || "No wallet loaded";
     renderBadgeRow(el.walletIdentity, identityBadges, "Awaiting analysis");
     if (el.walletBalance) el.walletBalance.textContent = safeText(data?.balanceXRP ?? data?.summary?.balanceXRP, "-");
     if (el.walletTx) el.walletTx.textContent = recentTx;
@@ -840,7 +844,11 @@
     if (!state.wallet) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
+      const statusWallet = state.subscriberWallet || state.wallet;
+      state.subscriberWallet = statusWallet;
+      localStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(statusWallet)}`, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
@@ -904,7 +912,9 @@
     setLoadingState(true);
 
     try {
-      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
+      const subscriberWallet = state.subscriberWallet || state.wallet || wallet;
+      const reportWallet = state.reportWallet || wallet;
+      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(subscriberWallet)}&address=${encodeURIComponent(reportWallet)}`;
       const res = await fetch(url, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
@@ -945,7 +955,7 @@
       },
       credentials: "same-origin",
       body: JSON.stringify({
-        walletAddress: state.wallet,
+        walletAddress: state.subscriberWallet || state.wallet,
         savedWallets: proSavedWallets,
         watchlist: proWatchlistWallets
       })

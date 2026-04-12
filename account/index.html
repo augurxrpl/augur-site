@@ -586,6 +586,8 @@
   </footer>
 <script>
     const API_BASE = "https://api.augurxrpl.com";
+    const AUGUR_SUBSCRIBER_WALLET_KEY = "augurSubscriberWallet";
+    const AUGUR_LAST_REPORT_WALLET_KEY = "augurLastReportWallet";
     const walletInput = document.getElementById("walletInput");
     const checkStatusBtn = document.getElementById("checkStatusBtn");
     const statusBox = document.getElementById("statusBox");
@@ -649,7 +651,14 @@
       try {
         const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
         const data = await res.json();
-
+        if (res.ok && data.ok) {
+          try {
+            localStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, wallet);
+            sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, wallet);
+            localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+            sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+          } catch {}
+        }
         if (!res.ok || !data.ok) {
           throw new Error(data.error || data.message || "Status lookup failed");
         }
