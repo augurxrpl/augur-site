@@ -885,6 +885,7 @@
       setModuleVisibility();
       await loadProWorkspace();
     } catch (err) {
+      alert("LOADACCESS CATCH: " + (err && err.message ? err.message : err));
       state.tier = "unknown";
       state.active = false;
       state.expiry = "";
@@ -1060,6 +1061,7 @@
   }
 
   async function init() {
+    alert("INIT START");
     resetReportUI();
     updateProPanels();
 
@@ -1077,10 +1079,14 @@
     state.reportWallet = qWallet || storedReportWallet || state.subscriberWallet || "";
     state.wallet = state.subscriberWallet || state.reportWallet || "";
 
+    alert("INIT VALUES | subscriber=" + state.subscriberWallet + " | report=" + state.reportWallet + " | wallet=" + state.wallet);
+
     if (el.walletInput) el.walletInput.value = state.reportWallet || "";
 
     bind();
+    alert("BEFORE LOADACCESS");
     await loadAccess();
+    alert("AFTER LOADACCESS | tier=" + state.tier + " | active=" + state.active + " | expiry=" + state.expiry);
 
     if (state.reportWallet && state.active) {
       await runStarter();
