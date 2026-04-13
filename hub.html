@@ -803,7 +803,45 @@
       .mini-sub{font-size:11px;line-height:1.3}
       .locked-grid{grid-template-columns:1fr}
     }
-  </style>
+  
+/* Hub analyzing state */
+.hub-loading-state{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+  padding:12px 14px;
+  border:1px solid rgba(118,156,228,.16);
+  border-radius:14px;
+  background:rgba(255,255,255,.03);
+}
+
+.hub-loading-state[hidden]{
+  display:none !important;
+}
+
+.hub-loading-wheel{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.18);
+  border-top-color:var(--blue);
+  animation:hub-spin .8s linear infinite;
+  flex:0 0 auto;
+}
+
+.hub-loading-copy{
+  color:var(--muted);
+  font-size:14px;
+  font-weight:700;
+}
+
+@keyframes hub-spin{
+  to{transform:rotate(360deg);}
+}
+
+
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -836,6 +874,12 @@
             <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
             <button id="runStarterBtn" class="btn btn-primary" type="button">Run Utility</button>
             <button id="loadWalletBtn" class="btn btn-secondary" type="button">Load Wallet</button>
+          </div>
+          <div id="hubLoadingState" class="hub-loading-state" hidden>
+            <div class="hub-loading-wheel" aria-hidden="true"></div>
+            <div class="hub-loading-copy">Analyzing wallet...</div>
+          </div>
+          <div class="trust">
           </div>
 
           <div class="trust">

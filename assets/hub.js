@@ -40,6 +40,7 @@
     loadWalletBtn: qs("#loadWalletBtn"),
     runStarterBtn: qs("#runStarterBtn"),
     starterStatus: qs("#starterStatus"),
+    hubLoadingState: qs("#hubLoadingState"),
 
     walletClassPill: qs("#walletClassPill"),
     walletAddress: qs("#walletAddress"),
@@ -392,9 +393,16 @@
   }
 
   function setLoadingState(isLoading) {
-    if (!el.runStarterBtn) return;
-    el.runStarterBtn.disabled = isLoading;
-    el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Report";
+    if (el.runStarterBtn) {
+      el.runStarterBtn.disabled = isLoading;
+      el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Report";
+    }
+    if (el.loadWalletBtn) {
+      el.loadWalletBtn.disabled = isLoading;
+    }
+    if (el.hubLoadingState) {
+      el.hubLoadingState.hidden = !isLoading;
+    }
     if (el.starterStatus && isLoading) {
       el.starterStatus.textContent = `Running premium report for ${state.reportWallet || "wallet"}...`;
     }
@@ -893,6 +901,13 @@
     localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, inputVal);
     sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, inputVal);
 
+    resetReportUI();
+    renderReportUI(state.reportWallet);
+    if (el.starterStatus) {
+      el.starterStatus.textContent = `Running premium report for ${state.reportWallet}...`;
+    }
+    if (el.loadWalletBtn) el.loadWalletBtn.disabled = true;
+
     setLoadingState(true);
 
     try {
@@ -911,11 +926,15 @@
       renderReport(data?.report || data);
       renderReportUI(state.reportWallet);
       clearStarterError();
+      if (el.starterStatus) {
+        el.starterStatus.textContent = `Premium report loaded for ${state.reportWallet}.`;
+      }
     } catch (err) {
       resetReportUI();
       setStarterError(err.message || "Unable to load premium wallet report.");
     } finally {
       setLoadingState(false);
+      if (el.loadWalletBtn) el.loadWalletBtn.disabled = false;
     }
   }
 
@@ -1100,7 +1119,6 @@
       url.searchParams.set("wallet", val);
       window.history.replaceState({}, "", url);
 
-      await loadAccess();
       if (state.subscriberWallet && state.active) {
         await runStarter();
       }
