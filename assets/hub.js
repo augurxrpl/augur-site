@@ -901,13 +901,16 @@
   async function runStarter() {
     clearStarterError();
 
-    const wallet = (el.walletInput?.value || state.wallet || "").trim();
+    const wallet = (el.walletInput?.value || state.reportWallet || state.wallet || "").trim();
     if (!wallet) {
       setStarterError("Enter a wallet first.");
       return;
     }
 
-    state.wallet = wallet;
+    state.reportWallet = wallet;
+    localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+    sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+    if (!state.subscriberWallet) state.wallet = wallet;
     setHero();
     setLoadingState(true);
 
@@ -971,226 +974,40 @@
       return;
     }
 
-    const res = await fetch(`${API_BASE}/api/subscription/pro-workspace?wallet=${encodeURIComponent(state.wallet)}`, {
+    const workspaceWallet = state.subscriberWallet || state.wallet;
+    const res = await fetch(`${API_BASE}/api/subscription/pro-workspace?wallet=${encodeURIComponent(workspaceWallet)}`, {
       headers: { "Accept": "application/json" },
       credentials: "same-origin"
     });
 
     const data = await res.json().catch(() => ({}));
 
-    if (!res.ok || !data?.ok) {
-      proSavedWallets = [];
-      proWatchlistWallets = [];
-      updateProPanels();
-      return;
-    }
-
-    proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : [];
-    proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : [];
-    updateProPanels();
-  }
-
-
-  function renderProSimpleList(target, items, emptyText, kind) {
-    if (!target) return;
-    if (!items.length) {
-      target.textContent = emptyText;
-      return;
-    }
-
-    target.innerHTML = items.map((item, index) => `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
-        <div style="min-width:0;">
-          <div style="font-weight:800;">${escapeHtml(item.label || humanWalletLabel(item.wallet || ""))}</div>
-          <div style="color:var(--muted);word-break:break-all;">${escapeHtml(shortWallet(item.wallet || ""))}</div>
-        </div>
-        <div style="display:flex;gap:8px;flex:0 0 auto;">
-          <button
-            class="btn btn-secondary"
-            type="button"
-            data-copy-wallet="${escapeHtml(item.wallet || "")}"
-            style="height:34px;padding:0 12px;"
-          >Copy</button>
-          <button
-            class="btn btn-secondary"
-            type="button"
-            data-remove-kind="${escapeHtml(kind || "")}"
-            data-remove-index="${index}"
-            style="height:34px;padding:0 12px;"
-          >Remove</button>
-        </div>
-      </div>
-    `).join("");
-  }
-
-
-  function updateProPanels() {
-    const rank = state.active ? tierRank(state.tier) : 0;
-    const unlocked = rank >= 2;
-
-    if (el.proBadge) setPill(el.proBadge, unlocked ? "Unlocked" : "Locked", unlocked ? "green" : "amber");
-    if (el.proLockNote) el.proLockNote.style.display = unlocked ? "none" : "block";
-    if (el.proWorkspaceTierLabel) el.proWorkspaceTierLabel.textContent = unlocked ? (state.tier === "developer" ? "Developer" : "Pro") : "Locked";
-    if (el.proSavedWalletCount) el.proSavedWalletCount.textContent = unlocked ? String(proSavedWallets.length) : "Locked";
-    if (el.proWatchlistCount) el.proWatchlistCount.textContent = unlocked ? String(proWatchlistWallets.length) : "Locked";
-
-    [
-      el.proCompareWalletA,
-      el.proCompareWalletB,
-      el.runWalletCompareBtn,
-      el.proSavedWalletLabelInput,
-      el.proSavedWalletInput,
-      el.addSavedWalletBtn,
-      el.proWatchlistLabelInput,
-      el.proWatchlistInput,
-      el.addWatchlistBtn
-    ].forEach((node) => {
-      if (!node) return;
-      node.disabled = !unlocked;
-      node.style.display = unlocked ? "" : "none";
-    });
-
-    if (el.proCompareOutput && !unlocked) {
-      el.proCompareOutput.textContent = "Upgrade to Pro to unlock wallet comparison.";
-    }
-
-    renderProSimpleList(
-      el.proSavedWalletsList,
-      unlocked ? proSavedWallets : [],
-      unlocked ? "No saved wallets yet." : "Upgrade to Pro to unlock saved wallets.",
-      "saved"
-    );
-
-    renderProSimpleList(
-      el.proWatchlist,
-      unlocked ? proWatchlistWallets : [],
-      unlocked ? "No watchlist items yet." : "Upgrade to Pro to unlock watchlists.",
-      "watchlist"
-    );
-  }
-
-
-  async function runProCompare() {
-    if (!hasProAccess()) {
-      if (el.proCompareOutput) el.proCompareOutput.textContent = "Upgrade to Pro to compare wallets.";
-      return;
-    }
-
-    const walletA = (el.proCompareWalletA?.value || "").trim();
-    const walletB = (el.proCompareWalletB?.value || "").trim();
-
-    if (!walletA || !walletB) {
-      if (el.proCompareOutput) el.proCompareOutput.textContent = "Enter both wallets first.";
-      return;
-    }
-
-    if (el.proCompareOutput) el.proCompareOutput.textContent = "Loading comparison...";
-
-    const [aRes, bRes] = await Promise.all([
-      fetch(`${API_BASE}/api/report?address=${encodeURIComponent(walletA)}`, {
-        headers: { "Accept": "application/json" },
-        credentials: "same-origin"
-      }),
-      fetch(`${API_BASE}/api/report?address=${encodeURIComponent(walletB)}`, {
-        headers: { "Accept": "application/json" },
-        credentials: "same-origin"
-      })
-    ]);
-
-    const [aData, bData] = await Promise.all([
-      aRes.json().catch(() => ({})),
-      bRes.json().catch(() => ({}))
-    ]);
-
-    const aClass = safeText(aData?.classification, "-");
-    const bClass = safeText(bData?.classification, "-");
-    const aRisk = safeText(aData?.risk?.score ?? aData?.risk?.level, "-");
-    const bRisk = safeText(bData?.risk?.score ?? bData?.risk?.level, "-");
-    const aXrp = safeText(aData?.balanceXRP ?? aData?.balance ?? aData?.summary?.balanceXRP, "-");
-    const bXrp = safeText(bData?.balanceXRP ?? bData?.balance ?? bData?.summary?.balanceXRP, "-");
-
-    if (el.proCompareOutput) {
-      el.proCompareOutput.innerHTML = `
-        <div><strong>Wallet A</strong> ${escapeHtml(shortWallet(walletA))}</div>
-        <div>Classification: ${escapeHtml(aClass)}</div>
-        <div>Risk: ${escapeHtml(String(aRisk))}</div>
-        <div>XRP: ${escapeHtml(String(aXrp))}</div>
-        <br>
-        <div><strong>Wallet B</strong> ${escapeHtml(shortWallet(walletB))}</div>
-        <div>Classification: ${escapeHtml(bClass)}</div>
-        <div>Risk: ${escapeHtml(String(bRisk))}</div>
-        <div>XRP: ${escapeHtml(String(bXrp))}</div>
-      `;
-    }
-  }
-
-
-  function addProSavedWallet() {
-    if (!hasProAccess()) return;
-    const label = (el.proSavedWalletLabelInput?.value || "").trim();
-    const wallet = (el.proSavedWalletInput?.value || "").trim();
-    if (!wallet) return;
-
-    if (!proSavedWallets.some((item) => item.wallet === wallet)) {
-      proSavedWallets.push({
-        label: label || humanWalletLabel(wallet),
-        wallet
-      });
-    }
+    proSavedWallets = Array.isArray(data?.workspace?.savedWallets) ? data.workspace.savedWallets : [];
+    proWatchlistWallets = Array.isArray(data?.workspace?.watchlist) ? data.workspace.watchlist : [];
 
     if (el.proSavedWalletLabelInput) el.proSavedWalletLabelInput.value = "";
     if (el.proSavedWalletInput) el.proSavedWalletInput.value = "";
-    updateProPanels();
-    saveProWorkspace();
-  }
-
-  function addProWatchlistWallet() {
-    if (!hasProAccess()) return;
-    const label = (el.proWatchlistLabelInput?.value || "").trim();
-    const wallet = (el.proWatchlistInput?.value || "").trim();
-    if (!wallet) return;
-
-    if (!proWatchlistWallets.some((item) => item.wallet === wallet)) {
-      proWatchlistWallets.push({
-        label: label || humanWalletLabel(wallet),
-        wallet
-      });
-    }
-
     if (el.proWatchlistLabelInput) el.proWatchlistLabelInput.value = "";
     if (el.proWatchlistInput) el.proWatchlistInput.value = "";
     updateProPanels();
-    saveProWorkspace();
-  }
-
-
-  function removeProItem(kind, index) {
-    const i = Number(index);
-    if (!Number.isInteger(i) || i < 0) return;
-
-    if (kind === "saved") {
-      proSavedWallets.splice(i, 1);
-    } else if (kind === "watchlist") {
-      proWatchlistWallets.splice(i, 1);
-    }
-
-    updateProPanels();
-    saveProWorkspace();
   }
 
   function bind() {
     el.loadWalletBtn?.addEventListener("click", async () => {
-      state.wallet = (el.walletInput?.value || "").trim();
-      if (!state.wallet) {
+      const wallet = (el.walletInput?.value || "").trim();
+      if (!wallet) {
         setStarterError("Enter a wallet first.");
         return;
       }
+      state.reportWallet = wallet;
+      localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+      sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+      if (!state.subscriberWallet) state.wallet = wallet;
       clearStarterError();
       const url = new URL(window.location.href);
-      url.searchParams.set("wallet", state.wallet);
+      url.searchParams.set("wallet", wallet);
       window.history.replaceState({}, "", url);
-      await loadAccess();
-      if (state.wallet && state.active) {
+      if (state.subscriberWallet ? state.active : wallet && state.active) {
         await runStarter();
       }
     });
@@ -1251,15 +1068,25 @@
     updateProPanels();
 
     const qWallet = getQueryWallet();
-    if (qWallet) {
-      state.wallet = qWallet;
-      if (el.walletInput) el.walletInput.value = qWallet;
-    }
+    const storedSubscriberWallet =
+      sessionStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+      localStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+      "";
+    const storedReportWallet =
+      sessionStorage.getItem(AUGUR_LAST_REPORT_WALLET_KEY) ||
+      localStorage.getItem(AUGUR_LAST_REPORT_WALLET_KEY) ||
+      "";
+
+    state.subscriberWallet = storedSubscriberWallet || "";
+    state.reportWallet = qWallet || storedReportWallet || state.subscriberWallet || "";
+    state.wallet = state.subscriberWallet || state.reportWallet || "";
+
+    if (el.walletInput) el.walletInput.value = state.reportWallet || "";
 
     bind();
     await loadAccess();
 
-    if (state.wallet && state.active) {
+    if (state.reportWallet && state.active) {
       await runStarter();
     }
   }
