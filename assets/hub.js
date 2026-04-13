@@ -885,7 +885,6 @@
       setModuleVisibility();
       await loadProWorkspace();
     } catch (err) {
-      alert("LOADACCESS CATCH: " + (err && err.message ? err.message : err));
       state.tier = "unknown";
       state.active = false;
       state.expiry = "";
@@ -989,6 +988,69 @@
     updateProPanels();
   }
 
+
+  function updateProPanels() {
+    const proUnlocked = hasProAccess();
+
+    if (el.proSavedWalletCount) {
+      el.proSavedWalletCount.textContent = String(Array.isArray(proSavedWallets) ? proSavedWallets.length : 0);
+    }
+
+    if (el.proWatchlistCount) {
+      el.proWatchlistCount.textContent = String(Array.isArray(proWatchlistWallets) ? proWatchlistWallets.length : 0);
+    }
+
+    if (el.proWorkspaceTierLabel) {
+      el.proWorkspaceTierLabel.textContent = proUnlocked ? "Pro unlocked" : "Pro locked";
+    }
+
+    if (el.proLockNote) {
+      el.proLockNote.textContent = proUnlocked
+        ? "Pro workspace is active for this wallet."
+        : "Upgrade to Pro to unlock saved wallets, watchlists, and compare tools.";
+    }
+
+    if (el.proSavedWalletsList) {
+      if (!proUnlocked) {
+        el.proSavedWalletsList.innerHTML = '<div class="empty">Pro access required.</div>';
+      } else if (!Array.isArray(proSavedWallets) || !proSavedWallets.length) {
+        el.proSavedWalletsList.innerHTML = '<div class="empty">No saved wallets yet.</div>';
+      } else {
+        el.proSavedWalletsList.innerHTML = proSavedWallets.map((item, index) => {
+          const label = escapeHtml(String(item?.label || "Saved Wallet"));
+          const wallet = escapeHtml(String(item?.wallet || ""));
+          return `<div class="tracker-item">
+            <div><strong>${label}</strong><span>${wallet}</span></div>
+            <div style="display:flex;gap:8px;">
+              <button class="mini-btn" data-copy-wallet="${wallet}">Copy</button>
+              <button class="mini-btn" data-remove-kind="saved" data-remove-index="${index}">Remove</button>
+            </div>
+          </div>`;
+        }).join("");
+      }
+    }
+
+    if (el.proWatchlist) {
+      if (!proUnlocked) {
+        el.proWatchlist.innerHTML = '<div class="empty">Pro access required.</div>';
+      } else if (!Array.isArray(proWatchlistWallets) || !proWatchlistWallets.length) {
+        el.proWatchlist.innerHTML = '<div class="empty">No watchlist wallets yet.</div>';
+      } else {
+        el.proWatchlist.innerHTML = proWatchlistWallets.map((item, index) => {
+          const label = escapeHtml(String(item?.label || "Watchlist Wallet"));
+          const wallet = escapeHtml(String(item?.wallet || ""));
+          return `<div class="tracker-item">
+            <div><strong>${label}</strong><span>${wallet}</span></div>
+            <div style="display:flex;gap:8px;">
+              <button class="mini-btn" data-copy-wallet="${wallet}">Copy</button>
+              <button class="mini-btn" data-remove-kind="watchlist" data-remove-index="${index}">Remove</button>
+            </div>
+          </div>`;
+        }).join("");
+      }
+    }
+  }
+
   function bind() {
     el.loadWalletBtn?.addEventListener("click", async () => {
       const wallet = (el.walletInput?.value || "").trim();
@@ -1061,13 +1123,8 @@
   }
 
   async function init() {
-    alert("INIT START");
-    alert("BEFORE resetReportUI");
     resetReportUI();
-    alert("AFTER resetReportUI");
-    alert("BEFORE updateProPanels");
     updateProPanels();
-    alert("AFTER updateProPanels");
 
     const qWallet = getQueryWallet();
     const storedSubscriberWallet =
@@ -1083,14 +1140,11 @@
     state.reportWallet = qWallet || storedReportWallet || state.subscriberWallet || "";
     state.wallet = state.subscriberWallet || state.reportWallet || "";
 
-    alert("INIT VALUES | subscriber=" + state.subscriberWallet + " | report=" + state.reportWallet + " | wallet=" + state.wallet);
 
     if (el.walletInput) el.walletInput.value = state.reportWallet || "";
 
     bind();
-    alert("BEFORE LOADACCESS");
     await loadAccess();
-    alert("AFTER LOADACCESS | tier=" + state.tier + " | active=" + state.active + " | expiry=" + state.expiry);
 
     if (state.reportWallet && state.active) {
       await runStarter();
