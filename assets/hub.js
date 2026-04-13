@@ -994,21 +994,13 @@
           <div style="font-weight:800;">${escapeHtml(item.label || humanWalletLabel(item.wallet || ""))}</div>
           <div style="color:var(--muted);word-break:break-all;">${escapeHtml(shortWallet(item.wallet || ""))}</div>
         </div>
-        <div style="display:flex;gap:8px;flex:0 0 auto;">
-          <button
-            class="btn btn-secondary"
-            type="button"
-            data-copy-wallet="${escapeHtml(item.wallet || "")}"
-            style="height:34px;padding:0 12px;"
-          >Copy</button>
-          <button
-            class="btn btn-secondary"
-            type="button"
-            data-remove-kind="${escapeHtml(kind || "")}"
-            data-remove-index="${index}"
-            style="height:34px;padding:0 12px;"
-          >Remove</button>
-        </div>
+        <button
+          class="btn btn-secondary"
+          type="button"
+          data-remove-kind="${escapeHtml(kind || "")}"
+          data-remove-index="${index}"
+          style="height:34px;padding:0 12px;flex:0 0 auto;"
+        >Remove</button>
       </div>
     `).join("");
   }
@@ -1199,18 +1191,7 @@
     el.addSavedWalletBtn?.addEventListener("click", addProSavedWallet);
     el.addWatchlistBtn?.addEventListener("click", addProWatchlistWallet);
 
-    document.addEventListener("click", async (e) => {
-      const copyBtn = e.target.closest("[data-copy-wallet]");
-      if (copyBtn) {
-        const wallet = copyBtn.getAttribute("data-copy-wallet") || "";
-        try {
-          await navigator.clipboard.writeText(wallet);
-          copyBtn.textContent = "Copied";
-          setTimeout(() => { copyBtn.textContent = "Copy"; }, 900);
-        } catch (_) {}
-        return;
-      }
-
+    document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-remove-kind][data-remove-index]");
       if (!btn) return;
       removeProItem(btn.getAttribute("data-remove-kind"), btn.getAttribute("data-remove-index"));
