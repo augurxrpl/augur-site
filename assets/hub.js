@@ -14,9 +14,8 @@
   const AUGUR_LAST_REPORT_WALLET_KEY = "augurLastReportWallet";
 
   const state = {
-    wallet: "",
-    subscriberWallet: "",
-    reportWallet: "",
+    subscriberWallet: localStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) || "",
+    reportWallet: localStorage.getItem(AUGUR_LAST_REPORT_WALLET_KEY) || "",
     tier: "unknown",
     active: false,
     expiry: "",
@@ -347,23 +346,29 @@
     return KNOWN_WALLET_LABELS[value] || `${value.slice(0,6)}...${value.slice(-6)}`;
   }
 
-  function setHero() {
-    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.subscriberWallet || state.wallet);
+  function setModuleVisibility() {
+    const rank = state.active ? tierRank(state.tier) : 0;
+    if (el.proBadge) setPill(el.proBadge, rank >= 2 ? "Unlocked" : "Locked", rank >= 2 ? "green" : "amber");
+    if (el.developerBadge) setPill(el.developerBadge, rank >= 3 ? "Unlocked" : "Locked", rank >= 3 ? "green" : "amber");
+  }
+
+  function renderSubscriberUI() {
+    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.subscriberWallet || "—");
     if (el.heroTier) el.heroTier.textContent = capitalize(state.tier);
     if (el.heroStatus) el.heroStatus.textContent = state.active ? "Active" : "Inactive";
     if (el.heroExpiry) el.heroExpiry.textContent = state.expiry || "—";
 
     if (state.active) {
       setPill(el.heroPill, `${capitalize(state.tier)} active`, "green");
-    } else if (state.wallet) {
+    } else if (state.subscriberWallet) {
       setPill(el.heroPill, "Inactive wallet", "red");
     } else {
       setPill(el.heroPill, "Wallet required", "amber");
     }
 
     if (el.hubAccessStatus) {
-      el.hubAccessStatus.textContent = state.wallet
-        ? `${shortWallet(state.wallet)} resolved. ${state.active ? "Paid access confirmed." : "No active paid access on this wallet."}`
+      el.hubAccessStatus.textContent = state.subscriberWallet
+        ? `${shortWallet(state.subscriberWallet)} resolved. ${state.active ? "Paid access confirmed." : "No active paid access on this wallet."}`
         : "No wallet loaded.";
     }
 
@@ -382,10 +387,8 @@
     }
   }
 
-  function setModuleVisibility() {
-    const rank = state.active ? tierRank(state.tier) : 0;
-    if (el.proBadge) setPill(el.proBadge, rank >= 2 ? "Unlocked" : "Locked", rank >= 2 ? "green" : "amber");
-    if (el.developerBadge) setPill(el.developerBadge, rank >= 3 ? "Unlocked" : "Locked", rank >= 3 ? "green" : "amber");
+  function renderReportUI(reportWallet) {
+    if (el.walletAddress) el.walletAddress.textContent = reportWallet || "No wallet loaded";
   }
 
   function setLoadingState(isLoading) {
@@ -393,7 +396,7 @@
     el.runStarterBtn.disabled = isLoading;
     el.runStarterBtn.textContent = isLoading ? "Running..." : "Run Report";
     if (el.starterStatus && isLoading) {
-      el.starterStatus.textContent = `Running premium report for ${state.wallet || "wallet"}...`;
+      el.starterStatus.textContent = `Running premium report for ${state.reportWallet || "wallet"}...`;
     }
   }
 
@@ -779,7 +782,7 @@
     );
 
     if (el.walletClassPill) setPill(el.walletClassPill, classification, badgeTone);
-    if (el.walletAddress) el.walletAddress.textContent = state.wallet || "No wallet loaded";
+    if (el.walletAddress) el.walletAddress.textContent = state.reportWallet || "No wallet loaded";
     renderBadgeRow(el.walletIdentity, identityBadges, "Awaiting analysis");
     if (el.walletBalance) el.walletBalance.textContent = safeText(data?.balanceXRP ?? data?.summary?.balanceXRP, "-");
     if (el.walletTx) el.walletTx.textContent = recentTx;
@@ -834,51 +837,30 @@
     if (el.blackholeTier) el.blackholeTier.textContent = blackholeView.tier;
 
     if (el.starterStatus) {
-      el.starterStatus.textContent = `Premium report loaded for ${state.wallet}.`;
+      el.starterStatus.textContent = `Premium report loaded for ${state.reportWallet}.`;
     }
   }
 
   async function loadAccess() {
-    setHero();
+    renderSubscriberUI();
     setModuleVisibility();
-
-    if (!state.wallet) return;
+    if (!state.subscriberWallet) return;
 
     try {
-      const statusWallet = state.subscriberWallet || state.wallet;
-      state.subscriberWallet = statusWallet;
-      localStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
-      sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
-      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(statusWallet)}`, {
+      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(state.subscriberWallet)}`, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
-
       const data = await res.json().catch(() => ({}));
 
       const planCode = String(
-        data.planCode ||
-        data.plan ||
-        data.tier ||
-        data.subscription?.planCode ||
-        data.subscription?.plan ||
-        ""
+        data.planCode || data.plan || data.tier || data.subscription?.planCode || data.subscription?.plan || ""
       ).toLowerCase();
-
       const active = Boolean(
-        data.active ||
-        data.isActive ||
-        data.subscription?.active ||
-        data.subscription?.isActive ||
-        data.status === "active"
+        data.active || data.isActive || data.subscription?.active || data.subscription?.isActive || data.status === "active"
       );
-
       const expiry = String(
-        data.expiresAt ||
-        data.expiry ||
-        data.subscription?.expiresAt ||
-        data.subscription?.expiry ||
-        ""
+        data.expiresAt || data.expiry || data.subscription?.expiresAt || data.subscription?.expiry || ""
       );
 
       state.rawStatus = data;
@@ -886,14 +868,14 @@
       state.active = active;
       state.expiry = formatDateTime(expiry);
 
-      setHero();
+      renderSubscriberUI();
       setModuleVisibility();
       updateProPanels();
     } catch (err) {
       state.tier = "unknown";
       state.active = false;
       state.expiry = "";
-      setHero();
+      renderSubscriberUI();
       setModuleVisibility();
       updateProPanels();
     }
@@ -901,26 +883,24 @@
 
   async function runStarter() {
     clearStarterError();
-
-    const wallet = (el.walletInput?.value || state.wallet || "").trim();
-    if (!wallet) {
+    const inputVal = (el.walletInput?.value || "").trim();
+    if (!inputVal) {
       setStarterError("Enter a wallet first.");
       return;
     }
 
-    state.wallet = wallet;
-    setHero();
+    state.reportWallet = inputVal;
+    localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, inputVal);
+    sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, inputVal);
+
     setLoadingState(true);
 
     try {
-      const subscriberWallet = state.subscriberWallet || state.wallet || wallet;
-      const reportWallet = state.reportWallet || wallet;
-      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(subscriberWallet)}&address=${encodeURIComponent(reportWallet)}`;
+      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(state.subscriberWallet)}&address=${encodeURIComponent(state.reportWallet)}`;
       const res = await fetch(url, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
-
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -929,6 +909,7 @@
       }
 
       renderReport(data?.report || data);
+      renderReportUI(state.reportWallet);
       clearStarterError();
     } catch (err) {
       resetReportUI();
@@ -1106,17 +1087,21 @@
 
   function bind() {
     el.loadWalletBtn?.addEventListener("click", async () => {
-      state.wallet = (el.walletInput?.value || "").trim();
-      if (!state.wallet) {
+      const val = (el.walletInput?.value || "").trim();
+      if (!val) {
         setStarterError("Enter a wallet first.");
         return;
       }
-      clearStarterError();
+      state.reportWallet = val;
+      localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, val);
+      sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, val);
+
       const url = new URL(window.location.href);
-      url.searchParams.set("wallet", state.wallet);
+      url.searchParams.set("wallet", val);
       window.history.replaceState({}, "", url);
+
       await loadAccess();
-      if (state.wallet && state.active) {
+      if (state.subscriberWallet && state.active) {
         await runStarter();
       }
     });
@@ -1167,15 +1152,23 @@
 
     const qWallet = getQueryWallet();
     if (qWallet) {
-      state.wallet = qWallet;
+      state.reportWallet = qWallet;
+      localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, qWallet);
+      sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, qWallet);
       if (el.walletInput) el.walletInput.value = qWallet;
     }
 
     bind();
     await loadAccess();
 
-    if (state.wallet && state.active) {
+    if (state.subscriberWallet && state.active) {
+      if (!state.reportWallet) {
+        state.reportWallet = state.subscriberWallet;
+      }
+      if (el.walletInput) el.walletInput.value = state.reportWallet;
       await runStarter();
+    } else {
+      renderSubscriberUI();
     }
   }
 
