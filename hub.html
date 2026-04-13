@@ -42,23 +42,13 @@
       margin:0 auto;
       padding:18px 18px 48px;
     }
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:50;
-      backdrop-filter:blur(14px);
-      background:rgba(5,11,21,.84);
-      border-bottom:1px solid rgba(118,156,228,.12);
-      margin:0 0 18px;
-      padding:0;
-    }
 
-    .nav{
-      min-height:74px;
+    .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:16px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
@@ -70,19 +60,17 @@
     }
 
     .brand-mark{
-      width:168px;
-      height:64px;
+      width:48px;
+      height:48px;
       display:grid;
       place-items:center;
-      color:var(--blue-2);
-    }
-
-    .brand-mark img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-      transform:translateY(-48px);
+      border-radius:14px;
+      background:linear-gradient(180deg, rgba(89,166,255,.18), rgba(45,108,223,.12));
+      border:1px solid rgba(87,166,255,.18);
+      box-shadow:var(--shadow);
+      color:var(--blue);
+      font-weight:900;
+      font-size:18px;
     }
 
     .brand-copy{
@@ -104,79 +92,14 @@
       font-size:22px;
       letter-spacing:.8px;
       line-height:1;
+      font-weight:900;
     }
 
-    .nav-links{
+    .top-actions{
       display:flex;
       align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .nav-link{
-      color:var(--muted);
-      padding:10px 14px;
-      border-radius:12px;
-      font-size:14px;
-      font-weight:700;
-      border:1px solid rgba(92,128,190,.32);
-      transition:.15s ease;
-      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
-    }
-
-    .nav-link:hover{
-      color:var(--text);
-      transform:translateY(-1px);
-      border-color:rgba(120,190,255,.45);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 24px rgba(20,60,160,.18);
-    }
-
-    .nav-link.active{
-      color:#fff;
-      background:linear-gradient(180deg,rgba(90,160,255,.95) 0%,rgba(35,92,190,.95) 100%);
-      border-color:rgba(120,190,255,.6);
-    }
-
-    .mobile-nav{
-      display:none;
-      width:100%;
       gap:10px;
-      overflow-x:visible;
       flex-wrap:wrap;
-      padding-top:12px;
-      padding-bottom:6px;
-      border-top:1px solid rgba(118,156,228,.10);
-      -ms-overflow-style:none;
-      scrollbar-width:none;
-    }
-
-    .mobile-nav::-webkit-scrollbar{
-      display:none;
-    }
-
-    .mobile-nav a{
-      flex:0 0 auto;
-      min-height:46px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:0 8px;
-      border-radius:12px;
-      text-decoration:none;
-      color:var(--muted);
-      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
-      border:1px solid rgba(92,128,190,.32);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .mobile-nav a:hover,
-    .mobile-nav a.active{
-      color:var(--text);
-      background:rgba(118,156,228,.12);
     }
 
     .btn{
@@ -208,6 +131,12 @@
       border:1px solid rgba(118,156,228,.10);
     }
 
+    .btn-ghost{
+      color:var(--muted);
+      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
+      border:1px solid rgba(92,128,190,.32);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
+    }
 
     .hero-card,
     .panel,
@@ -864,11 +793,8 @@
     @media (max-width:760px){
       .wrap{padding:18px 14px 42px}
       h1{font-size:30px}
-      .nav-links{display:none}
-      .mobile-nav{
-        display:flex;
-      }
       .search input,.btn{height:48px}
+      .topbar{align-items:flex-start;flex-direction:column}
       .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .hero-card,.card,.module,.locked-card,.panel{padding:12px}
       .mini-card{padding:10px;border-radius:12px}
