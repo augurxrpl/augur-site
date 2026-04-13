@@ -1062,8 +1062,12 @@
 
   async function init() {
     alert("INIT START");
+    alert("BEFORE resetReportUI");
     resetReportUI();
+    alert("AFTER resetReportUI");
+    alert("BEFORE updateProPanels");
     updateProPanels();
+    alert("AFTER updateProPanels");
 
     const qWallet = getQueryWallet();
     const storedSubscriberWallet =
