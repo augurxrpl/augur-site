@@ -1066,7 +1066,7 @@
       const url = new URL(window.location.href);
       url.searchParams.set("wallet", wallet);
       window.history.replaceState({}, "", url);
-      if (state.subscriberWallet ? state.active : wallet && state.active) {
+      if (state.active) {
         await runStarter();
       }
     });
