@@ -10,8 +10,13 @@
     : "";
 
 
+  const AUGUR_SUBSCRIBER_WALLET_KEY = "augurSubscriberWallet";
+  const AUGUR_LAST_REPORT_WALLET_KEY = "augurLastReportWallet";
+
   const state = {
     wallet: "",
+    subscriberWallet: "",
+    reportWallet: "",
     tier: "unknown",
     active: false,
     expiry: "",
@@ -343,7 +348,7 @@
   }
 
   function setHero() {
-    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.wallet);
+    if (el.heroWallet) el.heroWallet.textContent = shortWallet(state.subscriberWallet || state.wallet);
     if (el.heroTier) el.heroTier.textContent = capitalize(state.tier);
     if (el.heroStatus) el.heroStatus.textContent = state.active ? "Active" : "Inactive";
     if (el.heroExpiry) el.heroExpiry.textContent = state.expiry || "—";
@@ -840,7 +845,11 @@
     if (!state.wallet) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
+      const statusWallet = state.subscriberWallet || state.wallet;
+      state.subscriberWallet = statusWallet;
+      localStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(statusWallet)}`, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
@@ -904,7 +913,9 @@
     setLoadingState(true);
 
     try {
-      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
+      const subscriberWallet = state.subscriberWallet || state.wallet || wallet;
+      const reportWallet = state.reportWallet || wallet;
+      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(subscriberWallet)}&address=${encodeURIComponent(reportWallet)}`;
       const res = await fetch(url, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
