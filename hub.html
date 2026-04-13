@@ -725,7 +725,38 @@
       flex:0 0 auto;
     }
 
-    .locked-grid{
+    
+/* Pro workspace layout fix */
+.locked-grid{
+  align-items:start;
+}
+
+.locked-grid > .locked-tile{
+  min-width:0;
+}
+
+.locked-tile{
+  min-width:0;
+}
+
+.locked-tile input,
+.locked-tile button,
+.locked-tile .btn{
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+.locked-tile > div[style*="display:grid"]{
+  min-width:0;
+}
+
+.locked-tile .note{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+.locked-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:12px;
