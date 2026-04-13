@@ -840,7 +840,11 @@
     if (!state.wallet) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(state.wallet)}`, {
+      const statusWallet = state.subscriberWallet || state.wallet;
+      state.subscriberWallet = statusWallet;
+      localStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, statusWallet);
+      const res = await fetch(`${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(statusWallet)}`, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
       });
@@ -907,7 +911,9 @@
     setLoadingState(true);
 
     try {
-      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(wallet)}&address=${encodeURIComponent(wallet)}`;
+      const subscriberWallet = state.subscriberWallet || state.wallet || wallet;
+      const reportWallet = state.reportWallet || wallet;
+      const url = `${API_BASE}/api/starter/report?wallet=${encodeURIComponent(subscriberWallet)}&address=${encodeURIComponent(reportWallet)}`;
       const res = await fetch(url, {
         headers: { "Accept": "application/json" },
         credentials: "same-origin"
@@ -948,7 +954,7 @@
       },
       credentials: "same-origin",
       body: JSON.stringify({
-        walletAddress: state.wallet,
+        walletAddress: state.subscriberWallet || state.wallet,
         savedWallets: proSavedWallets,
         watchlist: proWatchlistWallets
       })
