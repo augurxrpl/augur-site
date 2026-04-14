@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUGUR Whale Distribution</title>
+  <meta name="description" content="XRPL whale distribution, percentile thresholds, and wallet rank lookup powered by AUGUR." />
+  <style>
+    :root{
+      --bg:#08101b;
+      --panel:#0f1726;
+      --panel-2:#121c2e;
+      --line:rgba(118,156,228,.18);
+      --text:#e8f0ff;
+      --muted:#8ea3c7;
+      --soft:#6e82a8;
+      --blue:#5b8cff;
+      --blue-2:#7fb2ff;
+      --green:#48d597;
+      --amber:#ffcc66;
+      --red:#ff7b7b;
+      --purple:#b08cff;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#07111d 0%,#0a1322 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{text-decoration:none;color:inherit}
+    button,input{font:inherit}
+
+    .wrap{
+      width:min(1240px, calc(100% - 36px));
+      margin:0 auto;
+      padding:0 18px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(14px);
+      background:rgba(5,11,21,.84);
+      border-bottom:1px solid rgba(118,156,228,.12);
+    }
+
+    .nav{
+      min-height:74px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      letter-spacing:.4px;
+    }
+
+    .brand-mark{
+      width:168px;
+      height:64px;
+      display:grid;
+      place-items:center;
+      color:var(--blue-2);
+    }
+
+    .brand-mark img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      transform:translateY(-48px);
+    }
+
+    .brand-copy{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .brand-copy small{
+      color:var(--muted);
+      font-size:11px;
+      letter-spacing:.9px;
+      text-transform:uppercase;
+      font-weight:700;
+      line-height:1;
+    }
+
+    .brand-copy span{
+      font-size:22px;
+      letter-spacing:.8px;
+      line-height:1;
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      color:var(--muted);
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:14px;
+      font-weight:700;
+      border:1px solid rgba(92,128,190,.32);
+      transition:.15s ease;
+      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+      transform:translateY(-1px);
+      border-color:rgba(120,190,255,.45);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 24px rgba(20,60,160,.18);
+    }
+
+    .nav-link.active{
+      color:#fff;
+      background:linear-gradient(180deg,rgba(90,160,255,.95) 0%,rgba(35,92,190,.95) 100%);
+      border-color:rgba(120,190,255,.6);
+    }
+
+    .mobile-nav{
+      display:none;
+      width:100%;
+      gap:10px;
+      overflow-x:visible;
+      flex-wrap:wrap;
+      padding-top:12px;
+      padding-bottom:6px;
+      border-top:1px solid rgba(118,156,228,.10);
+      -ms-overflow-style:none;
+      scrollbar-width:none;
+    }
+
+    .mobile-nav::-webkit-scrollbar{display:none}
+
+    .mobile-nav a{
+      flex:0 0 auto;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 8px;
+      border-radius:12px;
+      text-decoration:none;
+      color:var(--muted);
+      background:linear-gradient(180deg,rgba(28,38,66,.95) 0%,rgba(14,20,38,.95) 100%);
+      border:1px solid rgba(92,128,190,.32);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .mobile-nav a:hover,
+    .mobile-nav a.active{
+      color:var(--text);
+      background:rgba(118,156,228,.12);
+    }
+
+    .hero{
+      padding:16px 0 8px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:16px;
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(16,24,40,.96) 0%, rgba(10,16,29,.98) 100%);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(91,140,255,.28);
+      background:rgba(91,140,255,.10);
+      color:#dce8ff;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    h1{
+      margin:14px 0 12px;
+      font-size:38px;
+      letter-spacing:-1.2px;
+      line-height:1.02;
+    }
+
+    .lede{
+      color:var(--muted);
+      line-height:1.65;
+      font-size:15px;
+      max-width:68ch;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:34px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(118,156,228,.18);
+      color:#dfe9ff;
+      background:rgba(255,255,255,.05);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    .badge.blue{background:rgba(49,108,214,.18);border-color:rgba(89,166,255,.20)}
+    .badge.green{background:rgba(34,111,76,.22);border-color:rgba(78,227,154,.20)}
+    .badge.amber{background:rgba(125,95,28,.24);border-color:rgba(255,204,102,.18)}
+    .badge.red{background:rgba(120,29,29,.26);border-color:rgba(255,120,120,.18)}
+    .badge.purple{background:rgba(88,66,160,.24);border-color:rgba(170,140,255,.22)}
+    .badge.gray{background:rgba(90,102,128,.20);border-color:rgba(159,176,208,.18)}
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .mini-card{
+      border:1px solid rgba(118,156,228,.12);
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      padding:14px;
+    }
+
+    .mini-label{
+      color:var(--soft);
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    .mini-value{
+      margin-top:8px;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .mini-sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .section{
+      padding:10px 0 28px;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:14px;
+    }
+
+    .section-head h2{
+      margin:0;
+      font-size:28px;
+      letter-spacing:-.8px;
+    }
+
+    .section-head p{
+      margin:8px 0 0;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:16px;
+    }
+
+    .card-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .subhead{
+      color:var(--soft);
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    .bucket-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .bucket-row{
+      display:grid;
+      gap:8px;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(118,156,228,.12);
+      background:rgba(255,255,255,.03);
+    }
+
+    .bucket-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .bucket-label{
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .bucket-meta{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .bucket-bar{
+      width:100%;
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+
+    .bucket-fill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:linear-gradient(90deg,rgba(91,140,255,.95),rgba(127,178,255,.95));
+    }
+
+    .threshold-list,.rank-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .threshold-row,.rank-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.12);
+      background:rgba(255,255,255,.03);
+    }
+
+    .threshold-row strong,.rank-row strong{
+      font-size:14px;
+      letter-spacing:-.01em;
+    }
+
+    .search{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    input{
+      width:100%;
+      min-height:52px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.16);
+      background:linear-gradient(180deg,rgba(38,88,173,.18),rgba(18,43,87,.18));
+      color:var(--text);
+      padding:0 14px;
+      outline:none;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .btn{
+      min-height:52px;
+      padding:0 18px;
+      border-radius:14px;
+      border:0;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:.02em;
+      color:#fff;
+      background:linear-gradient(180deg,#6fa8ff 0%,#3f7cff 100%);
+      box-shadow:0 12px 28px rgba(48,93,214,.32);
+    }
+
+    .btn:hover{transform:translateY(-1px)}
+
+    .note{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(118,156,228,.12);
+      background:rgba(255,255,255,.03);
+    }
+
+    .empty{
+      color:var(--soft);
+      font-size:13px;
+    }
+
+    .footer{
+      padding:24px 0 42px;
+      color:var(--soft);
+      font-size:13px;
+    }
+
+    .footer-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      border-top:1px solid rgba(118,156,228,.10);
+      padding-top:16px;
+    }
+
+    .footer-links{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width:960px){
+      .hero-grid,.grid{grid-template-columns:1fr}
+      .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media (max-width:760px){
+      .wrap{padding:0 14px}
+      .nav-links{display:none}
+      .mobile-nav{display:flex;flex-wrap:wrap}
+      h1{font-size:30px}
+      .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .card{padding:14px}
+      .search{grid-template-columns:1fr}
+      .brand-copy span{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="nav">
+        <a class="brand" href="/">
+          <div class="brand-mark"><img src="/assets/augur_logo.webp" alt="AUGUR logo" onerror="this.onerror=null;this.src='/assets/augur_logo.png';" /></div>
+          <div class="brand-copy">
+            <small>XRPL wallet intelligence</small>
+            <span>AUGUR</span>
+          </div>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="/">Dashboard</a>
+          <a class="nav-link" href="/wallet/">Wallet Search</a>
+          <a class="nav-link" href="/pricing.html">Pricing</a>
+          <a class="nav-link" href="/developers.html">Developers</a>
+          <a class="nav-link" href="/account/">Account</a>
+          <a class="nav-link active" href="/whales/">Whales</a>
+        </div>
+      </div>
+
+      <div class="mobile-nav">
+        <a href="/">Dashboard</a>
+        <a href="/wallet/">Wallet Search</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/developers.html">Developers</a>
+        <a href="/account/">Account</a>
+        <a class="active" href="/whales/">Whales</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="card">
+          <div class="eyebrow">Coming Online</div>
+          <h1>XRPL Whale Distribution</h1>
+          <p class="lede">
+            Real wallet distribution, percentile thresholds, and wallet rank lookup pulled from AUGUR whale data. This page is powered by the live whale API foundation now running behind AUGUR.
+          </p>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="mini-label">Mode</div>
+              <div id="modeValue" class="mini-value">sample</div>
+              <div class="mini-sub">Current whale data mode</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Wallets</div>
+              <div id="walletCountValue" class="mini-value">-</div>
+              <div class="mini-sub">Funded wallets in current snapshot</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Snapshot</div>
+              <div id="snapshotTimeValue" class="mini-value" style="font-size:18px;">-</div>
+              <div class="mini-sub">Latest saved whale snapshot</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Ledger Marker</div>
+              <div id="ledgerIndexValue" class="mini-value" style="font-size:18px;">-</div>
+              <div class="mini-sub">Snapshot ledger marker</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 style="margin:0;">Wallet Rank Lookup</h3>
+              <div class="subhead">Check where one wallet stands</div>
+            </div>
+            <span id="rankPill" class="badge gray">Awaiting Wallet</span>
+          </div>
+
+          <div class="search">
+            <input id="walletInput" type="text" placeholder="Enter XRPL wallet address" autocomplete="off" spellcheck="false" />
+            <button id="rankBtn" class="btn" type="button">Run Rank</button>
+          </div>
+
+          <div id="rankOutput" class="rank-list" style="margin-top:14px;">
+            <div class="empty">Run a wallet to see bucket placement and percentile rank.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>Whale Bands</h2>
+          <p>Bucket distribution by XRP holdings from the latest saved whale snapshot.</p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 style="margin:0;">Distribution Bands</h3>
+              <div class="subhead">Wallet count by bucket</div>
+            </div>
+            <span class="badge blue">Live API</span>
+          </div>
+          <div id="bucketList" class="bucket-list">
+            <div class="empty">Loading whale bands...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 style="margin:0;">Percentile Thresholds</h3>
+              <div class="subhead">Estimated holding cutoffs</div>
+            </div>
+          </div>
+          <div id="thresholdList" class="threshold-list">
+            <div class="empty">Loading thresholds...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-inner">
+        <div>AUGUR Whales • XRPL wallet distribution intelligence</div>
+        <div class="footer-links">
+          <a href="/">Dashboard</a>
+          <a href="/wallet/">Wallet Search</a>
+          <a href="/pricing.html">Pricing</a>
+          <a href="https://api.augurxrpl.com/api/whales/latest?mode=sample" target="_blank" rel="noopener">Whales API</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.augurxrpl.com";
+    const MODE = "sample";
+
+    const modeValue = document.getElementById("modeValue");
+    const walletCountValue = document.getElementById("walletCountValue");
+    const snapshotTimeValue = document.getElementById("snapshotTimeValue");
+    const ledgerIndexValue = document.getElementById("ledgerIndexValue");
+    const bucketList = document.getElementById("bucketList");
+    const thresholdList = document.getElementById("thresholdList");
+    const walletInput = document.getElementById("walletInput");
+    const rankBtn = document.getElementById("rankBtn");
+    const rankOutput = document.getElementById("rankOutput");
+    const rankPill = document.getElementById("rankPill");
+
+    function fmtNum(value){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return "-";
+      return n.toLocaleString();
+    }
+
+    function fmtPct(value){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return "0%";
+      return `${n.toFixed(2)}%`;
+    }
+
+    function fmtXrp(value){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return "-";
+      return `${n.toLocaleString(undefined,{maximumFractionDigits:2})} XRP`;
+    }
+
+    function fmtDate(value){
+      if (!value) return "-";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return d.toLocaleString();
+    }
+
+    function setRankPill(text, tone){
+      rankPill.className = `badge ${tone || "gray"}`;
+      rankPill.textContent = text;
+    }
+
+    function toneFromPercentile(label){
+      const v = String(label || "").toLowerCase();
+      if (v.includes("top 1")) return "purple";
+      if (v.includes("top 5")) return "red";
+      if (v.includes("top 10")) return "amber";
+      if (v.includes("top 25")) return "green";
+      if (v.includes("top 50")) return "blue";
+      return "gray";
+    }
+
+    async function loadSnapshot(){
+      bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
+      thresholdList.innerHTML = '<div class="empty">Loading thresholds...</div>';
+
+      const res = await fetch(`${API_BASE}/api/whales/latest?mode=${encodeURIComponent(MODE)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok || !data.snapshot) {
+        throw new Error(data.error || "Failed to load whale snapshot");
+      }
+
+      const snap = data.snapshot;
+      modeValue.textContent = data.mode || MODE;
+      walletCountValue.textContent = fmtNum(snap.funded_wallet_count);
+      snapshotTimeValue.textContent = fmtDate(snap.snapshot_time);
+      ledgerIndexValue.textContent = String(snap.ledger_index || "-");
+
+      const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
+      bucketList.innerHTML = buckets.map((b) => {
+        const pct = Number(b.walletPct || 0);
+        return `
+          <div class="bucket-row">
+            <div class="bucket-top">
+              <div class="bucket-label">${b.label}</div>
+              <div class="bucket-meta">${fmtNum(b.walletCount)} wallets • ${fmtPct(b.walletPct)}</div>
+            </div>
+            <div class="bucket-bar"><div class="bucket-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
+            <div class="bucket-meta">${fmtXrp(b.xrpTotal)} • ${fmtPct(b.xrpPct)} of sampled XRP</div>
+          </div>
+        `;
+      }).join("");
+
+      const percentiles = Array.isArray(snap.percentile_data) ? snap.percentile_data : [];
+      thresholdList.innerHTML = percentiles.length
+        ? percentiles.map((p) => `
+          <div class="threshold-row">
+            <strong>${p.label}</strong>
+            <span>${p.minXrp == null ? "-" : fmtXrp(p.minXrp)}</span>
+          </div>
+        `).join("")
+        : '<div class="empty">No percentile data yet.</div>';
+    }
+
+    async function runRank(){
+      const wallet = walletInput.value.trim();
+      if (!wallet) {
+        setRankPill("Wallet Required", "amber");
+        rankOutput.innerHTML = '<div class="note">Enter an XRPL wallet address to run whale rank lookup.</div>';
+        return;
+      }
+
+      setRankPill("Loading", "blue");
+      rankOutput.innerHTML = '<div class="empty">Checking wallet rank...</div>';
+
+      const res = await fetch(`${API_BASE}/api/whales/wallet-rank?mode=${encodeURIComponent(MODE)}&wallet=${encodeURIComponent(wallet)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        setRankPill("Error", "red");
+        rankOutput.innerHTML = `<div class="note">${data.error || "Failed to load wallet rank."}</div>`;
+        return;
+      }
+
+      const tone = toneFromPercentile(data.percentileLabel);
+      setRankPill(data.percentileLabel || "Loaded", tone);
+
+      rankOutput.innerHTML = `
+        <div class="rank-row">
+          <strong>Wallet</strong>
+          <span>${data.wallet}</span>
+        </div>
+        <div class="rank-row">
+          <strong>XRP Balance</strong>
+          <span>${fmtXrp(data.balanceXrp)}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Bucket</strong>
+          <span>${data.bucket?.label || "-"}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Percentile</strong>
+          <span>${data.percentileLabel || "-"}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Snapshot Time</strong>
+          <span>${fmtDate(data.snapshot?.snapshotTime)}</span>
+        </div>
+      `;
+    }
+
+    rankBtn.addEventListener("click", runRank);
+    walletInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runRank();
+    });
+
+    loadSnapshot().catch((err) => {
+      bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
+      thresholdList.innerHTML = '<div class="empty">No percentile data available.</div>';
+    });
+  </script>
+</body>
+</html>
