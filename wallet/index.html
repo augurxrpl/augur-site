@@ -409,6 +409,8 @@
     .badge.green{background:rgba(34,111,76,.22);border-color:rgba(78,227,154,.18)}
     .badge.amber{background:rgba(125,95,28,.24);border-color:rgba(255,204,102,.18)}
     .badge.red{background:rgba(120,29,29,.26);border-color:rgba(255,120,120,.18)}
+    .badge.gray{background:rgba(90,102,128,.20);border-color:rgba(159,176,208,.18)}
+    .badge.purple{background:rgba(88,66,160,.24);border-color:rgba(170,140,255,.22)}
 
     .kbd{
       display:inline-flex;
@@ -780,8 +782,8 @@
           <div id="analyze" class="search">
             <div style="font-size:12px;opacity:.7;margin-bottom:6px;">Paste any XRPL wallet to analyze instantly</div>
 <input id="walletInput" type="text" placeholder="Paste a wallet address or load an example" autocomplete="off" spellcheck="false" />
-            <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Analyze Wallet</button>
-            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Load Example Wallet (See it instantly)</button>
+            <button id="analyzeBtn" class="btn btn-primary btn-hud" type="button">Run Report</button>
+            <button id="exampleBtn" class="btn btn-secondary btn-hud" type="button">Load Example Wallet</button>
           </div>
 
           <div class="trust">
@@ -944,7 +946,7 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>Analytics Report</h3>
+                <h3>Risk and Classification</h3>
                 <div class="subhead">Classification, balance, and behavior context</div>
               </div>
               <span id="confidencePill" class="badge">Confidence -</span>
@@ -1503,11 +1505,11 @@
       let note = "No blackhole pattern detected from current wallet flags and key state.";
 
       if (tier === "confirmed") {
-        pill = "red";
+        pill = "purple";
         label = "Confirmed blackhole state detected";
         note = "Confirmed blackhole state detected from current wallet flags and key state.";
       } else if (tier === "likely") {
-        pill = "amber";
+        pill = "purple";
         label = "Likely blackhole pattern detected";
         note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
       } else if (tier === "partial") {

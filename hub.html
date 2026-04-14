@@ -492,6 +492,8 @@
     .badge.green{background:rgba(34,111,76,.22);border-color:rgba(78,227,154,.18)}
     .badge.amber{background:rgba(125,95,28,.24);border-color:rgba(255,204,102,.18)}
     .badge.red{background:rgba(120,29,29,.26);border-color:rgba(255,120,120,.18)}
+    .badge.gray{background:rgba(90,102,128,.20);border-color:rgba(159,176,208,.18)}
+    .badge.purple{background:rgba(88,66,160,.24);border-color:rgba(170,140,255,.22)}
 
     .kbd{
       display:inline-flex;
@@ -965,15 +967,15 @@
     <section class="hero">
       <div class="hero-grid">
         <div class="hero-card">
-          <div class="eyebrow">Starter Tier Utility</div>
-          <h1>Starter is the premium Wallet Search surface inside Hub.</h1>
+          <div class="eyebrow">Starter</div>
+          <h1>Starter is the premium wallet intelligence layer inside Hub.</h1>
           <p class="lede">
             This is where paid users should work. Stronger structure, denser intelligence, and better XRPL wallet reads than the public teaser flow.
           </p>
 
           <div class="search">
             <input id="walletInput" type="text" placeholder="Enter XRPL address" autocomplete="off" spellcheck="false" />
-            <button id="runStarterBtn" class="btn btn-primary" type="button">Run Utility</button>
+            <button id="runStarterBtn" class="btn btn-primary" type="button">Run Report</button>
             <button id="loadWalletBtn" class="btn btn-secondary" type="button">Load Wallet</button>
           </div>
           <div id="hubLoadingState" class="hub-loading-state" hidden>
@@ -991,7 +993,7 @@
             <span class="pill">Blackhole detection</span>
           </div>
 
-          <div id="starterStatus" class="status">Load your paid wallet and run the premium report.</div>
+          <div id="starterStatus" class="status">Load your paid wallet and run a premium report.</div>
         </div>
 
         <div class="hero-card hero-side">
@@ -1009,7 +1011,7 @@
               <div id="heroStatus" class="mini-value">Checking</div>
             </div>
             <div class="mini-card">
-              <div class="mini-label">Expires</div>
+              <div class="mini-label">Expiry</div>
               <div id="heroExpiry" class="mini-value">—</div>
             </div>
           </div>
@@ -1025,7 +1027,7 @@
       <div class="module">
         <div class="section-head">
           <div>
-            <h2>Workspace Access</h2>
+            <h2>Access Status</h2>
             <p>Live paid status and tier visibility for the wallet attached to this Hub session.</p>
           </div>
         </div>
@@ -1050,7 +1052,7 @@
             <div class="card-header">
               <div>
                 <h3>Wallet Overview</h3>
-                <div class="subhead">Live paid report summary</div>
+                <div class="subhead">Premium report summary</div>
               </div>
               <span id="walletClassPill" class="badge blue">No Report</span>
             </div>
@@ -1126,7 +1128,7 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>All Holdings</h3>
+                <h3>Token Holdings</h3>
                 <div class="subhead">Issued assets and trustline balances held by this wallet</div>
               </div>
             </div>
@@ -1155,7 +1157,7 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>Analytics Report</h3>
+                <h3>Risk and Classification</h3>
                 <div class="subhead">Classification, balance, and behavior context</div>
               </div>
               <span id="confidencePill" class="badge">Confidence -</span>
@@ -1175,7 +1177,7 @@
                   </div>
                 </div>
                 <div class="subhead" style="margin:16px 0 10px;">Holdings by Estimated Value</div>
-                <div class="note" style="margin-bottom:10px;">Full holdings list appears below in All Holdings. Unpriced assets are marked clearly.</div><div id="topHoldingsChart" class="list">
+                <div class="note" style="margin-bottom:10px;">Full holdings list appears below in Token Holdings. Unpriced assets are marked clearly.</div><div id="topHoldingsChart" class="list">
                   <div class="empty">Estimated holdings by value will appear here after a premium report.</div>
                 </div>
               </div>

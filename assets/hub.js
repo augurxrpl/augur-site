@@ -304,11 +304,11 @@
     let note = "No blackhole pattern detected from current wallet flags and key state.";
 
     if (tier === "confirmed") {
-      pill = "red";
+      pill = "purple";
       label = "Confirmed blackhole state detected";
       note = "Confirmed blackhole state detected from current wallet flags and key state.";
     } else if (tier === "likely") {
-      pill = "amber";
+      pill = "purple";
       label = "Likely blackhole pattern detected";
       note = "Likely blackhole pattern detected. Current state suggests blackhole behavior without confirmed final certainty.";
     } else if (tier === "partial") {
@@ -362,7 +362,7 @@
     if (state.active) {
       setPill(el.heroPill, `${capitalize(state.tier)} active`, "green");
     } else if (state.subscriberWallet) {
-      setPill(el.heroPill, "Inactive wallet", "red");
+      setPill(el.heroPill, "Inactive wallet", "gray");
     } else {
       setPill(el.heroPill, "Wallet required", "amber");
     }
