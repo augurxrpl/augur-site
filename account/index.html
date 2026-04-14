@@ -311,6 +311,18 @@
       border-color:rgba(255,204,102,.18);
     }
 
+    .tag.red{
+      color:#ffdede;
+      background:rgba(120,29,29,.26);
+      border-color:rgba(255,120,120,.18);
+    }
+
+    .tag.gray{
+      color:#d7dfef;
+      background:rgba(90,102,128,.20);
+      border-color:rgba(159,176,208,.18);
+    }
+
     .card h3{
       font-size:22px;
       letter-spacing:-.02em;
@@ -560,9 +572,9 @@
           </div>
 
           <div class="card" id="accountUtilityLauncher" hidden style="margin-top:14px;padding:18px;">
-            <h3 style="margin:0 0 10px;">Paid Workspace</h3>
+            <h3 style="margin:0 0 10px;">Hub Access</h3>
             <p style="margin:0;color:var(--muted);line-height:1.55;">
-              This wallet has paid access. Open your main hub to access every utility included with your tier.
+              This wallet has paid access. Open Hub to access the utilities included with this tier.
             </p>
             <div id="accountUtilityLinks" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;"></div>
           </div>
@@ -609,6 +621,27 @@
         .replace(/'/g, "&#39;");
     }
 
+    function statusTone(value){
+      const v = String(value || "").toLowerCase();
+      if (v.includes("expired")) return "red";
+      if (v.includes("inactive")) return "gray";
+      if (v.includes("active")) return "green";
+      return "blue";
+    }
+
+    function tierTone(value){
+      const v = String(value || "").toLowerCase();
+      if (v === "developer") return "blue";
+      if (v === "pro") return "green";
+      if (v === "starter") return "green";
+      return "gray";
+    }
+
+    function rowTone(label, value){
+      if (label === "Status") return statusTone(value);
+      if (label === "Tier") return tierTone(value);
+      return "";
+    }
 
     function renderUtilityLinks(plan, wallet){
       if (!accountUtilityLinks) return;
@@ -618,7 +651,7 @@
       if (["starter","pro","developer"].includes(plan)) {
         links.push({
           href: `/hub.html?wallet=${encodeURIComponent(wallet)}`,
-          label: "Open My Hub"
+          label: "Open Hub"
         });
       }
 
@@ -629,12 +662,20 @@
 
     function renderRows(rows){
       statusBox.hidden = false;
-      statusDetails.innerHTML = rows.map(([label, value, isCode]) => `
+      statusDetails.innerHTML = rows.map(([label, value, isCode]) => {
+        const tone = rowTone(label, value);
+        const rendered = isCode
+          ? `<code>${escapeHtml(value)}</code>`
+          : tone
+            ? `<span class="tag ${tone}">${escapeHtml(value)}</span>`
+            : `<span>${escapeHtml(value)}</span>`;
+        return `
         <div class="kv-row">
           <strong>${escapeHtml(label)}</strong>
-          ${isCode ? `<code>${escapeHtml(value)}</code>` : `<span>${escapeHtml(value)}</span>`}
+          ${rendered}
         </div>
-      `).join("");
+      `;
+      }).join("");
     }
 
     checkStatusBtn.addEventListener("click", async () => {
@@ -670,12 +711,11 @@
 
         renderRows([
           ["Wallet", safeText(data.walletAddress), true],
-          ["Plan", safeText(data.planCode), false],
+          ["Tier", safeText(data.planCode), false],
           ["Status", safeText(data.status), false],
-          ["Active", safeText(data.active), false],
-          ["Destination Tag", safeText(data.destinationTag), true],
+                    ["Destination Tag", safeText(data.destinationTag), true],
           ["Started", safeText(data.startedAt), false],
-          ["Expires", safeText(data.expiresAt), false]
+          ["Expiry", safeText(data.expiresAt), false]
         ]);
 
         if (allowed) {
