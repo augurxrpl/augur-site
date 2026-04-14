@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AUGUR Whale Distribution</title>
-  <meta name="description" content="XRPL whale distribution, percentile thresholds, and wallet rank lookup powered by AUGUR." />
+  <meta name="description" content="XRPL whale distribution, wallet rank lookup, and sampled wallet band positioning powered by AUGUR." />
   <style>
     :root{
       --bg:#08101b;
@@ -174,7 +174,7 @@
 
     .hero-grid{
       display:grid;
-      grid-template-columns:1.1fr .9fr;
+      grid-template-columns:1.15fr .85fr;
       gap:16px;
     }
 
@@ -251,6 +251,7 @@
       border-radius:16px;
       background:rgba(255,255,255,.03);
       padding:14px;
+      min-height:118px;
     }
 
     .mini-label{
@@ -525,7 +526,7 @@
           <div class="eyebrow">Coming Online</div>
           <h1>XRPL Whale Distribution</h1>
           <p class="lede">
-            Real wallet distribution, percentile thresholds, and wallet rank lookup pulled from AUGUR whale data. This page is powered by the live whale API foundation now running behind AUGUR.
+            Real wallet distribution and wallet rank lookup pulled from AUGUR whale data. This page is powered by the live whale API foundation now running behind AUGUR.
           </p>
 
           <div class="mini-grid">
@@ -546,7 +547,7 @@
             </div>
             <div class="mini-card">
               <div class="mini-label">Ledger Marker</div>
-              <div id="ledgerIndexValue" class="mini-value" style="font-size:18px;">-</div>
+              <div id="ledgerIndexValue" class="mini-value">-</div>
               <div class="mini-sub">Snapshot ledger marker</div>
             </div>
           </div>
@@ -657,14 +658,6 @@
       return `${n.toLocaleString(undefined,{maximumFractionDigits:2})} XRP`;
     }
 
-    function fmtTierXrp(value){
-      const n = Number(value || 0);
-      if (!Number.isFinite(n)) return "-";
-      if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(/\.0$/,"")}M XRP`;
-      if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/,"")}K XRP`;
-      return `${Math.round(n).toLocaleString()} XRP`;
-    }
-
     function fmtDate(value){
       if (!value) return "-";
       const d = new Date(value);
@@ -734,4 +727,62 @@
       }).join("");
     }
 
+    async function runRank(){
+      const wallet = walletInput.value.trim();
+      if (!wallet) {
+        setRankPill("Wallet Required", "amber");
+        rankOutput.innerHTML = '<div class="note">Enter an XRPL wallet address to run whale rank lookup.</div>';
+        return;
+      }
 
+      setRankPill("Loading", "blue");
+      rankOutput.innerHTML = '<div class="empty">Checking wallet rank...</div>';
+
+      const res = await fetch(`${API_BASE}/api/whales/wallet-rank?mode=${encodeURIComponent(MODE)}&wallet=${encodeURIComponent(wallet)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        setRankPill("Error", "red");
+        rankOutput.innerHTML = `<div class="note">${data.error || "Failed to load wallet rank."}</div>`;
+        return;
+      }
+
+      const tone = toneFromPercentile(data.percentileLabel);
+      setRankPill(data.percentileLabel || "Loaded", tone);
+
+      rankOutput.innerHTML = `
+        <div class="rank-row">
+          <strong>Wallet</strong>
+          <span>${data.wallet}</span>
+        </div>
+        <div class="rank-row">
+          <strong>XRP Balance</strong>
+          <span>${fmtXrp(data.balanceXrp)}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Bucket</strong>
+          <span>${data.bucket?.label || "-"}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Percentile</strong>
+          <span>${data.percentileLabel || "-"}</span>
+        </div>
+        <div class="rank-row">
+          <strong>Snapshot Time</strong>
+          <span>${fmtDate(data.snapshot?.snapshotTime)}</span>
+        </div>
+      `;
+    }
+
+    rankBtn.addEventListener("click", runRank);
+    walletInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runRank();
+    });
+
+    loadSnapshot().catch((err) => {
+      bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
+      thresholdList.innerHTML = '<div class="empty">No distribution data available.</div>';
+    });
+  </script>
+</body>
+</html>
