@@ -598,8 +598,8 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h3 style="margin:0;">Percentile Thresholds</h3>
-              <div class="subhead">Estimated holding cutoffs</div>
+              <h3 style="margin:0;">Whale Tier Ladder</h3>
+              <div class="subhead">Human holding tiers</div>
             </div>
           </div>
           <div id="thresholdList" class="threshold-list">
@@ -657,6 +657,14 @@
       return `${n.toLocaleString(undefined,{maximumFractionDigits:2})} XRP`;
     }
 
+    function fmtTierXrp(value){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return "-";
+      if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(/\.0$/,"")}M XRP`;
+      if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/,"")}K XRP`;
+      return `${Math.round(n).toLocaleString()} XRP`;
+    }
+
     function fmtDate(value){
       if (!value) return "-";
       const d = new Date(value);
@@ -711,15 +719,24 @@
         `;
       }).join("");
 
-      const percentiles = Array.isArray(snap.percentile_data) ? snap.percentile_data : [];
-      thresholdList.innerHTML = percentiles.length
-        ? percentiles.map((p) => `
-          <div class="threshold-row">
-            <strong>${p.label}</strong>
-            <span>${p.minXrp == null ? "-" : fmtXrp(p.minXrp)}</span>
-          </div>
-        `).join("")
-        : '<div class="empty">No percentile data yet.</div>';
+      const tierRows = [
+        "0–500 XRP",
+        "500–2K XRP",
+        "2K–10K XRP",
+        "10K–20K XRP",
+        "20K–50K XRP",
+        "50K–100K XRP",
+        "100K–500K XRP",
+        "500K–1M XRP",
+        "1M+ XRP"
+      ];
+
+      thresholdList.innerHTML = tierRows.map((label) => `
+        <div class="threshold-row">
+          <strong>${label}</strong>
+          <span>Tier</span>
+        </div>
+      `).join("");
     }
 
     async function runRank(){
