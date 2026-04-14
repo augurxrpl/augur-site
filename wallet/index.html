@@ -1371,7 +1371,7 @@
       if (value.includes("high")) return "red";
       if (value.includes("medium") || value.includes("moderate")) return "amber";
       if (value.includes("low")) return "green";
-      return "blue";
+      return "gray";
     }
 
     function formatBalance(data){
@@ -1562,32 +1562,32 @@
       const flagItems = extractAccountFlags(data);
       const behaviorItems = [
         `Classification: ${classification}`,
-        `Confidence: ${confidence}`,
-        `Risk Level: ${riskLevel}`,
-        `Risk Score: ${riskScore}`
+        `Confidence: ${confidenceDisplay}`,
+        `Risk Level: ${riskLevelDisplay}`,
+        `Risk Score: ${riskScoreDisplay}`
       ];
       const activitySummary = Array.isArray(data?.activity?.summary) ? data.activity.summary : [];
       activitySummary.forEach(item => behaviorItems.push(safeText(item)));
       const riskFlags = Array.isArray(data?.risk?.flags) ? data.risk.flags : [];
       const riskNotes = Array.isArray(data?.risk?.notes) ? data.risk.notes : [];
-      const badgeTone = riskLevel.toLowerCase().includes("high")
-        ? "red"
-        : (riskLevel.toLowerCase().includes("medium") || riskLevel.toLowerCase().includes("moderate"))
-          ? "amber"
-          : (riskLevel.toLowerCase().includes("low") ? "green" : "");
 
       walletAddress.textContent = safeText(data?.address, "No wallet loaded");
       renderBadgeRow(walletIdentity, buildIdentityBadges(data));
 
       walletBalance.textContent = formatBalance(data);
       walletTx.textContent = formatRecentTx(data);
-      walletRisk.textContent = safeText(riskScore);
+      walletRisk.textContent = safeText(riskScoreDisplay);
       walletTrustlines.textContent = formatTrustlines(data);
       walletOwnerCount.textContent = formatOwnerCount(data);
 
-      if (confidencePill) confidencePill.textContent = `Confidence ${confidence}`;
-
       const blackholeView = getBlackholePresentation(data);
+      const badgeTone = riskTone(riskLevelDisplay);
+      const classificationTone = blackholeDetected ? blackholeView.pill : badgeTone;
+
+      if (confidencePill) {
+        confidencePill.className = `badge ${classificationTone}`;
+        confidencePill.textContent = `Confidence ${confidenceDisplay}`;
+      }
       if (blackholeTierPill) {
         blackholeTierPill.className = `badge ${blackholeView.pill}`;
         blackholeTierPill.textContent = blackholeView.tier;
@@ -1635,7 +1635,7 @@
       note.textContent = "Higher = more dangerous behavior";
       riskScoreValue.parentElement.appendChild(note);
 
-      setPill(classification, riskTone(riskLevel));
+      setPill(classification, classificationTone);
       setStatus(`Live report for ${safeText(data?.address, "wallet")}.`);
     }
 

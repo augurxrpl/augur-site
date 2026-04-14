@@ -334,7 +334,7 @@
     if (value.includes("high")) return "red";
     if (value.includes("medium") || value.includes("moderate")) return "amber";
     if (value.includes("low")) return "green";
-    return "blue";
+    return "gray";
   }
 
   const KNOWN_WALLET_LABELS = {
@@ -780,6 +780,7 @@
     const xrpPct = totalSlice > 0 ? ((xrpBalanceRaw / totalSlice) * 100) : 100;
     const blackholeView = getBlackholePresentation(data);
     const badgeTone = riskTone(riskLevelDisplay);
+    const classificationTone = blackholeDetected ? blackholeView.pill : badgeTone;
     const identityBadges = buildIdentityBadges(data);
     const signals = extractSignals(data);
     const recentTx = safeText(
@@ -789,12 +790,12 @@
       "-"
     );
 
-    if (el.walletClassPill) setPill(el.walletClassPill, classification, badgeTone);
+    if (el.walletClassPill) setPill(el.walletClassPill, classification, classificationTone);
     if (el.walletAddress) el.walletAddress.textContent = state.reportWallet || "No wallet loaded";
     renderBadgeRow(el.walletIdentity, identityBadges, "Awaiting analysis");
     if (el.walletBalance) el.walletBalance.textContent = safeText(data?.balanceXRP ?? data?.summary?.balanceXRP, "-");
     if (el.walletTx) el.walletTx.textContent = recentTx;
-    if (el.walletRisk) el.walletRisk.textContent = safeText(riskScore);
+    if (el.walletRisk) el.walletRisk.textContent = safeText(riskScoreDisplay);
     if (el.walletTrustlines) el.walletTrustlines.textContent = safeText(data?.trustlines ?? data?.summary?.trustlineCount ?? data?.activity?.trustlines, "-");
     if (el.walletOwnerCount) el.walletOwnerCount.textContent = safeText(data?.ownerCount ?? data?.summary?.ownerCount, "-");
 
@@ -815,7 +816,7 @@
     renderCounterpartyChart(txs);
     renderXrpFlowChart(txs);
     renderList(el.recentActivityList, activityItems, "No recent activity insights returned.");
-    if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, "");
+    if (el.confidencePill) setPill(el.confidencePill, `Confidence ${confidenceDisplay}`, classificationTone);
     if (el.legendBalance) el.legendBalance.textContent = valuations?.holdings?.find((h) => h.symbol === "XRP")?.valueUsd != null
       ? `$${Number(valuations.holdings.find((h) => h.symbol === "XRP").valueUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`
       : safeText(data?.balanceXRP ?? data?.balance ?? data?.summary?.balanceXRP, "-");
