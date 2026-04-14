@@ -705,6 +705,51 @@
       ledgerIndexValue.textContent = String(snap.ledger_index || "-");
 
       const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
+
+      bucketList.innerHTML = buckets.map((b) => {
+        const pct = Number(b.walletPct || 0);
+        return `
+          <div class="bucket-row">
+            <div class="bucket-top">
+              <div class="bucket-label">${b.label}</div>
+              <div class="bucket-meta">${fmtNum(b.walletCount)} wallets • ${fmtPct(b.walletPct)}</div>
+            </div>
+            <div class="bucket-bar"><div class="bucket-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
+            <div class="bucket-meta">${fmtXrp(b.xrpTotal)} • ${fmtPct(b.xrpPct)} of sampled XRP</div>
+          </div>
+        `;
+      }).join("");
+
+      thresholdList.innerHTML = buckets.map((item, idx) => {
+        const pct = Number(item.walletPct || 0).toFixed(2);
+        let label = `Top ${pct}%`;
+        if (idx === 0) label = `Bottom ${pct}%`;
+        else if (idx < 3) label = `Next ${pct}%`;
+        return `
+          <div class="threshold-row">
+            <strong>${item.label}</strong>
+            <span>${label}</span>
+          </div>
+        `;
+      }).join("");
+    }
+      bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
+      thresholdList.innerHTML = '<div class="empty">Loading thresholds...</div>';
+
+      const res = await fetch(`${API_BASE}/api/whales/latest?mode=${encodeURIComponent(MODE)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok || !data.snapshot) {
+        throw new Error(data.error || "Failed to load whale snapshot");
+      }
+
+      const snap = data.snapshot;
+      modeValue.textContent = data.mode || MODE;
+      walletCountValue.textContent = fmtNum(snap.funded_wallet_count);
+      snapshotTimeValue.textContent = fmtDate(snap.snapshot_time);
+      ledgerIndexValue.textContent = String(snap.ledger_index || "-");
+
+      const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
       bucketList.innerHTML = buckets.map((b) => {
         const pct = Number(b.walletPct || 0);
         return `
