@@ -598,8 +598,8 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h3 style="margin:0;">Whale Tier Ladder</h3>
-              <div class="subhead">Human holding tiers</div>
+              <h3 style="margin:0;">Whale Distribution Ladder</h3>
+              <div class="subhead">% of sampled wallets by band</div>
             </div>
           </div>
           <div id="thresholdList" class="threshold-list">
@@ -717,84 +717,13 @@
             <div class="bucket-meta">${fmtXrp(b.xrpTotal)} • ${fmtPct(b.xrpPct)} of sampled XRP</div>
           </div>
         `;
-      }).join("");
+         const bucketsForLadder = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
+      thresholdList.innerHTML = bucketsForLadder.map((item, idx) => {
+        const pct = Number(item.walletPct || 0).toFixed(2);
+        let label = `Top ${pct}%`;
+        if (idx === 0) label = `Bottom ${pct}%`;
+        else if (idx < 3) label = `Next ${pct}%`;
+        return `\n        <div class="threshold-row">\n          <strong>${item.label}</strong>\n          <span>${label}</span>\n        </div>\n      `;
+      }).join("\");
 
-      const tierRows = [
-        "0–500 XRP",
-        "500–2K XRP",
-        "2K–10K XRP",
-        "10K–20K XRP",
-        "20K–50K XRP",
-        "50K–100K XRP",
-        "100K–500K XRP",
-        "500K–1M XRP",
-        "1M+ XRP"
-      ];
 
-      thresholdList.innerHTML = tierRows.map((label) => `
-        <div class="threshold-row">
-          <strong>${label}</strong>
-          <span>Tier</span>
-        </div>
-      `).join("");
-    }
-
-    async function runRank(){
-      const wallet = walletInput.value.trim();
-      if (!wallet) {
-        setRankPill("Wallet Required", "amber");
-        rankOutput.innerHTML = '<div class="note">Enter an XRPL wallet address to run whale rank lookup.</div>';
-        return;
-      }
-
-      setRankPill("Loading", "blue");
-      rankOutput.innerHTML = '<div class="empty">Checking wallet rank...</div>';
-
-      const res = await fetch(`${API_BASE}/api/whales/wallet-rank?mode=${encodeURIComponent(MODE)}&wallet=${encodeURIComponent(wallet)}`);
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        setRankPill("Error", "red");
-        rankOutput.innerHTML = `<div class="note">${data.error || "Failed to load wallet rank."}</div>`;
-        return;
-      }
-
-      const tone = toneFromPercentile(data.percentileLabel);
-      setRankPill(data.percentileLabel || "Loaded", tone);
-
-      rankOutput.innerHTML = `
-        <div class="rank-row">
-          <strong>Wallet</strong>
-          <span>${data.wallet}</span>
-        </div>
-        <div class="rank-row">
-          <strong>XRP Balance</strong>
-          <span>${fmtXrp(data.balanceXrp)}</span>
-        </div>
-        <div class="rank-row">
-          <strong>Bucket</strong>
-          <span>${data.bucket?.label || "-"}</span>
-        </div>
-        <div class="rank-row">
-          <strong>Percentile</strong>
-          <span>${data.percentileLabel || "-"}</span>
-        </div>
-        <div class="rank-row">
-          <strong>Snapshot Time</strong>
-          <span>${fmtDate(data.snapshot?.snapshotTime)}</span>
-        </div>
-      `;
-    }
-
-    rankBtn.addEventListener("click", runRank);
-    walletInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") runRank();
-    });
-
-    loadSnapshot().catch((err) => {
-      bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
-      thresholdList.innerHTML = '<div class="empty">No percentile data available.</div>';
-    });
-  </script>
-</body>
-</html>
