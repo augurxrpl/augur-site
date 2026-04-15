@@ -526,8 +526,11 @@
           <div class="eyebrow">Coming Online</div>
           <h1>XRPL Whale Distribution</h1>
           <p class="lede">
-            Real wallet distribution and wallet rank lookup pulled from AUGUR whale data. This page is powered by the live whale API foundation now running behind AUGUR.
+            Real wallet distribution and wallet rank lookup pulled from AUGUR whale data. This page now reads from the latest full-ledger funded-wallet snapshot, not the 5,000-wallet sample.
           </p>
+          <div class="note" style="margin-top:14px;">
+            Latest full snapshot scanned 7,783,339 funded XRPL wallets, counted 66,629,970,937.42343 XRP, and was anchored to validated ledger 103571871. AUGUR refreshes this full snapshot once per day so whale distribution stays current without trying to crawl the full ledger inside a live page request.
+          </div>
 
           <div class="mini-grid">
             <div class="mini-card">
@@ -627,7 +630,7 @@
 
   <script>
     const API_BASE = "https://api.augurxrpl.com";
-    const MODE = "sample";
+    const MODE = "full";
 
     const modeValue = document.getElementById("modeValue");
     const walletCountValue = document.getElementById("walletCountValue");
