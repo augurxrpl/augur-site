@@ -594,7 +594,7 @@
           </div>
 
           <div class="note" style="margin-top:14px;">
-            Whale Watch will compare saved snapshots over time: 7-day change, 30-day change, total $XRP per bracket, exchange outflow notes, private wallet accumulation trend, snapshot date, and ledger index.
+            Whale Watch compares saved snapshots over time: 7-day change now, 30-day change once enough history is available, total $XRP per bracket, exchange outflow notes, private wallet accumulation trend, snapshot date, and ledger index.
           </div>
         </div>
 
@@ -790,7 +790,7 @@
 
           const thirtyText = thirtyRow && thirtyRow.walletCountChange !== null
             ? ` • 30D ${fmtSigned(thirtyRow.walletCountChange)}`
-            : "";
+             : " • 30D pending";
 
           el.textContent = `7D ${fmtSigned(row.walletCountChange)}${thirtyText} wallets`;
         });
