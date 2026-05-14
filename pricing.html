@@ -951,7 +951,7 @@
       <div class="section-head">
         <div>
           <h2>Start a Subscription</h2>
-          <p>Enter your XRPL wallet, choose a paid plan, pay with Xaman, then activate once payment is matched.</p>
+          <p>Enter your self-custody XRPL wallet, choose a paid plan, pay with Xaman, then activate once payment is matched.</p>
         </div>
       </div>
 
@@ -964,7 +964,7 @@
           <div class="selected-plan" id="selectedPlanPill">Selected Plan: starter</div>
 
           <div class="field">
-            <label for="subWallet">XRPL wallet address</label>
+            <label for="subWallet">Self-custody XRPL wallet address</label>
             <input class="input" id="subWallet" type="text" placeholder="r..." autocomplete="off" spellcheck="false" />
           </div>
 
@@ -1109,7 +1109,7 @@
       const planCode = subPlan.value.trim();
 
       if (!walletAddress) {
-        showStatus([["Error", "Enter an XRPL wallet address before starting payment.", false]]);
+        showStatus([["Error", "Enter an Self-custody XRPL wallet address before starting payment.", false]]);
         return;
       }
 
