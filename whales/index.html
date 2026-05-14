@@ -487,6 +487,50 @@
       .rank-row{display:grid;grid-template-columns:1fr;gap:6px}
       .rank-row span{max-width:100%;text-align:left}
     }
+
+    .whale-watch-huds{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .whale-watch-hud{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:26px;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid rgba(87,166,255,.22);
+      background:rgba(87,166,255,.08);
+      color:#9fc7ff;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.02em;
+      white-space:nowrap;
+    }
+    .whale-watch-hud.good{
+      border-color:rgba(78,227,154,.24);
+      background:rgba(78,227,154,.08);
+      color:#78f0b5;
+    }
+    .whale-watch-hud.bad{
+      border-color:rgba(255,125,125,.25);
+      background:rgba(255,125,125,.08);
+      color:#ff9a9a;
+    }
+    .whale-watch-hud.pending{
+      border-color:rgba(255,204,102,.22);
+      background:rgba(255,204,102,.08);
+      color:#ffd889;
+    }
+    .whale-watch-meta-huds{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
   </style>
 
   <!-- favicon: AUGUR -->
@@ -579,23 +623,26 @@
             <div class="mini-card">
               <div class="mini-label">10,000+ $XRP</div>
               <div id="whaleWatch10k" class="mini-value">-</div>
-              <div id="whaleWatch10kDelta" class="mini-sub">7D change loading</div>
+              <div class="whale-watch-huds"><span id="whaleWatch10k7d" class="whale-watch-hud">7D —</span><span id="whaleWatch10k30d" class="whale-watch-hud pending">30D pending</span></div>
             </div>
             <div class="mini-card">
               <div class="mini-label">100,000+ $XRP</div>
               <div id="whaleWatch100k" class="mini-value">-</div>
-              <div id="whaleWatch100kDelta" class="mini-sub">7D change loading</div>
+              <div class="whale-watch-huds"><span id="whaleWatch100k7d" class="whale-watch-hud">7D —</span><span id="whaleWatch100k30d" class="whale-watch-hud pending">30D pending</span></div>
             </div>
             <div class="mini-card">
               <div class="mini-label">1,000,000+ $XRP</div>
               <div id="whaleWatch1m" class="mini-value">-</div>
-              <div id="whaleWatch1mDelta" class="mini-sub">7D change loading</div>
+              <div class="whale-watch-huds"><span id="whaleWatch1m7d" class="whale-watch-hud">7D —</span><span id="whaleWatch1m30d" class="whale-watch-hud pending">30D pending</span></div>
             </div>
           </div>
 
-          <div class="note" style="margin-top:14px;">
-            Whale Watch compares saved snapshots over time: 7-day change now, 30-day change once enough history is available, total $XRP per bracket, exchange outflow notes, private wallet accumulation trend, snapshot date, and ledger index.
+          <div class="whale-watch-meta-huds">
+            <span id="whaleWatchSnapshotHud" class="whale-watch-hud">Snapshot —</span>
+            <span id="whaleWatchLedgerHud" class="whale-watch-hud">Ledger —</span>
+            <span class="whale-watch-hud">Full Snapshot</span>
           </div>
+          <div class="note" style="margin-top:14px;">Snapshot-backed bracket movement. 30D activates when enough full snapshots exist.</div>
         </div>
 
         <div class="card">
@@ -738,13 +785,14 @@
       return 0;
     }
 
-    function renderWhaleWatch(buckets){
+    function renderWhaleWatch(buckets, snap){
       const rows = Array.isArray(buckets) ? buckets : [];
       const targets = [
         ["whaleWatch10k", 10000],
         ["whaleWatch100k", 100000],
         ["whaleWatch1m", 1000000],
       ];
+
       targets.forEach(([id, min]) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -753,13 +801,32 @@
           .reduce((sum, bucket) => sum + Number(bucket.walletCount || 0), 0);
         el.textContent = count ? fmtNum(count) : "-";
       });
-    }
 
+      const snapshotHud = document.getElementById("whaleWatchSnapshotHud");
+      const ledgerHud = document.getElementById("whaleWatchLedgerHud");
+      if (snapshotHud) snapshotHud.textContent = `Snapshot ${fmtDate(snap?.snapshot_time).split(",")[0]}`;
+      if (ledgerHud) ledgerHud.textContent = `Ledger ${fmtNum(snap?.ledger_index)}`;
+    }
 
     function fmtSigned(value){
       const n = Number(value || 0);
       if (!Number.isFinite(n)) return "-";
       return n > 0 ? `+${fmtNum(n)}` : fmtNum(n);
+    }
+
+    function renderDeltaHud(id, label, value){
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      if (value === null || value === undefined) {
+        el.textContent = `${label} pending`;
+        el.className = "whale-watch-hud pending";
+        return;
+      }
+
+      const n = Number(value);
+      el.textContent = `${label} ${fmtSigned(n)}`;
+      el.className = `whale-watch-hud ${n >= 0 ? "good" : "bad"}`;
     }
 
     async function loadWhaleWatchCompare(){
@@ -775,24 +842,21 @@
         if (!sevenRes.ok || !seven.ok || !Array.isArray(seven.brackets)) return;
 
         const map = {
-          xrp_10000_plus: "whaleWatch10kDelta",
-          xrp_100000_plus: "whaleWatch100kDelta",
-          xrp_1000000_plus: "whaleWatch1mDelta",
+          xrp_10000_plus: ["whaleWatch10k7d", "whaleWatch10k30d"],
+          xrp_100000_plus: ["whaleWatch100k7d", "whaleWatch100k30d"],
+          xrp_1000000_plus: ["whaleWatch1m7d", "whaleWatch1m30d"],
         };
 
         seven.brackets.forEach((row) => {
-          const el = document.getElementById(map[row.key]);
-          if (!el) return;
+          const ids = map[row.key];
+          if (!ids) return;
 
           const thirtyRow = Array.isArray(thirty.brackets)
             ? thirty.brackets.find((item) => item.key === row.key)
             : null;
 
-          const thirtyText = thirtyRow && thirtyRow.walletCountChange !== null
-            ? ` • 30D ${fmtSigned(thirtyRow.walletCountChange)}`
-             : " • 30D pending";
-
-          el.textContent = `7D ${fmtSigned(row.walletCountChange)}${thirtyText} wallets`;
+          renderDeltaHud(ids[0], "7D", row.walletCountChange);
+          renderDeltaHud(ids[1], "30D", thirtyRow ? thirtyRow.walletCountChange : null);
         });
       } catch (err) {
         console.warn("Whale Watch compare failed", err);
@@ -817,7 +881,7 @@
       ledgerIndexValue.textContent = String(snap.ledger_index || "-");
 
       const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
-      renderWhaleWatch(buckets);
+      renderWhaleWatch(buckets, snap);
       loadWhaleWatchCompare();
 
       bucketList.innerHTML = buckets.map((b) => {
