@@ -726,15 +726,15 @@
     }
 
     function whaleBucketFloor(label){
-      const v = String(label || "").toUpperCase();
-      if (/1M\+/.test(v)) return 1000000;
-      if (v.includes("500K")) return 500000;
-      if (v.includes("100K")) return 100000;
-      if (v.includes("50K")) return 50000;
-      if (v.includes("20K")) return 20000;
-      if (v.includes("10K")) return 10000;
-      if (v.includes("2K")) return 2000;
-      if (v.includes("500")) return 500;
+      const v = String(label || "").toUpperCase().trim();
+      if (v.startsWith("1M+")) return 1000000;
+      if (v.startsWith("500K")) return 500000;
+      if (v.startsWith("100K")) return 100000;
+      if (v.startsWith("50K")) return 50000;
+      if (v.startsWith("20K")) return 20000;
+      if (v.startsWith("10K")) return 10000;
+      if (v.startsWith("2K")) return 2000;
+      if (v.startsWith("500")) return 500;
       return 0;
     }
 
