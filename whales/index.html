@@ -764,10 +764,15 @@
 
     async function loadWhaleWatchCompare(){
       try {
-        const res = await fetch(`${API_BASE}/api/whales/compare?mode=${encodeURIComponent(MODE)}&days=7`);
-        const data = await res.json();
+        const [sevenRes, thirtyRes] = await Promise.all([
+          fetch(`${API_BASE}/api/whales/compare?mode=${encodeURIComponent(MODE)}&days=7`),
+          fetch(`${API_BASE}/api/whales/compare?mode=${encodeURIComponent(MODE)}&days=30`),
+        ]);
 
-        if (!res.ok || !data.ok || !Array.isArray(data.brackets)) return;
+        const seven = await sevenRes.json();
+        const thirty = await thirtyRes.json();
+
+        if (!sevenRes.ok || !seven.ok || !Array.isArray(seven.brackets)) return;
 
         const map = {
           xrp_10000_plus: "whaleWatch10kDelta",
@@ -775,10 +780,19 @@
           xrp_1000000_plus: "whaleWatch1mDelta",
         };
 
-        data.brackets.forEach((row) => {
+        seven.brackets.forEach((row) => {
           const el = document.getElementById(map[row.key]);
           if (!el) return;
-          el.textContent = `7D change: ${fmtSigned(row.walletCountChange)} wallets`;
+
+          const thirtyRow = Array.isArray(thirty.brackets)
+            ? thirty.brackets.find((item) => item.key === row.key)
+            : null;
+
+          const thirtyText = thirtyRow && thirtyRow.walletCountChange !== null
+            ? ` • 30D ${fmtSigned(thirtyRow.walletCountChange)}`
+            : "";
+
+          el.textContent = `7D ${fmtSigned(row.walletCountChange)}${thirtyText} wallets`;
         });
       } catch (err) {
         console.warn("Whale Watch compare failed", err);
