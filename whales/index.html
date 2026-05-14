@@ -579,17 +579,17 @@
             <div class="mini-card">
               <div class="mini-label">10,000+ $XRP</div>
               <div id="whaleWatch10k" class="mini-value">-</div>
-              <div class="mini-sub">Serious holder bracket</div>
+              <div id="whaleWatch10kDelta" class="mini-sub">7D change loading</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">100,000+ $XRP</div>
               <div id="whaleWatch100k" class="mini-value">-</div>
-              <div class="mini-sub">Upper holder bracket</div>
+              <div id="whaleWatch100kDelta" class="mini-sub">7D change loading</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">1,000,000+ $XRP</div>
               <div id="whaleWatch1m" class="mini-value">-</div>
-              <div class="mini-sub">Whale bracket</div>
+              <div id="whaleWatch1mDelta" class="mini-sub">7D change loading</div>
             </div>
           </div>
 
@@ -755,6 +755,36 @@
       });
     }
 
+
+    function fmtSigned(value){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return "-";
+      return n > 0 ? `+${fmtNum(n)}` : fmtNum(n);
+    }
+
+    async function loadWhaleWatchCompare(){
+      try {
+        const res = await fetch(`${API_BASE}/api/whales/compare?mode=${encodeURIComponent(MODE)}&days=7`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok || !Array.isArray(data.brackets)) return;
+
+        const map = {
+          xrp_10000_plus: "whaleWatch10kDelta",
+          xrp_100000_plus: "whaleWatch100kDelta",
+          xrp_1000000_plus: "whaleWatch1mDelta",
+        };
+
+        data.brackets.forEach((row) => {
+          const el = document.getElementById(map[row.key]);
+          if (!el) return;
+          el.textContent = `7D change: ${fmtSigned(row.walletCountChange)} wallets`;
+        });
+      } catch (err) {
+        console.warn("Whale Watch compare failed", err);
+      }
+    }
+
     async function loadSnapshot(){
       bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
       thresholdList.innerHTML = '<div class="empty">Loading thresholds...</div>';
@@ -774,6 +804,7 @@
 
       const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
       renderWhaleWatch(buckets);
+      loadWhaleWatchCompare();
 
       bucketList.innerHTML = buckets.map((b) => {
         const pct = Number(b.walletPct || 0);
