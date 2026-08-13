@@ -117,6 +117,12 @@
     proSavedWalletCount: qs("#proSavedWalletCount"),
     proWatchlistCount: qs("#proWatchlistCount"),
     proWorkspaceTierLabel: qs("#proWorkspaceTierLabel"),
+    refreshMultiWalletBtn: qs("#refreshMultiWalletBtn"),
+    proCombinedXrp: qs("#proCombinedXrp"),
+    proCombinedWalletCount: qs("#proCombinedWalletCount"),
+    proCombinedWhaleBand: qs("#proCombinedWhaleBand"),
+    proCombinedPercentile: qs("#proCombinedPercentile"),
+    proMultiWalletStatus: qs("#proMultiWalletStatus"),
   };
 
   function getQueryWallet() {
@@ -1000,6 +1006,129 @@
   }
 
 
+
+  async function loadProWorkspace() {
+    if (!hasProAccess() || !state.subscriberWallet) {
+      proSavedWallets = [];
+      proWatchlistWallets = [];
+      updateProPanels();
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/subscription/pro-workspace?wallet=${encodeURIComponent(state.subscriberWallet)}`,
+        { headers: { "Accept": "application/json" } }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Unable to load Pro workspace.");
+      }
+
+      proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : [];
+      proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : [];
+      updateProPanels();
+    } catch (err) {
+      console.error("AUGUR Pro workspace load error:", err);
+      if (el.proMultiWalletStatus) {
+        el.proMultiWalletStatus.textContent = err.message || "Unable to load Pro workspace.";
+      }
+    }
+  }
+
+
+  async function saveProWorkspace() {
+    if (!hasProAccess() || !state.subscriberWallet) return;
+
+    const res = await fetch(`${API_BASE}/api/subscription/pro-workspace`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        walletAddress: state.subscriberWallet,
+        savedWallets: proSavedWallets,
+        watchlist: proWatchlistWallets
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Unable to save Pro workspace.");
+    }
+
+    proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : proSavedWallets;
+    proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : proWatchlistWallets;
+    updateProPanels();
+  }
+
+
+  function formatProXrp(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "-";
+    return `${n.toLocaleString(undefined, { maximumFractionDigits: 6 })} $XRP`;
+  }
+
+
+  async function loadMultiWalletPosition() {
+    if (!hasProAccess() || !state.subscriberWallet) {
+      if (el.proCombinedXrp) el.proCombinedXrp.textContent = "-";
+      if (el.proCombinedWalletCount) el.proCombinedWalletCount.textContent = "-";
+      if (el.proCombinedWhaleBand) el.proCombinedWhaleBand.textContent = "-";
+      if (el.proCombinedPercentile) el.proCombinedPercentile.textContent = "-";
+      return;
+    }
+
+    if (el.proMultiWalletStatus) {
+      el.proMultiWalletStatus.textContent = "Calculating combined $XRP position...";
+    }
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/whales/multi-wallet-rank?mode=full&wallet=${encodeURIComponent(state.subscriberWallet)}`,
+        { headers: { "Accept": "application/json" } }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Unable to calculate multi-wallet position.");
+      }
+
+      if (el.proCombinedXrp) {
+        el.proCombinedXrp.textContent = formatProXrp(data.combinedXrp);
+      }
+
+      if (el.proCombinedWalletCount) {
+        el.proCombinedWalletCount.textContent = String(data.walletCount ?? 0);
+      }
+
+      if (el.proCombinedWhaleBand) {
+        el.proCombinedWhaleBand.textContent = data.combinedBucket?.label || "-";
+      }
+
+      if (el.proCombinedPercentile) {
+        el.proCombinedPercentile.textContent = data.combinedPercentileLabel || "-";
+      }
+
+      if (el.proMultiWalletStatus) {
+        el.proMultiWalletStatus.textContent =
+          `${data.fundedWalletCount ?? 0} funded wallet(s) aggregated from your Pro portfolio.`;
+      }
+    } catch (err) {
+      console.error("AUGUR multi-wallet position error:", err);
+      if (el.proMultiWalletStatus) {
+        el.proMultiWalletStatus.textContent =
+          err.message || "Unable to calculate multi-wallet position.";
+      }
+    }
+  }
+
+
   async function runProCompare() {
     if (!hasProAccess()) {
       if (el.proCompareOutput) el.proCompareOutput.textContent = "Upgrade to Pro to compare wallets.";
@@ -1055,7 +1184,7 @@
   }
 
 
-  function addProSavedWallet() {
+  async function addProSavedWallet() {
     if (!hasProAccess()) return;
     const label = (el.proSavedWalletLabelInput?.value || "").trim();
     const wallet = (el.proSavedWalletInput?.value || "").trim();
@@ -1070,10 +1199,21 @@
 
     if (el.proSavedWalletLabelInput) el.proSavedWalletLabelInput.value = "";
     if (el.proSavedWalletInput) el.proSavedWalletInput.value = "";
+
     updateProPanels();
+
+    try {
+      await saveProWorkspace();
+      await loadMultiWalletPosition();
+    } catch (err) {
+      console.error("AUGUR save wallet error:", err);
+      if (el.proMultiWalletStatus) {
+        el.proMultiWalletStatus.textContent = err.message || "Unable to save wallet.";
+      }
+    }
   }
 
-  function addProWatchlistWallet() {
+  async function addProWatchlistWallet() {
     if (!hasProAccess()) return;
     const label = (el.proWatchlistLabelInput?.value || "").trim();
     const wallet = (el.proWatchlistInput?.value || "").trim();
@@ -1089,10 +1229,16 @@
     if (el.proWatchlistLabelInput) el.proWatchlistLabelInput.value = "";
     if (el.proWatchlistInput) el.proWatchlistInput.value = "";
     updateProPanels();
+
+    try {
+      await saveProWorkspace();
+    } catch (err) {
+      console.error("AUGUR watchlist save error:", err);
+    }
   }
 
 
-  function removeProItem(kind, index) {
+  async function removeProItem(kind, index) {
     const i = Number(index);
     if (!Number.isInteger(i) || i < 0) return;
 
@@ -1103,6 +1249,15 @@
     }
 
     updateProPanels();
+
+    try {
+      await saveProWorkspace();
+      if (kind === "saved") {
+        await loadMultiWalletPosition();
+      }
+    } catch (err) {
+      console.error("AUGUR Pro item removal save error:", err);
+    }
   }
 
   function bind() {
@@ -1157,6 +1312,7 @@
     el.runWalletCompareBtn?.addEventListener("click", runProCompare);
     el.addSavedWalletBtn?.addEventListener("click", addProSavedWallet);
     el.addWatchlistBtn?.addEventListener("click", addProWatchlistWallet);
+    el.refreshMultiWalletBtn?.addEventListener("click", loadMultiWalletPosition);
 
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-remove-kind][data-remove-index]");
@@ -1179,6 +1335,11 @@
 
     bind();
     await loadAccess();
+
+    if (hasProAccess()) {
+      await loadProWorkspace();
+      await loadMultiWalletPosition();
+    }
 
     if (state.subscriberWallet && state.active) {
       if (!state.reportWallet) {
