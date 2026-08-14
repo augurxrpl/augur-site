@@ -1058,6 +1058,59 @@
 
     let currentQuote = null;
 
+    const PLAN_RANK = {
+      free: 0,
+      starter: 1,
+      pro: 2,
+      developer: 3
+    };
+
+    function currentPurchasedPlan(){
+      return String(
+        window.AUGUR_SESSION?.getPlan?.() ||
+        localStorage.getItem("augurAccessPlan") ||
+        sessionStorage.getItem("augurAccessPlan") ||
+        "free"
+      ).toLowerCase();
+    }
+
+    function updatePricingOwnership(){
+      const ownedPlan = currentPurchasedPlan();
+      const ownedRank = PLAN_RANK[ownedPlan] || 0;
+
+      planButtons.forEach((btn) => {
+        const plan = String(btn.getAttribute("data-plan-select") || "").toLowerCase();
+        const rank = PLAN_RANK[plan] || 0;
+
+        btn.disabled = false;
+        btn.style.opacity = "";
+        btn.style.cursor = "";
+
+        if (!ownedRank) {
+          btn.textContent = `Buy ${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
+          return;
+        }
+
+        if (plan === ownedPlan) {
+          btn.textContent = "PURCHASED";
+          btn.disabled = true;
+          btn.style.opacity = ".72";
+          btn.style.cursor = "default";
+          return;
+        }
+
+        if (rank < ownedRank) {
+          btn.textContent = "INCLUDED";
+          btn.disabled = true;
+          btn.style.opacity = ".62";
+          btn.style.cursor = "default";
+          return;
+        }
+
+        btn.textContent = `Buy ${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
+      });
+    }
+
     function safeText(value){
       if (value === null || value === undefined || value === "") return "—";
       return String(value);
@@ -1113,12 +1166,18 @@
 
     planButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+
         const plan = btn.getAttribute("data-plan-select");
         if (!plan) return;
+
         setSelectedPlan(plan);
         document.getElementById("subscribe").scrollIntoView({ behavior: "smooth", block: "start" });
       });
     });
+
+    window.addEventListener("augur-session-changed", updatePricingOwnership);
+    setTimeout(updatePricingOwnership, 0);
 
     subPlan.addEventListener("change", () => setSelectedPlan(subPlan.value));
 
