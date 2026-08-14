@@ -593,7 +593,7 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
           <a class="btn btn-primary btn-hud" href="/hub.html" style="text-decoration:none;">Open Hub</a>
           <a class="btn btn-secondary btn-hud" href="/whales/" style="text-decoration:none;">Whale Watch</a>
-          <button class="btn btn-secondary btn-hud" id="profileDisconnectBtn" type="button">Disconnect</button>
+          <button class="btn btn-secondary btn-hud" id="profileDisconnectBtn" type="button" hidden>Disconnect</button>
         </div>
 
         <div id="profileNote" style="font-size:12px;color:var(--muted);margin-top:14px;">
@@ -826,6 +826,7 @@
       profileAccessBadge.textContent = "Disconnected";
       profileAccessBadge.className = "tag gray";
       profileLifetimeBadge.hidden = true;
+      profileDisconnectBtn.hidden = true;
       profileWalletCount.textContent = "—";
       profileCombinedXrp.textContent = "—";
       profileWhalePosition.textContent = "—";
@@ -867,6 +868,7 @@
         profileAccessBadge.textContent = data.active ? "Active" : "Inactive";
         profileAccessBadge.className = `tag ${data.active ? "green" : "gray"}`;
         profileLifetimeBadge.hidden = data.accessType !== "lifetime";
+        profileDisconnectBtn.hidden = false;
         profileStartedAt.textContent = formatProfileDate(data.startedAt);
 
         if (data.active && ["pro","developer"].includes(plan)) {
