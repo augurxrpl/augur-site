@@ -526,9 +526,9 @@
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">Wallet-Based Access</div>
-        <h1>Account Status</h1>
+        <h1>My AUGUR</h1>
         <p class="lede">
-          Check purchased AUGUR access for any XRPL wallet. No login. No custody. Wallet in, status out. Use a self-custody XRPL wallet; exchange addresses may be custodial.
+          Your XRPL identity, AUGUR access, portfolio position, and personal intelligence workspace.
         </p>
 
         <div class="trust">
@@ -537,6 +537,67 @@
           <span class="pill">Wallet-based access</span>
           <span class="pill">No custody</span>
           <span class="pill">XRPL-native</span>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:18px;">
+        <div>
+          <h2>AUGUR Profile</h2>
+          <p>Your connected XRPL wallet is your AUGUR identity.</p>
+        </div>
+      </div>
+
+      <div class="card" id="augurProfileCard">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);">Connected Identity</div>
+            <h2 id="profileTier" style="margin:8px 0 4px;">Not Connected</h2>
+            <div id="profileWallet" style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);word-break:break-all;">Connect an XRPL wallet to load your profile.</div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span id="profileAccessBadge" class="tag gray">Disconnected</span>
+            <span id="profileLifetimeBadge" class="tag blue" hidden>Lifetime Access</span>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:18px;">
+          <div class="card" style="padding:16px;">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Portfolio Wallets</div>
+            <div id="profileWalletCount" style="font-size:28px;font-weight:900;margin-top:6px;">—</div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Combined $XRP</div>
+            <div id="profileCombinedXrp" style="font-size:28px;font-weight:900;margin-top:6px;">—</div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Whale Position</div>
+            <div id="profileWhalePosition" style="font-size:22px;font-weight:900;margin-top:6px;">—</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+          <div class="card" style="padding:16px;">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Whale Percentile</div>
+            <div id="profilePercentile" style="font-size:22px;font-weight:900;margin-top:6px;">—</div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Access Since</div>
+            <div id="profileStartedAt" style="font-size:16px;font-weight:800;margin-top:8px;">—</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+          <a class="btn btn-primary btn-hud" href="/hub.html" style="text-decoration:none;">Open Hub</a>
+          <a class="btn btn-secondary btn-hud" href="/whales/" style="text-decoration:none;">Whale Watch</a>
+          <button class="btn btn-secondary btn-hud" id="profileDisconnectBtn" type="button">Disconnect</button>
+        </div>
+
+        <div id="profileNote" style="font-size:12px;color:var(--muted);margin-top:14px;">
+          Connect your AUGUR access wallet to load your profile.
         </div>
       </div>
 
@@ -587,12 +648,12 @@
           </div>
 
           <div class="account-actions">
-            <button class="btn btn-primary btn-hud" id="checkStatusBtn" type="button">Check Status</button>
+            <button class="btn btn-primary btn-hud" id="checkStatusBtn" type="button">Connect Wallet</button>
             <a class="btn btn-secondary btn-hud" href="/pricing.html">View Plans</a>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="accessResultCard" hidden>
           <h2 style="margin:0 0 14px;">Access Result</h2>
           <div id="statusBox" hidden class="status-box">
             <div class="kv" id="statusDetails"></div>
@@ -632,8 +693,36 @@
     const checkStatusBtn = document.getElementById("checkStatusBtn");
     const statusBox = document.getElementById("statusBox");
     const statusDetails = document.getElementById("statusDetails");
+    const accessResultCard = document.getElementById("accessResultCard");
     const accountUtilityLauncher = document.getElementById("accountUtilityLauncher");
     const accountUtilityLinks = document.getElementById("accountUtilityLinks");
+
+    const profileTier = document.getElementById("profileTier");
+    const profileWallet = document.getElementById("profileWallet");
+    const profileAccessBadge = document.getElementById("profileAccessBadge");
+    const profileLifetimeBadge = document.getElementById("profileLifetimeBadge");
+    const profileWalletCount = document.getElementById("profileWalletCount");
+    const profileCombinedXrp = document.getElementById("profileCombinedXrp");
+    const profileWhalePosition = document.getElementById("profileWhalePosition");
+    const profilePercentile = document.getElementById("profilePercentile");
+    const profileStartedAt = document.getElementById("profileStartedAt");
+    const profileDisconnectBtn = document.getElementById("profileDisconnectBtn");
+    const profileNote = document.getElementById("profileNote");
+
+    function updateWalletAccessButton(){
+      const connectedWallet =
+        window.AUGUR_SESSION?.getWallet?.() ||
+        localStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+        sessionStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+        "";
+
+      if (connectedWallet) {
+        checkStatusBtn.textContent = "Refresh Access";
+        if (!walletInput.value) walletInput.value = connectedWallet;
+      } else {
+        checkStatusBtn.textContent = "Connect Wallet";
+      }
+    }
 
     function safeText(value){
       if (value === null || value === undefined || value === "") return "—";
@@ -683,12 +772,20 @@
         });
       }
 
+      if (["pro","developer"].includes(plan)) {
+        links.push({
+          href: `/whales/`,
+          label: "Open Multi-Wallet Whale Watch"
+        });
+      }
+
       accountUtilityLinks.innerHTML = links.map((item) => `
         <a class="btn btn-primary btn-hud" href="${item.href}" style="text-decoration:none;">${item.label}</a>
       `).join("");
     }
 
     function renderRows(rows){
+      if (accessResultCard) accessResultCard.hidden = false;
       statusBox.hidden = false;
       statusDetails.innerHTML = rows.map(([label, value, isCode]) => {
         const tone = rowTone(label, value);
@@ -705,6 +802,130 @@
       `;
       }).join("");
     }
+
+    function formatProfileXrp(value){
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      return `${n.toLocaleString(undefined,{maximumFractionDigits:2})} XRP`;
+    }
+
+    function formatProfileDate(value){
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return d.toLocaleDateString(undefined,{
+        year:"numeric",
+        month:"short",
+        day:"numeric"
+      });
+    }
+
+    function resetProfile(){
+      profileTier.textContent = "Not Connected";
+      profileWallet.textContent = "Connect an XRPL wallet to load your profile.";
+      profileAccessBadge.textContent = "Disconnected";
+      profileAccessBadge.className = "tag gray";
+      profileLifetimeBadge.hidden = true;
+      profileWalletCount.textContent = "—";
+      profileCombinedXrp.textContent = "—";
+      profileWhalePosition.textContent = "—";
+      profilePercentile.textContent = "—";
+      profileStartedAt.textContent = "—";
+      profileNote.textContent = "Connect your AUGUR access wallet to load your profile.";
+    }
+
+    async function loadAugurProfile(){
+      const wallet =
+        window.AUGUR_SESSION?.getWallet?.() ||
+        localStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+        sessionStorage.getItem(AUGUR_SUBSCRIBER_WALLET_KEY) ||
+        "";
+
+      if (!wallet) {
+        resetProfile();
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/subscription/status?wallet=${encodeURIComponent(wallet)}`
+        );
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          resetProfile();
+          profileWallet.textContent = wallet;
+          profileNote.textContent = data.error || "Unable to load AUGUR access.";
+          return;
+        }
+
+        const plan = String(data.planCode || "free").toLowerCase();
+        const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+
+        profileTier.textContent = planLabel;
+        profileWallet.textContent = wallet;
+        profileAccessBadge.textContent = data.active ? "Active" : "Inactive";
+        profileAccessBadge.className = `tag ${data.active ? "green" : "gray"}`;
+        profileLifetimeBadge.hidden = data.accessType !== "lifetime";
+        profileStartedAt.textContent = formatProfileDate(data.startedAt);
+
+        if (data.active && ["pro","developer"].includes(plan)) {
+          const multiRes = await fetch(
+            `${API_BASE}/api/whales/multi-wallet-rank?mode=full&wallet=${encodeURIComponent(wallet)}`
+          );
+          const multi = await multiRes.json();
+
+          if (multiRes.ok && multi.ok) {
+            profileWalletCount.textContent = String(multi.walletCount || 1);
+            profileCombinedXrp.textContent = formatProfileXrp(multi.combinedXrp);
+            profileWhalePosition.textContent = multi.combinedBucket?.label || "—";
+            profilePercentile.textContent = multi.combinedPercentileLabel || "—";
+            profileNote.textContent =
+              `${planLabel} profile loaded with your current multi-wallet portfolio.`;
+          } else {
+            profileWalletCount.textContent = "1";
+            profileNote.textContent =
+              multi.error || "Profile loaded. Portfolio intelligence unavailable.";
+          }
+        } else if (data.active) {
+          profileWalletCount.textContent = "1";
+          profileNote.textContent =
+            `${planLabel} access active. Upgrade to Pro for multi-wallet portfolio intelligence.`;
+        } else {
+          profileNote.textContent = "This wallet does not currently have active purchased access.";
+        }
+      } catch (err) {
+        profileNote.textContent =
+          err instanceof Error ? err.message : "Unable to load AUGUR profile.";
+      }
+    }
+
+    profileDisconnectBtn.addEventListener("click", () => {
+      if (window.AUGUR_SESSION?.disconnectWallet) {
+        window.AUGUR_SESSION.disconnectWallet();
+      } else {
+        localStorage.removeItem(AUGUR_SUBSCRIBER_WALLET_KEY);
+        sessionStorage.removeItem(AUGUR_SUBSCRIBER_WALLET_KEY);
+        localStorage.removeItem("augurAccessPlan");
+        sessionStorage.removeItem("augurAccessPlan");
+        localStorage.removeItem("augurAccessStatus");
+        sessionStorage.removeItem("augurAccessStatus");
+      }
+
+      resetProfile();
+      walletInput.value = "";
+      statusBox.hidden = true;
+      if (accessResultCard) accessResultCard.hidden = true;
+      accountUtilityLauncher.hidden = true;
+      window.location.reload();
+    });
+
+    window.addEventListener("augur-session-changed", () => {
+      setTimeout(() => {
+        updateWalletAccessButton();
+        loadAugurProfile();
+      }, 0);
+    });
 
     checkStatusBtn.addEventListener("click", async () => {
       const wallet = walletInput.value.trim();
@@ -727,6 +948,10 @@
             sessionStorage.setItem(AUGUR_SUBSCRIBER_WALLET_KEY, wallet);
             localStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
             sessionStorage.setItem(AUGUR_LAST_REPORT_WALLET_KEY, wallet);
+            localStorage.setItem("augurAccessPlan", String(data.planCode || "free").toLowerCase());
+            sessionStorage.setItem("augurAccessPlan", String(data.planCode || "free").toLowerCase());
+            localStorage.setItem("augurAccessStatus", data.active === true ? "active" : "inactive");
+            sessionStorage.setItem("augurAccessStatus", data.active === true ? "active" : "inactive");
           } catch {}
         }
 
@@ -749,7 +974,15 @@
         if (allowed) {
           accountUtilityLauncher.hidden = false;
           renderUtilityLinks(plan, wallet);
-          window.location.href = `/hub.html?wallet=${encodeURIComponent(wallet)}`;
+          window.dispatchEvent(new CustomEvent("augur-session-changed", {
+            detail: {
+              wallet,
+              plan,
+              status: "active",
+              active: true
+            }
+          }));
+          window.AUGUR_SESSION?.refresh?.();
         } else {
           accountUtilityLauncher.hidden = true;
           accountUtilityLinks.innerHTML = "";
@@ -760,6 +993,12 @@
         checkStatusBtn.disabled = false;
       }
     });
+
+    setTimeout(() => {
+      updateWalletAccessButton();
+      loadAugurProfile();
+    }, 0);
   </script>
+  <script src="/assets/session.js"></script>
 </body>
 </html>

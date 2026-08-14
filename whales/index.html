@@ -655,6 +655,56 @@
           <div class="note" style="margin-top:14px;">Snapshot-backed bracket movement. 30D activates when enough full snapshots exist.</div>
         </div>
 
+        <div class="card" id="proMultiWalletCard">
+          <div class="card-header">
+            <div>
+              <h3 style="margin:0;">Multi-Wallet Whale Watch</h3>
+              <div class="subhead">Pro and Developer · combine every saved portfolio wallet</div>
+            </div>
+            <span id="multiWalletAccessPill" class="badge gray">Connect Wallet</span>
+          </div>
+
+          <div id="multiWalletLockedNote" class="note" style="margin-top:14px;">
+            Connect your Pro or Developer access wallet to load your multi-wallet portfolio.
+          </div>
+
+          <div id="multiWalletTools" hidden>
+            <div class="search" style="margin-top:14px;">
+              <input id="multiWalletLabelInput" type="text" placeholder="Wallet label" autocomplete="off" spellcheck="false" />
+              <input id="multiWalletInput" type="text" placeholder="Wallet Address" autocomplete="off" spellcheck="false" />
+              <button id="multiWalletAddBtn" class="btn" type="button">Add Wallet</button>
+              <button id="multiWalletRefreshBtn" class="btn btn-secondary" type="button">Refresh</button>
+            </div>
+
+            <div class="grid" style="margin-top:14px;">
+              <div class="mini-card">
+                <div class="mini-label">Combined $XRP Position</div>
+                <div id="multiCombinedXrp" class="mini-value">-</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Aggregated Wallets</div>
+                <div id="multiWalletCount" class="mini-value">-</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Whale Band</div>
+                <div id="multiWhaleBand" class="mini-value">-</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Whale Percentile</div>
+                <div id="multiPercentile" class="mini-value">-</div>
+              </div>
+            </div>
+
+            <div id="multiWalletStatus" class="note" style="margin-top:14px;">
+              Loading your Pro portfolio...
+            </div>
+
+            <div id="multiWalletSavedList" class="rank-list" style="margin-top:14px;">
+              <div class="empty">No saved portfolio wallets yet.</div>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <div>
@@ -744,6 +794,23 @@
     const rankBtn = document.getElementById("rankBtn");
     const rankOutput = document.getElementById("rankOutput");
     const rankPill = document.getElementById("rankPill");
+
+    const multiWalletAccessPill = document.getElementById("multiWalletAccessPill");
+    const multiWalletLockedNote = document.getElementById("multiWalletLockedNote");
+    const multiWalletTools = document.getElementById("multiWalletTools");
+    const multiWalletLabelInput = document.getElementById("multiWalletLabelInput");
+    const multiWalletInput = document.getElementById("multiWalletInput");
+    const multiWalletAddBtn = document.getElementById("multiWalletAddBtn");
+    const multiWalletRefreshBtn = document.getElementById("multiWalletRefreshBtn");
+    const multiCombinedXrp = document.getElementById("multiCombinedXrp");
+    const multiWalletCount = document.getElementById("multiWalletCount");
+    const multiWhaleBand = document.getElementById("multiWhaleBand");
+    const multiPercentile = document.getElementById("multiPercentile");
+    const multiWalletStatus = document.getElementById("multiWalletStatus");
+    const multiWalletSavedList = document.getElementById("multiWalletSavedList");
+
+    let proSavedWallets = [];
+    let proWatchlistWallets = [];
 
     function fmtNum(value){
       const n = Number(value || 0);
@@ -925,6 +992,221 @@
       }).join("");
     }
 
+    function escapeWhaleHtml(value){
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function currentAccessWallet(){
+      return window.AUGUR_SESSION?.getWallet?.() ||
+        localStorage.getItem("augurSubscriberWallet") ||
+        sessionStorage.getItem("augurSubscriberWallet") ||
+        "";
+    }
+
+    function currentAccessPlan(){
+      return String(
+        window.AUGUR_SESSION?.getPlan?.() ||
+        localStorage.getItem("augurAccessPlan") ||
+        sessionStorage.getItem("augurAccessPlan") ||
+        "free"
+      ).toLowerCase();
+    }
+
+    function hasMultiWalletAccess(){
+      return ["pro","developer"].includes(currentAccessPlan()) && !!currentAccessWallet();
+    }
+
+    function renderSavedPortfolio(){
+      if (!multiWalletSavedList) return;
+
+      if (!proSavedWallets.length) {
+        multiWalletSavedList.innerHTML =
+          '<div class="empty">No saved portfolio wallets yet. Your connected access wallet is always included automatically.</div>';
+        return;
+      }
+
+      multiWalletSavedList.innerHTML = proSavedWallets.map((item, index) => `
+        <div class="rank-row">
+          <strong>${escapeWhaleHtml(item.label || "Saved Wallet")}</strong>
+          <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <code>${escapeWhaleHtml(item.wallet)}</code>
+            <button class="btn btn-secondary" type="button" data-remove-pro-wallet="${index}" style="min-height:34px;padding:0 10px;">Remove</button>
+          </span>
+        </div>
+      `).join("");
+
+      multiWalletSavedList.querySelectorAll("[data-remove-pro-wallet]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const index = Number(button.dataset.removeProWallet);
+          if (!Number.isInteger(index)) return;
+
+          proSavedWallets.splice(index, 1);
+          await saveWhaleProWorkspace();
+          await loadWhaleMultiPosition();
+          renderSavedPortfolio();
+        });
+      });
+    }
+
+    async function loadWhaleProWorkspace(){
+      if (!hasMultiWalletAccess()) return;
+
+      const wallet = currentAccessWallet();
+
+      const res = await fetch(
+        `${API_BASE}/api/subscription/pro-workspace?wallet=${encodeURIComponent(wallet)}`
+      );
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to load Pro workspace.");
+      }
+
+      proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : [];
+      proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : [];
+      renderSavedPortfolio();
+    }
+
+    async function saveWhaleProWorkspace(){
+      if (!hasMultiWalletAccess()) return;
+
+      const res = await fetch(`${API_BASE}/api/subscription/pro-workspace`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          walletAddress: currentAccessWallet(),
+          savedWallets: proSavedWallets,
+          watchlist: proWatchlistWallets
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to save Pro workspace.");
+      }
+
+      proSavedWallets = Array.isArray(data.savedWallets) ? data.savedWallets : proSavedWallets;
+      proWatchlistWallets = Array.isArray(data.watchlist) ? data.watchlist : proWatchlistWallets;
+    }
+
+    async function loadWhaleMultiPosition(){
+      if (!hasMultiWalletAccess()) return;
+
+      if (multiWalletStatus) {
+        multiWalletStatus.textContent = "Calculating combined $XRP position...";
+      }
+
+      const res = await fetch(
+        `${API_BASE}/api/whales/multi-wallet-rank?mode=${encodeURIComponent(MODE)}&wallet=${encodeURIComponent(currentAccessWallet())}`
+      );
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to load multi-wallet Whale Watch.");
+      }
+
+      if (multiCombinedXrp) multiCombinedXrp.textContent = fmtXrp(data.combinedXrp);
+      if (multiWalletCount) multiWalletCount.textContent = fmtNum(data.walletCount);
+      if (multiWhaleBand) multiWhaleBand.textContent = data.combinedBucket?.label || "-";
+      if (multiPercentile) multiPercentile.textContent = data.combinedPercentileLabel || "-";
+
+      if (multiWalletStatus) {
+        multiWalletStatus.textContent =
+          `${data.fundedWalletCount || 0} funded wallet(s) combined under ${currentAccessPlan().toUpperCase()} access.`;
+      }
+    }
+
+    async function refreshWhaleSession(){
+      const wallet = currentAccessWallet();
+      const plan = currentAccessPlan();
+
+      if (!wallet) {
+        multiWalletTools.hidden = true;
+        multiWalletLockedNote.hidden = false;
+        multiWalletLockedNote.textContent =
+          "Connect your Pro or Developer access wallet to load your multi-wallet portfolio.";
+        multiWalletAccessPill.className = "badge gray";
+        multiWalletAccessPill.textContent = "Connect Wallet";
+        return;
+      }
+
+      if (!["pro","developer"].includes(plan)) {
+        multiWalletTools.hidden = true;
+        multiWalletLockedNote.hidden = false;
+        multiWalletLockedNote.textContent =
+          `Connected as ${plan.toUpperCase()}. Multi-Wallet Whale Watch requires Pro or Developer access.`;
+        multiWalletAccessPill.className = "badge amber";
+        multiWalletAccessPill.textContent = `${plan.toUpperCase()} Connected`;
+        return;
+      }
+
+      multiWalletLockedNote.hidden = true;
+      multiWalletTools.hidden = false;
+      multiWalletAccessPill.className = "badge green";
+      multiWalletAccessPill.textContent = `${plan.toUpperCase()} Connected`;
+
+      try {
+        await loadWhaleProWorkspace();
+        await loadWhaleMultiPosition();
+      } catch (err) {
+        multiWalletStatus.textContent =
+          err instanceof Error ? err.message : "Unable to load multi-wallet portfolio.";
+      }
+    }
+
+    async function addWhalePortfolioWallet(){
+      if (!hasMultiWalletAccess()) return;
+
+      const wallet = String(multiWalletInput?.value || "").trim();
+      const label = String(multiWalletLabelInput?.value || "").trim();
+
+      if (!wallet) {
+        multiWalletStatus.textContent = "Enter an XRPL wallet address.";
+        return;
+      }
+
+      if (!wallet.startsWith("r") || wallet.length < 25) {
+        multiWalletStatus.textContent = "Enter a valid XRPL wallet address.";
+        return;
+      }
+
+      const accessWallet = currentAccessWallet().toLowerCase();
+
+      if (wallet.toLowerCase() === accessWallet) {
+        multiWalletStatus.textContent =
+          "Your connected access wallet is already included automatically.";
+        return;
+      }
+
+      if (!proSavedWallets.some((item) => String(item.wallet).toLowerCase() === wallet.toLowerCase())) {
+        proSavedWallets.push({
+          label: label || `Wallet ${proSavedWallets.length + 1}`,
+          wallet
+        });
+      }
+
+      if (multiWalletInput) multiWalletInput.value = "";
+      if (multiWalletLabelInput) multiWalletLabelInput.value = "";
+
+      try {
+        await saveWhaleProWorkspace();
+        renderSavedPortfolio();
+        await loadWhaleMultiPosition();
+      } catch (err) {
+        multiWalletStatus.textContent =
+          err instanceof Error ? err.message : "Unable to save wallet.";
+      }
+    }
+
     async function runRank(){
       const wallet = walletInput.value.trim();
       if (!wallet) {
@@ -972,15 +1254,35 @@
       `;
     }
 
+    multiWalletAddBtn?.addEventListener("click", addWhalePortfolioWallet);
+    multiWalletRefreshBtn?.addEventListener("click", async () => {
+      try {
+        await loadWhaleProWorkspace();
+        await loadWhaleMultiPosition();
+      } catch (err) {
+        multiWalletStatus.textContent =
+          err instanceof Error ? err.message : "Unable to refresh portfolio.";
+      }
+    });
+
+    multiWalletInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addWhalePortfolioWallet();
+    });
+
+    window.addEventListener("augur-session-changed", refreshWhaleSession);
+
     rankBtn.addEventListener("click", runRank);
     walletInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") runRank();
     });
+
+    setTimeout(refreshWhaleSession, 0);
 
     loadSnapshot().catch((err) => {
       bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
       thresholdList.innerHTML = '<div class="empty">No distribution data available.</div>';
     });
   </script>
+  <script src="/assets/session.js"></script>
 </body>
 </html>
