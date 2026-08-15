@@ -1,10 +1,15 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
+const BLUE=0x258cff, RED=0xff4038;
+const accentTank=(r,c)=>r.traverse(o=>{if(o.isMesh&&["Tank_Turret_2","Tank_body_4","Tank_body_5"].includes(o.name)){o.material=o.material.clone();o.material.color.set(c);}});
+const accentSoldier=(r,c)=>r.traverse(o=>{if(o.isMesh&&["ShoulderPadL","ShoulderPadR"].includes(o.name)){o.material=o.material.clone();o.material.color.set(c);}});
 
 const root = document.getElementById('battlefield');
 
 const scene = new THREE.Scene();
+window.scene = scene;
+window.THREE = THREE;
 scene.background = new THREE.Color(0x071017);
 
 const camera = new THREE.PerspectiveCamera(
@@ -64,11 +69,15 @@ loader.load('./assets/models/master-tank.glb', (gltf) => {
   tank.position.set(-22, 0, 8);
   tank.rotation.y = Math.PI;
   tank.scale.setScalar(0.35);
-    tank.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.set(0x258cff); } });
-    const redTank = clone(tank); redTank.position.set(22,0,8); redTank.traverse((o)=>{if(o.isMesh){o.material=o.material.clone();o.material.color.set(0xff4038);}}); scene.add(redTank);
+    tank.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
+  tank.userData.side="blue"; tank.userData.kind="tank";
+    const redTank=clone(tank); redTank.position.set(22,0,8); scene.add(redTank);
+  accentTank(tank,BLUE);
+  redTank.userData.side="red"; redTank.userData.kind="tank";
+  accentTank(redTank,RED);
   redTank.rotation.y = Math.PI;
   scene.add(tank);
-    for(let r=0;r<4;r++)for(let c=0;c<5;c++){if(r||c){const b=clone(tank);b.position.set(-12-c*8,0,-24+r*16);scene.add(b);const s=clone(redTank);s.position.set(12+c*8,0,-24+r*16);scene.add(s);}}
+    for(let r=0;r<4;r++)for(let c=0;c<5;c++){if(r||c){const b=clone(tank);b.position.set(-12-c*8,0,-24+r*16);b.userData.side="blue";b.userData.kind="tank";scene.add(b);const s=clone(redTank);s.position.set(12+c*8,0,-24+r*16);s.userData.side="red";s.userData.kind="tank";scene.add(s);}}
   renderer.render(scene, camera);
 });
 
@@ -78,18 +87,13 @@ loader.load('./assets/models/master-soldier.glb', (gltf) => {
   soldier.rotation.y = Math.PI / 2;
   soldier.scale.setScalar(1.5);
 
-  soldier.traverse((o) => {
-    if (o.isMesh) {
-      o.material = o.material.clone();
-      o.material.color.set(0x258cff);
-    }
-  });
+  soldier.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
 
-  const redSoldier=clone(soldier); redSoldier.position.set(10,0,-8); redSoldier.rotation.y = -Math.PI / 2; redSoldier.traverse((o)=>{if(o.isMesh){o.material=o.material.clone();o.material.color.set(0xff4038);}});
+  const redSoldier=clone(soldier); redSoldier.position.set(10,0,-8); redSoldier.rotation.y=-Math.PI/2;
+  accentSoldier(soldier,BLUE); accentSoldier(redSoldier,RED);
   for(const z of [-16,0,16])for(let i=0;i<5;i++){const b=clone(soldier);b.position.set(-8-i*6,0,z);b.userData.side="blue";b.userData.kind="soldier";scene.add(b);const r=clone(redSoldier);r.position.set(8+i*6,0,z);r.userData.side="red";r.userData.kind="soldier";scene.add(r);}
   renderer.render(scene, camera);
 });
-
 
 function animate(){
   requestAnimationFrame(animate);
