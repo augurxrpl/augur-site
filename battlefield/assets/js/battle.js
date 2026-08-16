@@ -43,6 +43,7 @@ function darkenUnit(root,factor){
 }
 
 const helicopters=[];
+const combatEffects=[];
 
 function accentHelicopter(root,color){
   root.traverse(o=>{
@@ -86,6 +87,208 @@ function addRotorBlur(unit,color){
     rotor.userData.spin=y<9.6?1:-1;
     unit.add(rotor);
   }
+}
+
+function spawnInfantryTracer(unit,now){
+  if(combatEffects.length>=90) return;
+
+  const direction=unit.userData.side==="blue"?1:-1;
+  const length=THREE.MathUtils.randFloat(6.0,11.0);
+  const drift=THREE.MathUtils.randFloat(-0.55,0.55);
+  const start=new THREE.Vector3(
+    unit.position.x+direction*0.42,
+    unit.position.y+0.88,
+    unit.position.z
+  );
+  const end=new THREE.Vector3(
+    start.x+direction*length,
+    start.y+THREE.MathUtils.randFloat(-0.04,0.08),
+    start.z+drift
+  );
+  const midpoint=start.clone().add(end).multiplyScalar(0.5);
+  const tracerLength=start.distanceTo(end);
+
+  const group=new THREE.Group();
+
+  const tracer=new THREE.Mesh(
+    new THREE.BoxGeometry(tracerLength,0.045,0.045),
+    new THREE.MeshBasicMaterial({
+      color:0xffd36a,
+      transparent:true,
+      opacity:0.92,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  tracer.position.copy(midpoint);
+  tracer.rotation.y=-Math.atan2(end.z-start.z,end.x-start.x);
+  group.add(tracer);
+
+  const flash=new THREE.Mesh(
+    new THREE.SphereGeometry(0.14,8,6),
+    new THREE.MeshBasicMaterial({
+      color:0xfff1a8,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  flash.position.copy(start);
+  group.add(flash);
+
+  scene.add(group);
+  combatEffects.push({
+    object:group,
+    tracer,
+    flash,
+    born:now,
+    life:THREE.MathUtils.randFloat(0.08,0.14)
+  });
+}
+
+function spawnTankCannon(unit,now){
+  if(combatEffects.length>=90) return;
+
+  const direction=unit.userData.side==="blue"?1:-1;
+  const length=THREE.MathUtils.randFloat(17.0,29.0);
+  const drift=THREE.MathUtils.randFloat(-1.0,1.0);
+  const start=new THREE.Vector3(
+    unit.position.x+direction*1.75,
+    unit.position.y+0.82,
+    unit.position.z
+  );
+  const end=new THREE.Vector3(
+    start.x+direction*length,
+    0.22,
+    start.z+drift
+  );
+  const midpoint=start.clone().add(end).multiplyScalar(0.5);
+  const tracerLength=start.distanceTo(end);
+  const group=new THREE.Group();
+
+  const tracer=new THREE.Mesh(
+    new THREE.BoxGeometry(tracerLength,0.11,0.11),
+    new THREE.MeshBasicMaterial({
+      color:0xffb238,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  tracer.position.copy(midpoint);
+  tracer.rotation.y=-Math.atan2(end.z-start.z,end.x-start.x);
+  group.add(tracer);
+
+  const flash=new THREE.Mesh(
+    new THREE.SphereGeometry(0.38,10,8),
+    new THREE.MeshBasicMaterial({
+      color:0xffe08a,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  flash.position.copy(start);
+  group.add(flash);
+
+  const impact=new THREE.Mesh(
+    new THREE.SphereGeometry(1.10,14,10),
+    new THREE.MeshBasicMaterial({
+      color:0xff6a18,
+      transparent:true,
+      opacity:0.92,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  impact.position.copy(end);
+  group.add(impact);
+
+  scene.add(group);
+  combatEffects.push({
+    object:group,
+    tracer,
+    flash,
+    impact,
+    born:now,
+    life:THREE.MathUtils.randFloat(0.26,0.38)
+  });
+}
+
+function spawnHelicopterMissile(unit,now){
+  if(combatEffects.length>=90) return;
+
+  const direction=unit.userData.side==="blue"?1:-1;
+  const start=new THREE.Vector3(
+    unit.position.x+direction*1.2,
+    unit.position.y-0.35,
+    unit.position.z
+  );
+  const end=new THREE.Vector3(
+    start.x+direction*THREE.MathUtils.randFloat(12,22),
+    0.22,
+    start.z+THREE.MathUtils.randFloat(-5,5)
+  );
+  const midpoint=start.clone().add(end).multiplyScalar(0.5);
+  const missileVector=end.clone().sub(start);
+  const missileLength=missileVector.length();
+  const group=new THREE.Group();
+
+  const tracer=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.065,0.065,missileLength,7),
+    new THREE.MeshBasicMaterial({
+      color:0xffb238,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  tracer.position.copy(midpoint);
+  tracer.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0,1,0),
+    missileVector.clone().normalize()
+  );
+  group.add(tracer);
+
+  const flash=new THREE.Mesh(
+    new THREE.SphereGeometry(0.34,10,8),
+    new THREE.MeshBasicMaterial({
+      color:0xffe08a,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  flash.position.copy(start);
+  group.add(flash);
+
+  const impact=new THREE.Mesh(
+    new THREE.SphereGeometry(1.10,14,10),
+    new THREE.MeshBasicMaterial({
+      color:0xff5a12,
+      transparent:true,
+      opacity:0.96,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+  impact.position.copy(end);
+  group.add(impact);
+
+  scene.add(group);
+  combatEffects.push({
+    object:group,
+    tracer,
+    flash,
+    impact,
+    born:now,
+    life:THREE.MathUtils.randFloat(0.26,0.38)
+  });
 }
 
 const root = document.getElementById('battlefield');
@@ -281,6 +484,7 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
       heli.userData.depth=THREE.MathUtils.randFloat(-12,12);
       heli.userData.radiusX=THREE.MathUtils.randFloat(9,15);
       heli.userData.radiusZ=THREE.MathUtils.randFloat(5,10);
+      heli.userData.nextStrike=performance.now()*0.001+THREE.MathUtils.randFloat(2.5,7.0);
       helicopters.push(heli);
       scene.add(heli);
     }
@@ -318,6 +522,11 @@ function animate(){
     heli.traverse(o=>{
       if(o.userData.kind==="rotor") o.rotation.z+=0.32*o.userData.spin;
     });
+
+    if(now>=d.nextStrike){
+      spawnHelicopterMissile(heli,now);
+      d.nextStrike=now+THREE.MathUtils.randFloat(5.5,10.0);
+    }
   }
 
   const groundUnits=[];
@@ -334,6 +543,7 @@ function animate(){
       d.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
       d.moveSpeed=soldier?THREE.MathUtils.randFloat(0.38,0.62):THREE.MathUtils.randFloat(0.12,0.22);
       d.collisionRadius=soldier?0.78:2.35;
+      d.nextShot=now+THREE.MathUtils.randFloat(0.8,3.0);
       const line=THREE.MathUtils.randFloat(2.5,6.5);
       d.engageX=d.side==="blue"?-line:line;
     }
@@ -352,6 +562,19 @@ function animate(){
     const soldier=d.kind==="soldier";
     const motion=d.combatState==="advance"?1:0.3;
     o.position.z=d.startZ+Math.sin(now*(soldier?4.2:1.2)+d.movePhase)*(soldier?0.11:0.025)*motion;
+
+    const firingRange=soldier?30:48;
+    const inFiringRange=Math.abs(o.position.x)<=firingRange;
+
+    if(inFiringRange&&now>=d.nextShot){
+      if(soldier){
+        spawnInfantryTracer(o,now);
+        d.nextShot=now+THREE.MathUtils.randFloat(2.2,5.0);
+      }else{
+        spawnTankCannon(o,now);
+        d.nextShot=now+THREE.MathUtils.randFloat(4.5,9.0);
+      }
+    }
   });
 
   for(let pass=0;pass<2;pass++){
@@ -389,6 +612,33 @@ function animate(){
         a.userData.startZ-=nz*correction*moveA;
         b.userData.startZ+=nz*correction*moveB;
       }
+    }
+  }
+
+  for(let i=combatEffects.length-1;i>=0;i--){
+    const effect=combatEffects[i];
+    const age=(now-effect.born)/effect.life;
+
+    if(age>=1){
+      scene.remove(effect.object);
+      effect.tracer.geometry.dispose();
+      effect.tracer.material.dispose();
+      effect.flash.geometry.dispose();
+      effect.flash.material.dispose();
+      if(effect.impact){
+        effect.impact.geometry.dispose();
+        effect.impact.material.dispose();
+      }
+      combatEffects.splice(i,1);
+      continue;
+    }
+
+    effect.tracer.material.opacity=0.92*(1-age);
+    effect.flash.material.opacity=1-age;
+    effect.flash.scale.setScalar(1+age*1.8);
+    if(effect.impact){
+      effect.impact.material.opacity=0.92*(1-age);
+      effect.impact.scale.setScalar(0.8+age*4.2);
     }
   }
 
