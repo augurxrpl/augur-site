@@ -3,21 +3,37 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 const BLUE=0x258cff, RED=0xff4038;
 const accentTank=(r,c)=>r.traverse(o=>{if(o.isMesh&&["Tank_Turret_2","Tank_body_4","Tank_body_5","Tank_Gun","Tank_Gun_1"].includes(o.name)){o.material=o.material.clone();o.material.color.set(c);if(o.material.emissive){o.material.emissive.set(c);o.material.emissiveIntensity=.20;}}});
-const accentSoldier=(r,c)=>r.traverse(o=>{
-  if(!o.isMesh||!o.material) return;
-  const pads=["ShoulderPadL","ShoulderPadR"].includes(o.name);
-  const body=["Body","Head"].includes(o.name);
-  if(!pads&&!body) return;
-  o.material=o.material.clone();
-  if(o.material.color){
-    if(pads) o.material.color.set(c);
-    else o.material.color.lerp(new THREE.Color(c),.38);
-  }
-  if(o.material.emissive){
-    o.material.emissive.set(c);
-    o.material.emissiveIntensity=pads?.32:.14;
-  }
-});
+const accentSoldier=(root,color)=>{
+  root.traverse(o=>{
+    if(!o.isMesh||!o.material) return;
+
+    const pads=o.name.startsWith("ShoulderPad");
+    const head=o.name.startsWith("Head");
+    if(!pads&&!head) return;
+
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
+    let changed=false;
+
+    const materials=sources.map(source=>{
+      const helmet=head&&source.name==="Grey";
+      if(!pads&&!helmet) return source;
+
+      changed=true;
+      const material=source.clone();
+
+      if(material.color) material.color.set(color);
+      if(material.emissive){
+        material.emissive.set(color);
+        material.emissiveIntensity=helmet?.48:.38;
+      }
+
+      return material;
+    });
+
+    if(changed) o.material=wasArray?materials:materials[0];
+  });
+};
 function darkenUnit(root,factor){
   root.traverse(o=>{
     if(!o.isMesh||!o.material) return;
@@ -32,13 +48,23 @@ function accentHelicopter(root,color){
   root.traverse(o=>{
     if(!o.isMesh||!o.material) return;
     o.material=o.material.clone();
-    if(o.material.color){
-      o.material.color.multiplyScalar(0.45);
-      o.material.color.lerp(new THREE.Color(color),0.12);
+
+    const body=o.name==="Object_10";
+    const weapons=o.name==="Object_6";
+    if(!body&&!weapons) return;
+
+    if(body){
+      if(o.material.color) o.material.color.multiplyScalar(0.22);
+      if("metalness" in o.material) o.material.metalness=Math.max(o.material.metalness,0.72);
+      if("roughness" in o.material) o.material.roughness=Math.min(o.material.roughness,0.68);
     }
-    if(o.material.emissive){
-      o.material.emissive.set(color);
-      o.material.emissiveIntensity=0.05;
+
+    if(weapons){
+      if(o.material.color) o.material.color.lerp(new THREE.Color(color),0.58);
+      if(o.material.emissive){
+        o.material.emissive.set(color);
+        o.material.emissiveIntensity=0.16;
+      }
     }
   });
 }
@@ -243,7 +269,7 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
 
   for(const side of ["blue","red"]){
     const color=side==="blue"?BLUE:RED;
-    for(let i=0;i<3;i++){
+    for(let i=0;i<4;i++){
       const heli=clone(master);
       accentHelicopter(heli,color);
       addRotorBlur(heli,color);
@@ -251,10 +277,10 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
       heli.userData.side=side;
       heli.userData.phase=Math.random()*Math.PI*2;
       heli.userData.speed=THREE.MathUtils.randFloat(0.16,0.24);
-      heli.userData.altitude=THREE.MathUtils.randFloat(8,14);
-      heli.userData.depth=THREE.MathUtils.randFloat(-22,22);
-      heli.userData.radiusX=THREE.MathUtils.randFloat(11,18);
-      heli.userData.radiusZ=THREE.MathUtils.randFloat(7,14);
+      heli.userData.altitude=THREE.MathUtils.randFloat(7,12);
+      heli.userData.depth=THREE.MathUtils.randFloat(-12,12);
+      heli.userData.radiusX=THREE.MathUtils.randFloat(9,15);
+      heli.userData.radiusZ=THREE.MathUtils.randFloat(5,10);
       helicopters.push(heli);
       scene.add(heli);
     }
@@ -264,10 +290,15 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
   console.error("AUGUR helicopter load failed",error);
 });
 
+let lastFrame=performance.now();
+
 function animate(){
   requestAnimationFrame(animate);
 
-  const now=performance.now()*0.001;
+  const frameTime=performance.now();
+  const delta=Math.min((frameTime-lastFrame)/1000,0.05);
+  lastFrame=frameTime;
+  const now=frameTime*0.001;
 
   for(const heli of helicopters){
     const d=heli.userData;
@@ -289,18 +320,77 @@ function animate(){
     });
   }
 
+  const groundUnits=[];
+
   scene.traverse((o)=>{
     if(!["soldier","tank"].includes(o.userData.kind)) return;
-    if(o.userData.startX===undefined){
-      o.userData.startX=o.position.x;
-      o.userData.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
+    const d=o.userData;
+    groundUnits.push(o);
+
+    if(d.combatState===undefined){
+      const soldier=d.kind==="soldier";
+      d.combatState="advance";
+      d.startZ=o.position.z;
+      d.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
+      d.moveSpeed=soldier?THREE.MathUtils.randFloat(0.38,0.62):THREE.MathUtils.randFloat(0.12,0.22);
+      d.collisionRadius=soldier?0.78:2.35;
+      const line=THREE.MathUtils.randFloat(2.5,6.5);
+      d.engageX=d.side==="blue"?-line:line;
     }
 
-    const soldier=o.userData.kind==="soldier";
-    const wave=soldier?Math.sin(now):Math.sin(now*0.55+o.userData.movePhase);
-    const push=(wave+1)*(soldier?1.5:0.65);
-    o.position.x=o.userData.startX+(o.userData.side==="blue"?push:-push);
+    if(d.combatState==="advance"){
+      const direction=d.side==="blue"?1:-1;
+      o.position.x+=direction*d.moveSpeed*delta;
+      const reached=d.side==="blue"?o.position.x>=d.engageX:o.position.x<=d.engageX;
+      if(reached){
+        o.position.x=d.engageX;
+        d.combatState="engage";
+        d.engagedAt=now;
+      }
+    }
+
+    const soldier=d.kind==="soldier";
+    const motion=d.combatState==="advance"?1:0.3;
+    o.position.z=d.startZ+Math.sin(now*(soldier?4.2:1.2)+d.movePhase)*(soldier?0.11:0.025)*motion;
   });
+
+  for(let pass=0;pass<2;pass++){
+    for(let i=0;i<groundUnits.length;i++){
+      const a=groundUnits[i];
+
+      for(let j=i+1;j<groundUnits.length;j++){
+        const b=groundUnits[j];
+        let dx=b.position.x-a.position.x;
+        let dz=b.position.z-a.position.z;
+        let distance=Math.hypot(dx,dz);
+        const minimum=a.userData.collisionRadius+b.userData.collisionRadius;
+
+        if(distance>=minimum) continue;
+
+        if(distance<0.001){
+          dx=((i+j)%2===0)?1:-1;
+          dz=((i*3+j)%2===0)?0.5:-0.5;
+          distance=Math.hypot(dx,dz);
+        }
+
+        const nx=dx/distance;
+        const nz=dz/distance;
+        const correction=(minimum-distance)*0.52;
+        const massA=a.userData.kind==="tank"?4:1;
+        const massB=b.userData.kind==="tank"?4:1;
+        const moveA=massB/(massA+massB);
+        const moveB=massA/(massA+massB);
+
+        a.position.x-=nx*correction*moveA;
+        a.position.z-=nz*correction*moveA;
+        b.position.x+=nx*correction*moveB;
+        b.position.z+=nz*correction*moveB;
+
+        a.userData.startZ-=nz*correction*moveA;
+        b.userData.startZ+=nz*correction*moveB;
+      }
+    }
+  }
 
   renderer.render(scene,camera);
 }
