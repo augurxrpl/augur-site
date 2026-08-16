@@ -92,6 +92,296 @@ const helicopters=[];
 const combatEffects=[];
 const aftermathEffects=[];
 const destroyedUnits=[];
+const battlefieldEventQueue=[];
+const unitTemplates={
+  blue:{soldier:null,tank:null},
+  red:{soldier:null,tank:null}
+};
+const UNIT_CAPS={soldier:90,tank:30};
+
+const COMBAT_EVENT_TYPES=new Set([
+  "infantry_volley",
+  "tank_artillery",
+  "helicopter_strike",
+  "reinforcement"
+]);
+
+function queueBattlefieldEvent(event){
+  if(!event||!COMBAT_EVENT_TYPES.has(event.type)) return false;
+  if(!["blue","red"].includes(event.side)) return false;
+
+  battlefieldEventQueue.push({
+    type:event.type,
+    side:event.side,
+    intensity:THREE.MathUtils.clamp(Number(event.intensity)||1,0.25,3),
+    kind:event.kind,
+    count:event.count,
+    source:event.source||"market",
+    receivedAt:performance.now()*0.001
+  });
+
+  if(battlefieldEventQueue.length>40) battlefieldEventQueue.shift();
+  return true;
+}
+
+window.dispatchBattlefieldEvent=queueBattlefieldEvent;
+window.addEventListener("augur-battlefield-event",event=>{
+  queueBattlefieldEvent(event.detail);
+});
+
+const xrplMarketState={
+  connected:false,
+  reconnectDelay:1000,
+  reconnectTimer:null,
+  lastTrade:null,
+  growthCredit:{blue:0,red:0},
+  sessionVolume:{blue:0,red:0},
+  tradeCount:{blue:0,red:0},
+  xrpUsd:null,
+  xrpChange24h:null
+};
+
+window.augurBattlefieldMarket=xrplMarketState;
+
+function isXrpAmount(amount){
+  return typeof amount==="string";
+}
+
+function isExecutedXrpMarketTransaction(tx){
+  if(tx.TransactionType==="OfferCreate"){
+    return isXrpAmount(tx.TakerGets)!==isXrpAmount(tx.TakerPays);
+  }
+
+  if(tx.TransactionType==="Payment"&&tx.SendMax){
+    const destinationAmount=tx.DeliverMax??tx.Amount;
+    return destinationAmount&&isXrpAmount(tx.SendMax)!==isXrpAmount(destinationAmount);
+  }
+
+  return false;
+}
+
+function sourceAccountXrpDelta(tx,meta){
+  const nodes=Array.isArray(meta?.AffectedNodes)?meta.AffectedNodes:[];
+
+  for(const wrapper of nodes){
+    const node=wrapper.ModifiedNode;
+    if(!node||node.LedgerEntryType!=="AccountRoot") continue;
+
+    const finalFields=node.FinalFields||{};
+    const previousFields=node.PreviousFields||{};
+    if(finalFields.Account!==tx.Account) continue;
+    if(previousFields.Balance===undefined||finalFields.Balance===undefined) continue;
+
+    try{
+      const finalDrops=BigInt(finalFields.Balance);
+      const previousDrops=BigInt(previousFields.Balance);
+      const feeDrops=BigInt(tx.Fee||"0");
+      return Number(finalDrops-previousDrops+feeDrops)/1000000;
+    }catch(error){
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+function dispatchValidatedXrpTrade(side,xrpAmount,hash){
+  const amount=Math.abs(Number(xrpAmount)||0);
+  if(amount<0.01) return;
+
+  const intensity=THREE.MathUtils.clamp(0.55+Math.log10(amount+1)*0.55,0.55,3);
+
+  queueBattlefieldEvent({
+    type:"infantry_volley",
+    side,
+    intensity,
+    source:"xrpl",
+    hash
+  });
+
+  xrplMarketState.growthCredit[side]+=Math.min(2.5,Math.sqrt(amount)/60);
+
+  while(xrplMarketState.growthCredit[side]>=1){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"soldier",
+      count:1,
+      source:"xrpl",
+      hash
+    });
+    xrplMarketState.growthCredit[side]-=1;
+  }
+
+  if(amount>=5000){
+    queueBattlefieldEvent({type:"tank_artillery",side,intensity,source:"xrpl",hash});
+  }
+
+  if(amount>=25000){
+    queueBattlefieldEvent({type:"helicopter_strike",side,intensity,source:"xrpl",hash});
+  }
+
+  if(amount>=100000){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"tank",
+      count:1,
+      source:"xrpl",
+      hash
+    });
+  }
+
+  xrplMarketState.sessionVolume[side]+=amount;
+  xrplMarketState.tradeCount[side]+=1;
+  xrplMarketState.lastTrade={side,xrpAmount:amount,hash,receivedAt:Date.now()};
+  renderBattlefieldMarketHud();
+}
+
+function handleXrplMarketMessage(message){
+  let payload;
+  try{
+    payload=JSON.parse(message.data);
+  }catch(error){
+    return;
+  }
+
+  if(payload.type!=="transaction"||payload.validated!==true) return;
+
+  const tx=payload.tx_json||payload.transaction;
+  const meta=payload.meta||payload.metaData;
+  if(!tx||!meta||meta.TransactionResult!=="tesSUCCESS") return;
+  if(!isExecutedXrpMarketTransaction(tx)) return;
+
+  const xrpDelta=sourceAccountXrpDelta(tx,meta);
+  if(Math.abs(xrpDelta)<0.01) return;
+
+  const side=xrpDelta>0?"blue":"red";
+  dispatchValidatedXrpTrade(side,Math.abs(xrpDelta),tx.hash||payload.hash||"");
+}
+
+function connectXrplMarketStream(){
+  const socket=new WebSocket("wss://s1.ripple.com");
+  xrplMarketState.socket=socket;
+
+  socket.addEventListener("open",()=>{
+    xrplMarketState.connected=true;
+    xrplMarketState.reconnectDelay=1000;
+    renderBattlefieldMarketHud();
+    socket.send(JSON.stringify({
+      id:"augur-battlefield-market",
+      command:"subscribe",
+      streams:["transactions"]
+    }));
+  });
+
+  socket.addEventListener("message",handleXrplMarketMessage);
+
+  socket.addEventListener("close",()=>{
+    xrplMarketState.connected=false;
+    renderBattlefieldMarketHud();
+    clearTimeout(xrplMarketState.reconnectTimer);
+    xrplMarketState.reconnectTimer=setTimeout(connectXrplMarketStream,xrplMarketState.reconnectDelay);
+    xrplMarketState.reconnectDelay=Math.min(xrplMarketState.reconnectDelay*2,30000);
+  });
+
+  socket.addEventListener("error",()=>socket.close());
+}
+
+function formatHudNumber(value,maximumFractionDigits=0){
+  return Number(value||0).toLocaleString(undefined,{maximumFractionDigits});
+}
+
+function battlefieldForceCounts(side){
+  const counts={soldier:0,tank:0,helicopter:0};
+  if(!window.scene) return counts;
+
+  window.scene.traverse(unit=>{
+    const d=unit.userData;
+    if(d.side!==side||d.combatState==="destroyed") return;
+    if(Object.hasOwn(counts,d.kind)) counts[d.kind]+=1;
+  });
+  return counts;
+}
+
+function createBattlefieldMarketHud(){
+  if(document.getElementById("battlefield-market-hud")) return;
+
+  const style=document.createElement("style");
+  style.textContent=`
+    #battlefield-market-hud{position:fixed;inset:0;z-index:30;pointer-events:none;font-family:Inter,system-ui,sans-serif;color:#eef6ff;text-shadow:0 1px 3px #000}
+    .bf-hud-panel{position:absolute;background:linear-gradient(180deg,rgba(9,16,24,.88),rgba(4,8,13,.72));border:1px solid rgba(180,215,240,.24);box-shadow:0 8px 26px rgba(0,0,0,.34),inset 0 0 18px rgba(140,190,220,.05);backdrop-filter:blur(7px)}
+    .bf-market{top:14px;left:50%;transform:translateX(-50%);min-width:250px;padding:9px 16px;border-radius:8px;text-align:center}
+    .bf-price-row{display:flex;align-items:baseline;justify-content:center;gap:10px}.bf-price{font-size:22px;font-weight:900;letter-spacing:.03em}.bf-change{font-size:13px;font-weight:800}.bf-positive{color:#39e68a}.bf-negative{color:#ff5d57}
+    .bf-status{margin-top:3px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9fb2c2}.bf-status-dot{display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:#ff554d;box-shadow:0 0 8px currentColor}.bf-online .bf-status-dot{background:#35e784}
+    .bf-army{top:14px;width:245px;padding:11px 13px;border-radius:8px}.bf-blue{left:14px;border-color:rgba(37,140,255,.55)}.bf-red{right:14px;border-color:rgba(255,64,56,.55)}
+    .bf-army-title{display:flex;justify-content:space-between;font-size:12px;font-weight:900;letter-spacing:.12em}.bf-blue .bf-army-title,.bf-blue .bf-volume{color:#65adff}.bf-red .bf-army-title,.bf-red .bf-volume{color:#ff6d66}.bf-volume{margin-top:5px;font-size:17px;font-weight:900}.bf-unit-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px;font-size:10px;color:#aebdca}.bf-unit-row strong{display:block;color:#fff;font-size:13px}
+    .bf-ticker{bottom:14px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 28px));padding:9px 14px;border-radius:8px;text-align:center;font-size:12px;letter-spacing:.045em}.bf-ticker strong{color:#ffd56b}.bf-hash{margin-left:9px;color:#94aabc;font-family:ui-monospace,monospace}
+    @media(max-width:850px){.bf-army{top:82px;width:190px}.bf-unit-row{font-size:9px}.bf-market{top:8px}.bf-blue{left:8px}.bf-red{right:8px}}
+    @media(max-width:480px){.bf-army{width:calc(50vw - 12px);padding:8px}.bf-army-title{font-size:9px}.bf-volume{font-size:13px}.bf-ticker{font-size:10px}}
+  `;
+  document.head.append(style);
+
+  const hud=document.createElement("div");
+  hud.id="battlefield-market-hud";
+  hud.innerHTML=`
+    <section class="bf-hud-panel bf-market"><div class="bf-price-row"><span class="bf-price" data-bf-price>$XRP --</span><span class="bf-change" data-bf-change>--</span></div><div class="bf-status" data-bf-status><span class="bf-status-dot"></span>XRPL CONNECTING</div></section>
+    <section class="bf-hud-panel bf-army bf-blue"><div class="bf-army-title"><span>BLUE ARMY</span><span>BUYS</span></div><div class="bf-volume" data-bf-blue-volume>0 $XRP</div><div class="bf-unit-row" data-bf-blue-units></div></section>
+    <section class="bf-hud-panel bf-army bf-red"><div class="bf-army-title"><span>RED ARMY</span><span>SELLS</span></div><div class="bf-volume" data-bf-red-volume>0 $XRP</div><div class="bf-unit-row" data-bf-red-units></div></section>
+    <section class="bf-hud-panel bf-ticker" data-bf-ticker>WAITING FOR VALIDATED $XRP MARKET ACTIVITY</section>
+  `;
+  document.body.append(hud);
+  renderBattlefieldMarketHud();
+  refreshXrpMarketPrice();
+  setInterval(renderBattlefieldMarketHud,1000);
+  setInterval(refreshXrpMarketPrice,30000);
+}
+
+function renderBattlefieldMarketHud(){
+  const hud=document.getElementById("battlefield-market-hud");
+  if(!hud) return;
+
+  const price=hud.querySelector("[data-bf-price]");
+  const change=hud.querySelector("[data-bf-change]");
+  const status=hud.querySelector("[data-bf-status]");
+  const blue=battlefieldForceCounts("blue");
+  const red=battlefieldForceCounts("red");
+
+  price.textContent=xrplMarketState.xrpUsd===null?"$XRP --":`$XRP $${xrplMarketState.xrpUsd.toFixed(4)}`;
+  const changeValue=xrplMarketState.xrpChange24h;
+  change.textContent=changeValue===null?"--":`${changeValue>=0?"+":""}${changeValue.toFixed(2)}%`;
+  change.className=`bf-change ${changeValue>=0?"bf-positive":"bf-negative"}`;
+  status.className=`bf-status ${xrplMarketState.connected?"bf-online":""}`;
+  status.innerHTML=`<span class="bf-status-dot"></span>${xrplMarketState.connected?"XRPL LIVE":"XRPL RECONNECTING"}`;
+
+  hud.querySelector("[data-bf-blue-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.blue,2)} $XRP`;
+  hud.querySelector("[data-bf-red-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.red,2)} $XRP`;
+  hud.querySelector("[data-bf-blue-units]").innerHTML=`<span><strong>${blue.soldier}</strong>TROOPS</span><span><strong>${blue.tank}</strong>TANKS</span><span><strong>${blue.helicopter}</strong>COPTERS</span>`;
+  hud.querySelector("[data-bf-red-units]").innerHTML=`<span><strong>${red.soldier}</strong>TROOPS</span><span><strong>${red.tank}</strong>TANKS</span><span><strong>${red.helicopter}</strong>COPTERS</span>`;
+
+  const trade=xrplMarketState.lastTrade;
+  if(trade){
+    const action=trade.side==="blue"?"BUY":"SELL";
+    const shortHash=trade.hash?`${trade.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
+    hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • INFANTRY VOLLEY <span class="bf-hash">${shortHash}</span>`;
+  }
+}
+
+async function refreshXrpMarketPrice(){
+  try{
+    const response=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true",{cache:"no-store"});
+    if(!response.ok) throw new Error(`Price response ${response.status}`);
+    const data=await response.json();
+    xrplMarketState.xrpUsd=Number(data?.ripple?.usd)||null;
+    xrplMarketState.xrpChange24h=Number.isFinite(Number(data?.ripple?.usd_24h_change))?Number(data.ripple.usd_24h_change):null;
+    renderBattlefieldMarketHud();
+  }catch(error){
+    console.warn("AUGUR $XRP price refresh failed",error);
+  }
+}
+
+createBattlefieldMarketHud();
+connectXrplMarketStream();
 
 function accentHelicopter(root,color){
   root.traverse(o=>{
@@ -485,6 +775,48 @@ function spawnAftermath(position,now){
   });
 }
 
+function processBattlefieldEvent(event,now){
+  if(event.type==="reinforcement"){
+    const kind=event.kind==="tank"?"tank":"soldier";
+    return spawnReinforcements(event.side,kind,event.count||1)>0;
+  }
+
+  const candidates=[];
+
+  if(event.type==="helicopter_strike"){
+    for(const heli of helicopters){
+      if(heli.userData.side===event.side) candidates.push(heli);
+    }
+  }else{
+    const kind=event.type==="infantry_volley"?"soldier":"tank";
+    scene.traverse(unit=>{
+      if(unit.userData.kind!==kind) return;
+      if(unit.userData.side!==event.side) return;
+      if(unit.userData.combatState==="destroyed") return;
+      candidates.push(unit);
+    });
+  }
+
+  if(!candidates.length) return false;
+
+  for(let i=candidates.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [candidates[i],candidates[j]]=[candidates[j],candidates[i]];
+  }
+
+  const baseCount=event.type==="infantry_volley"?4:event.type==="tank_artillery"?2:1;
+  const count=Math.min(candidates.length,Math.max(1,Math.round(baseCount*event.intensity)));
+
+  for(let i=0;i<count;i++){
+    const unit=candidates[i];
+    if(event.type==="infantry_volley") spawnInfantryTracer(unit,now);
+    else if(event.type==="tank_artillery") spawnTankCannon(unit,now);
+    else spawnHelicopterMissile(unit,now);
+  }
+
+  return true;
+}
+
 const root = document.getElementById('battlefield');
 
 const scene = new THREE.Scene();
@@ -607,6 +939,38 @@ function scatteredPosition(side, minGap=5){
   };
 }
 
+function countActiveUnits(side,kind){
+  let count=0;
+  scene.traverse(unit=>{
+    if(unit.userData.side===side&&unit.userData.kind===kind&&unit.userData.combatState!=="destroyed") count++;
+  });
+  return count;
+}
+
+function spawnReinforcements(side,kind,requested=1){
+  const template=unitTemplates[side]?.[kind];
+  if(!template) return 0;
+
+  const available=Math.max(0,UNIT_CAPS[kind]-countActiveUnits(side,kind));
+  const count=Math.min(available,Math.max(1,Math.floor(requested)));
+  const color=side==="blue"?BLUE:RED;
+
+  for(let i=0;i<count;i++){
+    const unit=clone(template);
+    const rearX=side==="blue"
+      ?THREE.MathUtils.randFloat(-52,-43)
+      :THREE.MathUtils.randFloat(43,52);
+    unit.position.set(rearX,0,THREE.MathUtils.randFloat(-31,31));
+    unit.userData.side=side;
+    unit.userData.kind=kind;
+    delete unit.userData.combatState;
+    addUnitHalo(unit,color,kind);
+    scene.add(unit);
+  }
+
+  return count;
+}
+
 loader.load('./assets/models/master-tank.glb', (gltf) => {
   const tank = gltf.scene;
   tank.position.set(-22, 0, 8);
@@ -620,6 +984,8 @@ loader.load('./assets/models/master-tank.glb', (gltf) => {
   redTank.userData.side="red"; redTank.userData.kind="tank";
   accentTank(redTank,RED);
   redTank.rotation.y = Math.PI;
+  unitTemplates.blue.tank=clone(tank);
+  unitTemplates.red.tank=clone(redTank);
     for(let i=0;i<20;i++){
     const bp=scatteredPosition("blue",7);
     const b=clone(tank);
@@ -651,6 +1017,8 @@ loader.load('./assets/models/master-soldier.glb', (gltf) => {
 
   const redSoldier=clone(soldier); redSoldier.position.set(10,0,-8); redSoldier.rotation.y=-Math.PI/2;
   accentSoldier(soldier,BLUE); accentSoldier(redSoldier,RED);
+  unitTemplates.blue.soldier=clone(soldier);
+  unitTemplates.red.soldier=clone(redSoldier);
   for(let i=0;i<60;i++){
     const bp=scatteredPosition("blue",4);
     const b=clone(soldier);
@@ -689,7 +1057,6 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
       heli.userData.depth=THREE.MathUtils.randFloat(-12,12);
       heli.userData.radiusX=THREE.MathUtils.randFloat(9,15);
       heli.userData.radiusZ=THREE.MathUtils.randFloat(5,10);
-      heli.userData.nextStrike=performance.now()*0.001+THREE.MathUtils.randFloat(2.5,7.0);
       helicopters.push(heli);
       scene.add(heli);
     }
@@ -728,10 +1095,6 @@ function animate(){
       if(o.userData.kind==="rotor") o.rotation.z+=0.32*o.userData.spin;
     });
 
-    if(now>=d.nextStrike){
-      spawnHelicopterMissile(heli,now);
-      d.nextStrike=now+THREE.MathUtils.randFloat(5.5,10.0);
-    }
   }
 
   const groundUnits=[];
@@ -749,9 +1112,17 @@ function animate(){
       d.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
       d.moveSpeed=soldier?THREE.MathUtils.randFloat(0.38,0.62):THREE.MathUtils.randFloat(0.12,0.22);
       d.collisionRadius=soldier?0.78:2.35;
-      d.nextShot=now+THREE.MathUtils.randFloat(0.8,3.0);
-      const line=THREE.MathUtils.randFloat(2.5,6.5);
-      d.engageX=d.side==="blue"?-line:line;
+      const direction=d.side==="blue"?1:-1;
+      const advanceDistance=soldier
+        ?THREE.MathUtils.randFloat(2.5,8.5)
+        :THREE.MathUtils.randFloat(1.5,5.0);
+      const frontBand=soldier
+        ?THREE.MathUtils.randFloat(3.5,9.5)
+        :THREE.MathUtils.randFloat(7.0,14.0);
+      const proposed=o.position.x+direction*advanceDistance;
+      d.engageX=d.side==="blue"
+        ?Math.min(proposed,-frontBand)
+        :Math.max(proposed,frontBand);
     }
 
     if(d.combatState==="advance"){
@@ -769,18 +1140,6 @@ function animate(){
     const motion=d.combatState==="advance"?1:0.3;
     o.position.z=d.startZ+Math.sin(now*(soldier?4.2:1.2)+d.movePhase)*(soldier?0.11:0.025)*motion;
 
-    const firingRange=soldier?30:48;
-    const inFiringRange=Math.abs(o.position.x)<=firingRange;
-
-    if(inFiringRange&&now>=d.nextShot){
-      if(soldier){
-        spawnInfantryTracer(o,now);
-        d.nextShot=now+THREE.MathUtils.randFloat(2.2,5.0);
-      }else{
-        spawnTankCannon(o,now);
-        d.nextShot=now+THREE.MathUtils.randFloat(4.5,9.0);
-      }
-    }
   });
 
   for(let i=destroyedUnits.length-1;i>=0;i--){
@@ -923,6 +1282,11 @@ function animate(){
         fragment.velocity.z*=0.72;
       }
     }
+  }
+
+  for(let processed=0;processed<2&&battlefieldEventQueue.length;processed++){
+    const event=battlefieldEventQueue.shift();
+    processBattlefieldEvent(event,now);
   }
 
   renderer.render(scene,camera);
