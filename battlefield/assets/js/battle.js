@@ -290,10 +290,15 @@ function animate(){
   }
 
   scene.traverse((o)=>{
-    if(o.userData.kind!=="soldier") return;
-    if(o.userData.startX===undefined) o.userData.startX=o.position.x;
+    if(!["soldier","tank"].includes(o.userData.kind)) return;
+    if(o.userData.startX===undefined){
+      o.userData.startX=o.position.x;
+      o.userData.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
+    }
 
-    const push=(Math.sin(performance.now()*0.001)+1)*1.5;
+    const soldier=o.userData.kind==="soldier";
+    const wave=soldier?Math.sin(now):Math.sin(now*0.55+o.userData.movePhase);
+    const push=(wave+1)*(soldier?1.5:0.65);
     o.position.x=o.userData.startX+(o.userData.side==="blue"?push:-push);
   });
 
