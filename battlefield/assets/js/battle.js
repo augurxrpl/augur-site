@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 const BLUE=0x258cff, RED=0xff4038;
+const UNIT_METAL=0x60717e;
 const accentTank=(r,c)=>r.traverse(o=>{if(o.isMesh&&["Tank_Turret_2","Tank_body_4","Tank_body_5","Tank_Gun","Tank_Gun_1"].includes(o.name)){o.material=o.material.clone();o.material.color.set(c);if(o.material.emissive){o.material.emissive.set(c);o.material.emissiveIntensity=.20;}}});
 const accentSoldier=(root,color)=>{
   root.traverse(o=>{
@@ -42,40 +43,97 @@ function darkenUnit(root,factor){
   });
 }
 
+function tuneSoldierUniform(root){
+  root.traverse(o=>{
+    if(!o.isMesh||!o.material||o.name!=="Body") return;
+
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
+
+    const materials=sources.map(source=>{
+      const material=source.clone();
+      if(material.name!=="Skin"){
+        if(material.color) material.color.set(UNIT_METAL);
+        if("metalness" in material) material.metalness=0.12;
+        if("roughness" in material) material.roughness=0.82;
+        if(material.emissive){
+          material.emissive.set(UNIT_METAL);
+          material.emissiveIntensity=0.10;
+        }
+      }
+      return material;
+    });
+
+    o.material=wasArray?materials:materials[0];
+  });
+}
+
+function tuneTankMetal(root){
+  root.traverse(o=>{
+    if(!o.isMesh||!o.material) return;
+    if(o.name.startsWith("TrackMesh")) return;
+
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
+
+    const materials=sources.map(source=>{
+      const material=source.clone();
+      if(material.color) material.color.set(UNIT_METAL);
+      if("metalness" in material) material.metalness=0.72;
+      if("roughness" in material) material.roughness=0.58;
+      return material;
+    });
+
+    o.material=wasArray?materials:materials[0];
+  });
+}
+
 const helicopters=[];
 const combatEffects=[];
 const aftermathEffects=[];
+const destroyedUnits=[];
 
 function accentHelicopter(root,color){
   root.traverse(o=>{
     if(!o.isMesh||!o.material) return;
-    o.material=o.material.clone();
 
-    const body=o.name==="Object_10";
     const weapons=o.name==="Object_6";
-    if(!body&&!weapons) return;
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
 
-    if(body){
-      if(o.material.color) o.material.color.multiplyScalar(0.22);
-      if("metalness" in o.material) o.material.metalness=Math.max(o.material.metalness,0.72);
-      if("roughness" in o.material) o.material.roughness=Math.min(o.material.roughness,0.68);
-    }
+    const materials=sources.map(source=>{
+      const material=source.clone();
 
-    if(weapons){
-      if(o.material.color) o.material.color.lerp(new THREE.Color(color),0.58);
-      if(o.material.emissive){
-        o.material.emissive.set(color);
-        o.material.emissiveIntensity=0.16;
+      if(material.color) material.color.set(UNIT_METAL);
+      material.map=null;
+      material.vertexColors=false;
+      if("metalness" in material) material.metalness=0.72;
+      if("roughness" in material) material.roughness=0.58;
+      if(material.emissive){
+        material.emissive.set(UNIT_METAL);
+        material.emissiveIntensity=0.14;
       }
-    }
+
+      if(weapons){
+        if(material.color) material.color.lerp(new THREE.Color(color),0.58);
+        if(material.emissive){
+          material.emissive.set(color);
+          material.emissiveIntensity=0.16;
+        }
+      }
+
+      return material;
+    });
+
+    o.material=wasArray?materials:materials[0];
   });
 }
 
 function addRotorBlur(unit,color){
   const material=new THREE.MeshBasicMaterial({
-    color,
+    color:new THREE.Color(color).multiplyScalar(0.92),
     transparent:true,
-    opacity:0.075,
+    opacity:0.11,
     depthWrite:false,
     side:THREE.DoubleSide,
     blending:THREE.AdditiveBlending
@@ -214,6 +272,8 @@ function spawnTankCannon(unit,now){
     tracer,
     flash,
     impact,
+    sourceSide:unit.userData.side,
+    damageRadius:8.5,
     born:now,
     life:THREE.MathUtils.randFloat(0.26,0.38)
   });
@@ -287,9 +347,68 @@ function spawnHelicopterMissile(unit,now){
     tracer,
     flash,
     impact,
+    sourceSide:unit.userData.side,
+    damageRadius:8.5,
     born:now,
     life:THREE.MathUtils.randFloat(0.26,0.38)
   });
+}
+
+function destroyUnit(unit,now){
+  const d=unit.userData;
+  if(d.combatState==="destroyed") return;
+
+  d.combatState="destroyed";
+  d.destroyedAt=now;
+  d.destroyDuration=d.kind==="tank"?3.8:1.8;
+  d.destroyStartY=unit.position.y;
+  d.destroyDirection=d.side==="blue"?1:-1;
+
+  unit.traverse(o=>{
+    if(!o.isMesh||!o.material) return;
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
+    const materials=sources.map(source=>{
+      const material=source.clone();
+      material.transparent=true;
+      material.opacity=1;
+      return material;
+    });
+    o.material=wasArray?materials:materials[0];
+  });
+
+  destroyedUnits.push(unit);
+}
+
+function applyImpactDamage(position,attackerSide,now,radius){
+  if(!attackerSide) return;
+
+  let target=null;
+  let nearest=radius;
+
+  scene.traverse(o=>{
+    const d=o.userData;
+    if(!["soldier","tank"].includes(d.kind)) return;
+    if(d.side===attackerSide||d.combatState==="destroyed") return;
+
+    const distance=Math.hypot(
+      o.position.x-position.x,
+      o.position.z-position.z
+    );
+
+    if(distance<nearest){
+      nearest=distance;
+      target=o;
+    }
+  });
+
+  if(!target) return;
+
+  const d=target.userData;
+  if(d.health===undefined) d.health=d.kind==="tank"?3:1;
+  d.health-=1;
+
+  if(d.health<=0) destroyUnit(target,now);
 }
 
 function spawnAftermath(position,now){
@@ -421,6 +540,17 @@ scene.add(ground);
 
 scene.add(new THREE.HemisphereLight(0xb8d8ff, 0x202015, 3));
 
+const battlefieldFillLight=new THREE.AmbientLight(0xdbe5ed,1.35);
+scene.add(battlefieldFillLight);
+
+const battlefieldKeyLight=new THREE.DirectionalLight(0xffe4c2,2.25);
+battlefieldKeyLight.position.set(-18,38,32);
+scene.add(battlefieldKeyLight);
+
+const battlefieldRimLight=new THREE.DirectionalLight(0x9ecbff,1.45);
+battlefieldRimLight.position.set(22,24,-28);
+scene.add(battlefieldRimLight);
+
 renderer.render(scene, camera);
 
 renderer.render(scene,camera);
@@ -483,7 +613,7 @@ loader.load('./assets/models/master-tank.glb', (gltf) => {
   tank.rotation.y = Math.PI;
   tank.scale.setScalar(0.35);
     tank.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
-  darkenUnit(tank,0.58);
+  tuneTankMetal(tank);
   tank.userData.side="blue"; tank.userData.kind="tank";
     const redTank=clone(tank); redTank.position.set(22,0,8);
   accentTank(tank,BLUE);
@@ -514,10 +644,10 @@ loader.load('./assets/models/master-soldier.glb', (gltf) => {
   const soldier = gltf.scene;
   soldier.position.set(-10, 0, -8);
   soldier.rotation.y = Math.PI / 2;
-  soldier.scale.setScalar(0.75);
+  soldier.scale.setScalar(0.90);
 
   soldier.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
-  darkenUnit(soldier,0.62);
+  tuneSoldierUniform(soldier);
 
   const redSoldier=clone(soldier); redSoldier.position.set(10,0,-8); redSoldier.rotation.y=-Math.PI/2;
   accentSoldier(soldier,BLUE); accentSoldier(redSoldier,RED);
@@ -609,6 +739,7 @@ function animate(){
   scene.traverse((o)=>{
     if(!["soldier","tank"].includes(o.userData.kind)) return;
     const d=o.userData;
+    if(d.combatState==="destroyed") return;
     groundUnits.push(o);
 
     if(d.combatState===undefined){
@@ -651,6 +782,37 @@ function animate(){
       }
     }
   });
+
+  for(let i=destroyedUnits.length-1;i>=0;i--){
+    const unit=destroyedUnits[i];
+    const d=unit.userData;
+    const age=Math.min((now-d.destroyedAt)/d.destroyDuration,1);
+    const fade=age<0.42?1:1-(age-0.42)/0.58;
+
+    if(d.kind==="soldier"){
+      unit.rotation.z=d.destroyDirection*age*Math.PI*0.48;
+      unit.position.y=d.destroyStartY-Math.min(age,0.55)*0.18;
+    }else{
+      unit.rotation.z=d.destroyDirection*age*0.12;
+      unit.position.y=d.destroyStartY-age*0.32;
+    }
+
+    unit.traverse(o=>{
+      if(!o.isMesh||!o.material) return;
+      const materials=Array.isArray(o.material)?o.material:[o.material];
+      for(const material of materials) material.opacity=Math.max(0,fade);
+    });
+
+    if(age>=1){
+      scene.remove(unit);
+      unit.traverse(o=>{
+        if(!o.isMesh||!o.material) return;
+        const materials=Array.isArray(o.material)?o.material:[o.material];
+        for(const material of materials) material.dispose();
+      });
+      destroyedUnits.splice(i,1);
+    }
+  }
 
   for(let pass=0;pass<2;pass++){
     for(let i=0;i<groundUnits.length;i++){
@@ -702,6 +864,12 @@ function animate(){
       effect.flash.material.dispose();
       if(effect.impact){
         spawnAftermath(effect.impact.position,now);
+        applyImpactDamage(
+          effect.impact.position,
+          effect.sourceSide,
+          now,
+          effect.damageRadius
+        );
         effect.impact.geometry.dispose();
         effect.impact.material.dispose();
       }
