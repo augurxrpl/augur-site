@@ -44,6 +44,7 @@ function darkenUnit(root,factor){
 
 const helicopters=[];
 const combatEffects=[];
+const aftermathEffects=[];
 
 function accentHelicopter(root,color){
   root.traverse(o=>{
@@ -288,6 +289,80 @@ function spawnHelicopterMissile(unit,now){
     impact,
     born:now,
     life:THREE.MathUtils.randFloat(0.26,0.38)
+  });
+}
+
+function spawnAftermath(position,now){
+  if(aftermathEffects.length>=28) return;
+
+  const group=new THREE.Group();
+  group.position.copy(position);
+  const smoke=[];
+  const debris=[];
+
+  for(let i=0;i<4;i++){
+    const cloud=new THREE.Mesh(
+      new THREE.SphereGeometry(THREE.MathUtils.randFloat(0.38,0.72),9,7),
+      new THREE.MeshBasicMaterial({
+        color:i===0?0x292421:0x1b1d20,
+        transparent:true,
+        opacity:THREE.MathUtils.randFloat(0.22,0.34),
+        depthWrite:false
+      })
+    );
+    cloud.position.set(
+      THREE.MathUtils.randFloat(-0.7,0.7),
+      THREE.MathUtils.randFloat(0.1,0.6),
+      THREE.MathUtils.randFloat(-0.7,0.7)
+    );
+    group.add(cloud);
+    smoke.push({
+      mesh:cloud,
+      rise:THREE.MathUtils.randFloat(0.75,1.35),
+      driftX:THREE.MathUtils.randFloat(-0.18,0.18),
+      driftZ:THREE.MathUtils.randFloat(-0.18,0.18)
+    });
+  }
+
+  for(let i=0;i<7;i++){
+    const fragment=new THREE.Mesh(
+      new THREE.BoxGeometry(
+        THREE.MathUtils.randFloat(0.10,0.28),
+        THREE.MathUtils.randFloat(0.08,0.22),
+        THREE.MathUtils.randFloat(0.10,0.30)
+      ),
+      new THREE.MeshBasicMaterial({
+        color:i%2?0x40342d:0x24282b
+      })
+    );
+    fragment.position.set(
+      THREE.MathUtils.randFloat(-0.35,0.35),
+      THREE.MathUtils.randFloat(0.15,0.55),
+      THREE.MathUtils.randFloat(-0.35,0.35)
+    );
+    group.add(fragment);
+    debris.push({
+      mesh:fragment,
+      velocity:new THREE.Vector3(
+        THREE.MathUtils.randFloat(-1.8,1.8),
+        THREE.MathUtils.randFloat(1.8,3.7),
+        THREE.MathUtils.randFloat(-1.8,1.8)
+      ),
+      spin:new THREE.Vector3(
+        THREE.MathUtils.randFloat(-5,5),
+        THREE.MathUtils.randFloat(-5,5),
+        THREE.MathUtils.randFloat(-5,5)
+      )
+    });
+  }
+
+  scene.add(group);
+  aftermathEffects.push({
+    group,
+    smoke,
+    debris,
+    born:now,
+    life:THREE.MathUtils.randFloat(2.8,4.2)
   });
 }
 
@@ -626,6 +701,7 @@ function animate(){
       effect.flash.geometry.dispose();
       effect.flash.material.dispose();
       if(effect.impact){
+        spawnAftermath(effect.impact.position,now);
         effect.impact.geometry.dispose();
         effect.impact.material.dispose();
       }
@@ -639,6 +715,45 @@ function animate(){
     if(effect.impact){
       effect.impact.material.opacity=0.92*(1-age);
       effect.impact.scale.setScalar(0.8+age*4.2);
+    }
+  }
+
+  for(let i=aftermathEffects.length-1;i>=0;i--){
+    const effect=aftermathEffects[i];
+    const age=(now-effect.born)/effect.life;
+
+    if(age>=1){
+      scene.remove(effect.group);
+      effect.group.traverse(o=>{
+        if(!o.isMesh) return;
+        o.geometry.dispose();
+        o.material.dispose();
+      });
+      aftermathEffects.splice(i,1);
+      continue;
+    }
+
+    for(const cloud of effect.smoke){
+      cloud.mesh.position.x+=cloud.driftX*delta;
+      cloud.mesh.position.y+=cloud.rise*delta;
+      cloud.mesh.position.z+=cloud.driftZ*delta;
+      cloud.mesh.scale.setScalar(1+age*2.6);
+      cloud.mesh.material.opacity=0.30*(1-age);
+    }
+
+    for(const fragment of effect.debris){
+      fragment.velocity.y-=5.2*delta;
+      fragment.mesh.position.addScaledVector(fragment.velocity,delta);
+      fragment.mesh.rotation.x+=fragment.spin.x*delta;
+      fragment.mesh.rotation.y+=fragment.spin.y*delta;
+      fragment.mesh.rotation.z+=fragment.spin.z*delta;
+
+      if(fragment.mesh.position.y<0){
+        fragment.mesh.position.y=0;
+        fragment.velocity.y=Math.abs(fragment.velocity.y)*0.28;
+        fragment.velocity.x*=0.72;
+        fragment.velocity.z*=0.72;
+      }
     }
   }
 
