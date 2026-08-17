@@ -901,7 +901,7 @@ function createBattlefieldMarketHud(){
   updateBattlefieldSoundButton();
   renderBattlefieldMarketHud();
   refreshXrpMarketPrice();
-  setInterval(renderBattlefieldMarketHud,1000);
+  setInterval(renderBattlefieldMarketHud,250);
   setInterval(refreshXrpMarketPrice,30000);
 }
 
@@ -935,7 +935,8 @@ function renderBattlefieldMarketHud(){
     const action=trade.side==="blue"?"BUY":"SELL";
     const shortHash=trade.hash?`${trade.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
     const combatAction=trade.xrpAmount>=250000?"WHALE AIRSTRIKE":trade.xrpAmount>=25000?"HELICOPTER STRIKE":trade.xrpAmount>=5000?"ARTILLERY + INFANTRY":"INFANTRY VOLLEY";
-    hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • ${combatAction} <span class="bf-hash">${shortHash}</span>`;
+    const source=trade.source?`${trade.source.toUpperCase()} • `:"XRPL • ";
+    hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${source}${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • ${combatAction} <span class="bf-hash">${shortHash}</span>`;
   }
 }
 
