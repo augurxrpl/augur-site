@@ -250,6 +250,29 @@ function dispatchValidatedXrpTrade(side,xrpAmount,hash){
 
   xrplMarketState.sessionVolume[side]+=amount;
   xrplMarketState.tradeCount[side]+=1;
+
+  const tradeSequence=xrplMarketState.tradeCount[side];
+
+  if(amount<5000&&tradeSequence%5===0){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity:0.9,
+      source:"xrpl_trade_cycle",
+      hash
+    });
+  }
+
+  if(amount<25000&&tradeSequence%15===0){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity:1,
+      source:"xrpl_trade_cycle",
+      hash
+    });
+  }
+
   xrplMarketState.lastTrade={side,xrpAmount:amount,hash,receivedAt:Date.now()};
   renderBattlefieldMarketHud();
 }
@@ -279,8 +302,8 @@ function dispatchValidatedLedgerActivity(tx,hash){
   ambientLedgerCount+=1;
 
   const side=ambientLedgerSide(tx,hash);
-  const helicopterStrike=ambientLedgerCount%24===0;
-  const artilleryStrike=!helicopterStrike&&ambientLedgerCount%8===0;
+  const helicopterStrike=ambientLedgerCount%12===0;
+  const artilleryStrike=!helicopterStrike&&ambientLedgerCount%4===0;
 
   queueBattlefieldEvent({
     type:helicopterStrike
@@ -304,6 +327,18 @@ function dispatchValidatedLedgerActivity(tx,hash){
       intensity:0.7,
       xrpAmount:0,
       source:"xrpl_ambient_response",
+      hash
+    });
+  }
+
+  if(ambientLedgerCount%10===0){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"soldier",
+      count:1,
+      xrpAmount:0,
+      source:"xrpl_ambient_reinforcement",
       hash
     });
   }
@@ -670,7 +705,6 @@ function addRotorBlur(unit,color){
 
 function spawnInfantryTracer(unit,now){
   playBattlefieldSound("infantry",unit.userData.side);
-  playBattlefieldSound("infantry",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -730,7 +764,6 @@ function spawnInfantryTracer(unit,now){
 
 function spawnTankCannon(unit,now){
   playBattlefieldSound("tank",unit.userData.side);
-  playBattlefieldSound("tank",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -741,11 +774,8 @@ function spawnTankCannon(unit,now){
     unit.position.y+0.82,
     unit.position.z
   );
-  const end=new THREE.Vector3(
-    start.x+direction*length,
-    0.22,
-    start.z+drift
-  );
+  const end=chooseAirstrikeTarget(unit.userData.side);
+  end.y=0.22;
   const midpoint=start.clone().add(end).multiplyScalar(0.5);
   const tracerLength=start.distanceTo(end);
   const group=new THREE.Group();
@@ -805,7 +835,6 @@ function spawnTankCannon(unit,now){
 
 function spawnHelicopterMissile(unit,now){
   playBattlefieldSound("helicopter",unit.userData.side);
-  playBattlefieldSound("helicopter",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -814,11 +843,8 @@ function spawnHelicopterMissile(unit,now){
     unit.position.y-0.35,
     unit.position.z
   );
-  const end=new THREE.Vector3(
-    start.x+direction*THREE.MathUtils.randFloat(12,22),
-    0.22,
-    start.z+THREE.MathUtils.randFloat(-5,5)
-  );
+  const end=chooseAirstrikeTarget(unit.userData.side);
+  end.y=0.22;
   const midpoint=start.clone().add(end).multiplyScalar(0.5);
   const missileVector=end.clone().sub(start);
   const missileLength=missileVector.length();
@@ -878,6 +904,64 @@ function spawnHelicopterMissile(unit,now){
     born:now,
     life:THREE.MathUtils.randFloat(0.26,0.38)
   });
+}
+
+function spawnCombatExplosion(position,side,now){
+  playBattlefieldSound("explosion",side);
+
+  const group=new THREE.Group();
+  group.position.copy(position);
+  group.position.y=0.42;
+
+  const fire=new THREE.Mesh(
+    new THREE.SphereGeometry(0.9,14,10),
+    new THREE.MeshBasicMaterial({
+      color:0xff5d18,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+
+  const core=new THREE.Mesh(
+    new THREE.SphereGeometry(0.42,12,8),
+    new THREE.MeshBasicMaterial({
+      color:0xfff3ae,
+      transparent:true,
+      opacity:1,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+
+  const ring=new THREE.Mesh(
+    new THREE.RingGeometry(0.7,1.35,24),
+    new THREE.MeshBasicMaterial({
+      color:0xff9a38,
+      transparent:true,
+      opacity:0.92,
+      side:THREE.DoubleSide,
+      depthWrite:false,
+      blending:THREE.AdditiveBlending
+    })
+  );
+
+  ring.rotation.x=-Math.PI/2;
+  group.add(fire,core,ring);
+  scene.add(group);
+
+  airstrikeEffects.push({
+    type:"blast",
+    object:group,
+    fire,
+    core,
+    ring,
+    born:now,
+    life:0.85
+  });
+
+  spawnAftermath(position,now);
 }
 
 function destroyUnit(unit,now){
@@ -1172,7 +1256,6 @@ function applyAirstrikeDamage(position,attackerSide,now,radius){
 
 function detonateAirstrike(position,side,now){
   playBattlefieldSound("explosion",side);
-  playBattlefieldSound("explosion",side);
   const group=new THREE.Group();
   group.position.copy(position);
   group.position.y=0.45;
@@ -1249,6 +1332,12 @@ function processBattlefieldEvent(event,now){
 }
 
 const root = document.getElementById('battlefield');
+const MOBILE_BATTLEFIELD=window.matchMedia("(max-width:900px) and (orientation:landscape)").matches;
+const MOBILE_UNIT_SCALE=MOBILE_BATTLEFIELD?1.28:1;
+
+const BATTLEFIELD_BACKGROUND=MOBILE_BATTLEFIELD
+  ?"linear-gradient(90deg,rgba(2,14,27,.44) 0%,rgba(2,8,14,.32) 47%,rgba(14,5,5,.32) 53%,rgba(31,4,4,.44) 100%),url('./assets/textures/battlefield.webp')"
+  :"linear-gradient(90deg,rgba(2,12,24,.24) 0%,rgba(2,7,12,.17) 47%,rgba(12,4,4,.17) 53%,rgba(27,3,3,.24) 100%),url('./assets/textures/battlefield.webp')";
 
 const scene = new THREE.Scene();
 window.scene = scene;
@@ -1291,7 +1380,7 @@ new GLTFLoader().load(
   error=>console.error("AUGUR warplane load failed",error)
 );
 
-root.style.backgroundImage = "url('./assets/textures/battlefield.webp')";
+root.style.backgroundImage=BATTLEFIELD_BACKGROUND;
 root.style.backgroundSize = "cover";
 root.style.backgroundPosition = "center center";
 root.style.backgroundRepeat = "no-repeat";
@@ -1310,8 +1399,11 @@ const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true
 });
-renderer.setClearColor(0x000000, 0);
+renderer.setClearColor(0x000000,0);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=MOBILE_BATTLEFIELD?1.28:1.18;
 
 root.replaceChildren(renderer.domElement);
 
@@ -1425,7 +1517,7 @@ renderer.render(scene, camera);
 
 
 /* AUGUR BATTLEFIELD — SCREEN BACKGROUND + INVISIBLE PLAYFIELD */
-root.style.backgroundImage = "url('./assets/textures/battlefield.webp')";
+root.style.backgroundImage=BATTLEFIELD_BACKGROUND;
 root.style.backgroundSize = "cover";
 root.style.backgroundPosition = "center center";
 root.style.backgroundRepeat = "no-repeat";
@@ -1466,8 +1558,10 @@ const occupied = [];
 
 /* Unit visibility halos */
 function addUnitHalo(unit, color, kind){
-  const size = kind === "tank" ? 3.25 : 1.35;
-  const opacity = kind === "tank" ? 0.15 : 0.30;
+  const size=(kind==="tank"?3.25:1.35)*(MOBILE_BATTLEFIELD?1.18:1);
+  const opacity=MOBILE_BATTLEFIELD
+    ?(kind==="tank"?0.27:0.42)
+    :(kind==="tank"?0.15:0.30);
 
   const halo = new THREE.Mesh(
     new THREE.CircleGeometry(size, 28),
@@ -1536,6 +1630,7 @@ function spawnReinforcements(side,kind,requested=1){
     unit.position.set(rearX,0,THREE.MathUtils.randFloat(-31,31));
     unit.userData.side=side;
     unit.userData.kind=kind;
+    unit.userData.reinforcement=true;
     delete unit.userData.combatState;
     addUnitHalo(unit,color,kind);
     scene.add(unit);
@@ -1548,7 +1643,7 @@ loader.load('./assets/models/master-tank.glb', (gltf) => {
   const tank = gltf.scene;
   tank.position.set(-22, 0, 8);
   tank.rotation.y = Math.PI;
-  tank.scale.setScalar(0.35);
+  tank.scale.setScalar(0.35*MOBILE_UNIT_SCALE);
     tank.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
   tuneTankMetal(tank);
   tank.userData.side="blue"; tank.userData.kind="tank";
@@ -1583,7 +1678,7 @@ loader.load('./assets/models/master-soldier.glb', (gltf) => {
   const soldier = gltf.scene;
   soldier.position.set(-10, 0, -8);
   soldier.rotation.y = Math.PI / 2;
-  soldier.scale.setScalar(0.90);
+  soldier.scale.setScalar(0.90*MOBILE_UNIT_SCALE);
 
   soldier.traverse((o)=>{if(o.isMesh)o.material=o.material.clone();});
   tuneSoldierUniform(soldier);
@@ -1614,7 +1709,7 @@ loader.load('./assets/models/master-soldier.glb', (gltf) => {
 
 loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
   const master=gltf.scene;
-  master.scale.setScalar(0.18);
+  master.scale.setScalar(0.18*MOBILE_UNIT_SCALE);
 
   for(const side of ["blue","red"]){
     const color=side==="blue"?BLUE:RED;
@@ -1752,12 +1847,18 @@ function animate(){
       d.combatState="advance";
       d.startZ=o.position.z;
       d.movePhase=(Math.abs(o.position.x)*0.37+Math.abs(o.position.z)*0.19)%(Math.PI*2);
-      d.moveSpeed=soldier?THREE.MathUtils.randFloat(0.38,0.62):THREE.MathUtils.randFloat(0.12,0.22);
+      d.moveSpeed=d.reinforcement
+        ?(soldier?THREE.MathUtils.randFloat(1.05,1.35):THREE.MathUtils.randFloat(0.38,0.52))
+        :(soldier?THREE.MathUtils.randFloat(0.38,0.62):THREE.MathUtils.randFloat(0.12,0.22));
       d.collisionRadius=soldier?0.78:2.35;
       const direction=d.side==="blue"?1:-1;
-      const advanceDistance=soldier
-        ?THREE.MathUtils.randFloat(2.5,8.5)
-        :THREE.MathUtils.randFloat(1.5,5.0);
+      const advanceDistance=d.reinforcement
+        ?(soldier
+          ?THREE.MathUtils.randFloat(16,25)
+          :THREE.MathUtils.randFloat(10,17))
+        :(soldier
+          ?THREE.MathUtils.randFloat(2.5,8.5)
+          :THREE.MathUtils.randFloat(1.5,5.0));
       const frontBand=soldier
         ?THREE.MathUtils.randFloat(3.5,9.5)
         :THREE.MathUtils.randFloat(7.0,14.0);
@@ -1873,7 +1974,7 @@ function animate(){
       effect.flash.geometry.dispose();
       effect.flash.material.dispose();
       if(effect.impact){
-        spawnAftermath(effect.impact.position,now);
+        spawnCombatExplosion(effect.impact.position,effect.sourceSide,now);
         applyImpactDamage(
           effect.impact.position,
           effect.sourceSide,
