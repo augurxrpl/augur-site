@@ -271,24 +271,42 @@ function ambientLedgerSide(tx,hash){
 function dispatchValidatedLedgerActivity(tx,hash){
   const now=performance.now();
 
-  // Keep the battlefield active without allowing ledger volume
-  // to overwhelm mobile rendering.
-  if(now-lastAmbientLedgerEvent<160) return;
+  // Convert the live validated XRPL stream into visible ambient warfare.
+  // Major attacks and army volume remain reserved for proven market trades.
+  if(now-lastAmbientLedgerEvent<90) return;
 
   lastAmbientLedgerEvent=now;
   ambientLedgerCount+=1;
 
   const side=ambientLedgerSide(tx,hash);
-  const payment=tx.TransactionType==="Payment";
+  const helicopterStrike=ambientLedgerCount%24===0;
+  const artilleryStrike=!helicopterStrike&&ambientLedgerCount%8===0;
 
   queueBattlefieldEvent({
-    type:"infantry_volley",
+    type:helicopterStrike
+      ?"helicopter_strike"
+      :artilleryStrike
+        ?"tank_artillery"
+        :"infantry_volley",
     side,
-    intensity:payment?0.55:0.35,
+    intensity:helicopterStrike?0.75:artilleryStrike?0.85:1.15,
     xrpAmount:0,
     source:"xrpl_ambient",
     hash
   });
+
+  // Payments get a second opposing volley to make ledger movement
+  // visually cross the battlefield instead of flashing on one side.
+  if(tx.TransactionType==="Payment"){
+    queueBattlefieldEvent({
+      type:"infantry_volley",
+      side:side==="blue"?"red":"blue",
+      intensity:0.7,
+      xrpAmount:0,
+      source:"xrpl_ambient_response",
+      hash
+    });
+  }
 }
 
 function handleXrplMarketMessage(message){
