@@ -378,7 +378,7 @@ function renderBattlefieldMarketHud(){
   const trade=xrplMarketState.lastTrade;
   if(trade){
     const action=trade.side==="blue"?"BUY":"SELL";
-    const shortHash=trade.hash?`${trae.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
+    const shortHash=trade.hash?`${trade.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
     const combatAction=trade.xrpAmount>=250000?"WHALE AIRSTRIKE":trade.xrpAmount>=25000?"HELICOPTER STRIKE":trade.xrpAmount>=5000?"ARTILLERY + INFANTRY":"INFANTRY VOLLEY";
     hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • ${combatAction} <span class="bf-hash">${shortHash}</span>`;
   }
@@ -456,6 +456,7 @@ function addRotorBlur(unit,color){
 }
 
 function spawnInfantryTracer(unit,now){
+  playBattlefieldSound("infantry",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -514,6 +515,7 @@ function spawnInfantryTracer(unit,now){
 }
 
 function spawnTankCannon(unit,now){
+  playBattlefieldSound("tank",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -587,6 +589,7 @@ function spawnTankCannon(unit,now){
 }
 
 function spawnHelicopterMissile(unit,now){
+  playBattlefieldSound("helicopter",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -906,6 +909,7 @@ function launchWarplaneAirstrike(event,now){
 }
 
 function releaseAirstrikeBombs(strike,now){
+  playBattlefieldSound("bomb",strike.side);
   strike.released=true;
   for(let i=0;i<3;i++){
     const bomb=new THREE.Mesh(
@@ -949,6 +953,7 @@ function applyAirstrikeDamage(position,attackerSide,now,radius){
 }
 
 function detonateAirstrike(position,side,now){
+  playBattlefieldSound("explosion",side);
   const group=new THREE.Group();
   group.position.copy(position);
   group.position.y=0.45;
