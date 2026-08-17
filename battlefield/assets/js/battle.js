@@ -320,6 +320,149 @@ function battlefieldForceCounts(side){
   return counts;
 }
 
+
+const battlefieldAudio={
+  enabled:localStorage.getItem("augurBattlefieldSound")==="on",
+  context:null,
+  master:null,
+  cooldowns:new Map()
+};
+
+function ensureBattlefieldAudio(){
+  const AudioContext=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContext) return null;
+
+  if(!battlefieldAudio.context){
+    battlefieldAudio.context=new AudioContext();
+    battlefieldAudio.master=battlefieldAudio.context.createGain();
+    battlefieldAudio.master.gain.value=0.32;
+    battlefieldAudio.master.connect(battlefieldAudio.context.destination);
+  }
+
+  if(battlefieldAudio.context.state==="suspended"){
+    battlefieldAudio.context.resume();
+  }
+
+  return battlefieldAudio.context;
+}
+
+function updateBattlefieldSoundButton(){
+  const button=document.querySelector("[data-bf-sound]");
+  if(!button) return;
+
+  button.textContent=battlefieldAudio.enabled?"SOUND ON":"SOUND OFF";
+  button.classList.toggle("bf-sound-on",battlefieldAudio.enabled);
+  button.setAttribute("aria-pressed",String(battlefieldAudio.enabled));
+}
+
+function toggleBattlefieldSound(){
+  battlefieldAudio.enabled=!battlefieldAudio.enabled;
+  localStorage.setItem(
+    "augurBattlefieldSound",
+    battlefieldAudio.enabled?"on":"off"
+  );
+
+  if(battlefieldAudio.enabled) ensureBattlefieldAudio();
+  updateBattlefieldSoundButton();
+}
+
+function battlefieldSoundAllowed(kind,delay){
+  const now=performance.now();
+  const last=battlefieldAudio.cooldowns.get(kind)||0;
+  if(now-last<delay) return false;
+
+  battlefieldAudio.cooldowns.set(kind,now);
+  return true;
+}
+
+function battlefieldTone(frequency,endFrequency,duration,volume,type="sine",pan=0){
+  const context=ensureBattlefieldAudio();
+  if(!context||!battlefieldAudio.enabled) return;
+
+  const now=context.currentTime;
+  const oscillator=context.createOscillator();
+  const gain=context.createGain();
+  const stereo=context.createStereoPanner();
+
+  oscillator.type=type;
+  oscillator.frequency.setValueAtTime(frequency,now);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    Math.max(20,endFrequency),
+    now+duration
+  );
+
+  gain.gain.setValueAtTime(0.0001,now);
+  gain.gain.exponentialRampToValueAtTime(volume,now+0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+duration);
+  stereo.pan.value=THREE.MathUtils.clamp(pan,-1,1);
+
+  oscillator.connect(gain);
+  gain.connect(stereo);
+  stereo.connect(battlefieldAudio.master);
+
+  oscillator.start(now);
+  oscillator.stop(now+duration+0.04);
+}
+
+function battlefieldNoise(duration,volume,frequency,pan=0){
+  const context=ensureBattlefieldAudio();
+  if(!context||!battlefieldAudio.enabled) return;
+
+  const length=Math.ceil(context.sampleRate*duration);
+  const buffer=context.createBuffer(1,length,context.sampleRate);
+  const data=buffer.getChannelData(0);
+
+  for(let i=0;i<length;i++){
+    data[i]=(Math.random()*2-1)*(1-i/length);
+  }
+
+  const source=context.createBufferSource();
+  const filter=context.createBiquadFilter();
+  const gain=context.createGain();
+  const stereo=context.createStereoPanner();
+  const now=context.currentTime;
+
+  source.buffer=buffer;
+  filter.type="lowpass";
+  filter.frequency.value=frequency;
+  gain.gain.setValueAtTime(volume,now);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+duration);
+  stereo.pan.value=THREE.MathUtils.clamp(pan,-1,1);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(stereo);
+  stereo.connect(battlefieldAudio.master);
+  source.start(now);
+}
+
+function playBattlefieldSound(kind,side="blue"){
+  if(!battlefieldAudio.enabled) return;
+
+  const pan=side==="blue"?-0.35:0.35;
+
+  if(kind==="infantry"&&battlefieldSoundAllowed("infantry",90)){
+    battlefieldNoise(0.08,0.055,2800,pan);
+    battlefieldTone(180,75,0.08,0.025,"square",pan);
+  }else if(kind==="tank"&&battlefieldSoundAllowed("tank",240)){
+    battlefieldNoise(0.45,0.16,720,pan);
+    battlefieldTone(95,32,0.5,0.13,"sine",pan);
+  }else if(kind==="helicopter"&&battlefieldSoundAllowed("helicopter",300)){
+    battlefieldNoise(0.34,0.07,1500,pan);
+    battlefieldTone(145,68,0.36,0.06,"sawtooth",pan);
+  }else if(kind==="jet"&&battlefieldSoundAllowed("jet",500)){
+    battlefieldNoise(2.5,0.11,1350,pan);
+    battlefieldTone(82,195,2.3,0.10,"sawtooth",pan);
+  }else if(kind==="bomb"&&battlefieldSoundAllowed("bomb",120)){
+    battlefieldTone(940,160,0.75,0.07,"sine",pan);
+  }else if(kind==="explosion"){
+    battlefieldNoise(0.95,0.23,620,pan);
+    battlefieldTone(76,24,1.05,0.18,"sine",pan);
+  }
+}
+
+window.toggleBattlefieldSound=toggleBattlefieldSound;
+
 function createBattlefieldMarketHud(){
   if(document.getElementById("battlefield-market-hud")) return;
 
@@ -332,7 +475,10 @@ function createBattlefieldMarketHud(){
     .bf-status{margin-top:3px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9fb2c2}.bf-status-dot{display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:#ff554d;box-shadow:0 0 8px currentColor}.bf-online .bf-status-dot{background:#35e784}
     .bf-army{top:14px;width:245px;padding:11px 13px;border-radius:8px}.bf-blue{left:14px;border-color:rgba(37,140,255,.55)}.bf-red{right:14px;border-color:rgba(255,64,56,.55)}
     .bf-army-title{display:flex;justify-content:space-between;font-size:12px;font-weight:900;letter-spacing:.12em}.bf-blue .bf-army-title,.bf-blue .bf-volume{color:#65adff}.bf-red .bf-army-title,.bf-red .bf-volume{color:#ff6d66}.bf-volume{margin-top:5px;font-size:17px;font-weight:900}.bf-unit-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px;font-size:10px;color:#aebdca}.bf-unit-row strong{display:block;color:#fff;font-size:13px}
-    .bf-ticker{bottom:14px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 28px));padding:9px 14px;border-radius:8px;text-align:center;font-size:12px;letter-spacing:.045em}.bf-ticker strong{color:#ffd56b}.bf-hash{margin-left:9px;color:#94aabc;font-family:ui-monospace,monospace}
+    .bf-ticker{bottom:14px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 150px));padding:9px 14px;border-radius:8px;text-align:center;font-size:12px;letter-spacing:.045em}.bf-ticker strong{color:#ffd56b}.bf-hash{margin-left:9px;color:#94aabc;font-family:ui-monospace,monospace}
+    .bf-sound{position:absolute;right:14px;bottom:14px;pointer-events:auto;border:1px solid rgba(180,215,240,.38);border-radius:7px;padding:9px 11px;background:rgba(6,11,17,.9);color:#96a5b1;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.1em;cursor:pointer}
+    .bf-sound-on{border-color:#35e784;color:#35e784;box-shadow:0 0 12px rgba(53,231,132,.24)}
+    @media(max-height:520px) and (orientation:landscape){.bf-market{top:8px;padding:7px 13px}.bf-army{top:8px;padding:8px 10px}.bf-ticker{bottom:8px}.bf-sound{right:8px;bottom:8px}}
     @media(max-width:850px){.bf-army{top:82px;width:190px}.bf-unit-row{font-size:9px}.bf-market{top:8px}.bf-blue{left:8px}.bf-red{right:8px}}
     @media(max-width:480px){.bf-army{width:calc(50vw - 12px);padding:8px}.bf-army-title{font-size:9px}.bf-volume{font-size:13px}.bf-ticker{font-size:10px}}
   `;
@@ -345,8 +491,11 @@ function createBattlefieldMarketHud(){
     <section class="bf-hud-panel bf-army bf-blue"><div class="bf-army-title"><span>BLUE ARMY</span><span>BUYS</span></div><div class="bf-volume" data-bf-blue-volume>0 $XRP</div><div class="bf-unit-row" data-bf-blue-units></div></section>
     <section class="bf-hud-panel bf-army bf-red"><div class="bf-army-title"><span>RED ARMY</span><span>SELLS</span></div><div class="bf-volume" data-bf-red-volume>0 $XRP</div><div class="bf-unit-row" data-bf-red-units></div></section>
     <section class="bf-hud-panel bf-ticker" data-bf-ticker>WAITING FOR VALIDATED $XRP MARKET ACTIVITY</section>
+    <button class="bf-sound" type="button" data-bf-sound aria-pressed="false">SOUND OFF</button>
   `;
   document.body.append(hud);
+  hud.querySelector("[data-bf-sound]").addEventListener("click",toggleBattlefieldSound);
+  updateBattlefieldSoundButton();
   renderBattlefieldMarketHud();
   refreshXrpMarketPrice();
   setInterval(renderBattlefieldMarketHud,1000);
@@ -457,6 +606,7 @@ function addRotorBlur(unit,color){
 
 function spawnInfantryTracer(unit,now){
   playBattlefieldSound("infantry",unit.userData.side);
+  playBattlefieldSound("infantry",unit.userData.side);
   if(combatEffects.length>=90) return;
 
   const direction=unit.userData.side==="blue"?1:-1;
@@ -515,6 +665,7 @@ function spawnInfantryTracer(unit,now){
 }
 
 function spawnTankCannon(unit,now){
+  playBattlefieldSound("tank",unit.userData.side);
   playBattlefieldSound("tank",unit.userData.side);
   if(combatEffects.length>=90) return;
 
@@ -589,6 +740,7 @@ function spawnTankCannon(unit,now){
 }
 
 function spawnHelicopterMissile(unit,now){
+  playBattlefieldSound("helicopter",unit.userData.side);
   playBattlefieldSound("helicopter",unit.userData.side);
   if(combatEffects.length>=90) return;
 
@@ -886,6 +1038,7 @@ function launchWarplaneAirstrike(event,now){
   plane.rotation.y=direction>0?0:Math.PI;
   plane.rotation.z=-direction*0.05;
   scene.add(plane);
+  playBattlefieldSound("jet",event.side);
 
   warplanes.push({
     plane,
@@ -909,6 +1062,7 @@ function launchWarplaneAirstrike(event,now){
 }
 
 function releaseAirstrikeBombs(strike,now){
+  playBattlefieldSound("bomb",strike.side);
   playBattlefieldSound("bomb",strike.side);
   strike.released=true;
   for(let i=0;i<3;i++){
@@ -953,6 +1107,7 @@ function applyAirstrikeDamage(position,attackerSide,now,radius){
 }
 
 function detonateAirstrike(position,side,now){
+  playBattlefieldSound("explosion",side);
   playBattlefieldSound("explosion",side);
   const group=new THREE.Group();
   group.position.copy(position);
@@ -1079,7 +1234,7 @@ root.style.backgroundRepeat = "no-repeat";
 
 const camera = new THREE.PerspectiveCamera(
   55,
-  innerWidth / innerHeight,
+  1,
   0.1,
   500
 );
@@ -1092,9 +1247,46 @@ const renderer = new THREE.WebGLRenderer({
   alpha: true
 });
 renderer.setClearColor(0x000000, 0);
-renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
 
 root.replaceChildren(renderer.domElement);
+
+function resizeBattlefieldViewport(){
+  const viewport=window.visualViewport;
+  const width=Math.max(1,Math.round(viewport?.width||document.documentElement.clientWidth));
+  const height=Math.max(1,Math.round(viewport?.height||document.documentElement.clientHeight));
+  const left=Math.round(viewport?.offsetLeft||0);
+  const top=Math.round(viewport?.offsetTop||0);
+
+  root.style.left=`${left}px`;
+  root.style.top=`${top}px`;
+  root.style.width=`${width}px`;
+  root.style.height=`${height}px`;
+
+  const hud=document.getElementById("battlefield-market-hud");
+  if(hud){
+    hud.style.left=`${left}px`;
+    hud.style.top=`${top}px`;
+    hud.style.width=`${width}px`;
+    hud.style.height=`${height}px`;
+  }
+
+  camera.aspect=width/height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width,height,false);
+}
+
+resizeBattlefieldViewport();
+window.addEventListener("resize",resizeBattlefieldViewport,{passive:true});
+window.addEventListener("orientationchange",()=>{
+  setTimeout(resizeBattlefieldViewport,100);
+  setTimeout(resizeBattlefieldViewport,400);
+},{passive:true});
+
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",resizeBattlefieldViewport,{passive:true});
+  window.visualViewport.addEventListener("scroll",resizeBattlefieldViewport,{passive:true});
+}
 
 renderer.render(scene, camera);
 

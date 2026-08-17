@@ -2,15 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AUGUR Battlefield</title>
   <style>
-    html,body{margin:0;width:100%;height:100%;background:#03070b;color:#fff;font-family:Arial,sans-serif}
-    #battlefield{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+    *{box-sizing:border-box}
+    html,body{
+      position:fixed;
+      inset:0;
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      overscroll-behavior:none;
+      touch-action:none;
+      background:#03070b;
+      color:#fff;
+      font-family:Arial,sans-serif
+    }
+    #battlefield{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center
+    }
+    #battlefield canvas{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+    #rotate-device{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:10000;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      background:
+        radial-gradient(circle at center,rgba(24,55,82,.97),rgba(2,7,12,.99));
+      text-align:center;
+    }
+    .rotate-card{
+      width:min(390px,90vw);
+      padding:32px 24px;
+      border:1px solid rgba(87,169,255,.7);
+      border-radius:16px;
+      background:rgba(5,12,20,.94);
+      box-shadow:0 0 40px rgba(38,137,255,.24);
+    }
+    .rotate-phone{
+      display:block;
+      margin-bottom:18px;
+      font-size:58px;
+      animation:rotate-phone 1.8s ease-in-out infinite;
+    }
+    .rotate-card strong{
+      display:block;
+      color:#73b6ff;
+      font-size:22px;
+      letter-spacing:.08em;
+    }
+    .rotate-card span{
+      display:block;
+      margin-top:10px;
+      color:#b7c7d6;
+      font-size:14px;
+      line-height:1.5;
+    }
+    @keyframes rotate-phone{
+      0%,100%{transform:rotate(0deg)}
+      50%{transform:rotate(90deg)}
+    }
+    @media (orientation:portrait) and (max-width:900px){
+      #rotate-device{display:flex}
+    }
   </style>
 </head>
 <body>
   <div id="battlefield">AUGUR BATTLEFIELD INITIALIZING...</div>
+  <div id="rotate-device" role="dialog" aria-modal="true" aria-label="Rotate your phone">
+    <div class="rotate-card">
+      <span class="rotate-phone">📱</span>
+      <strong>ROTATE YOUR PHONE</strong>
+      <span>AUGUR BATTLEFIELD is designed for landscape combat view.</span>
+    </div>
+  </div>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
   <script type="module" src="./assets/js/battle.js"></script>
 </body>
