@@ -89,6 +89,8 @@ function tuneTankMetal(root){
 }
 
 const helicopters=[];
+const warplanes=[];
+const airstrikeEffects=[];
 const combatEffects=[];
 const aftermathEffects=[];
 const destroyedUnits=[];
@@ -103,6 +105,7 @@ const COMBAT_EVENT_TYPES=new Set([
   "infantry_volley",
   "tank_artillery",
   "helicopter_strike",
+  "warplane_airstrike",
   "reinforcement"
 ]);
 
@@ -117,6 +120,8 @@ function queueBattlefieldEvent(event){
     kind:event.kind,
     count:event.count,
     source:event.source||"market",
+    hash:event.hash||"",
+    xrpAmount:Number(event.xrpAmount)||0,
     receivedAt:performance.now()*0.001
   });
 
@@ -227,6 +232,17 @@ function dispatchValidatedXrpTrade(side,xrpAmount,hash){
       side,
       kind:"tank",
       count:1,
+      source:"xrpl",
+      hash
+    });
+  }
+
+  if(amount>=250000){
+    queueBattlefieldEvent({
+      type:"warplane_airstrike",
+      side,
+      intensity,
+      xrpAmount:amount,
       source:"xrpl",
       hash
     });
@@ -362,8 +378,9 @@ function renderBattlefieldMarketHud(){
   const trade=xrplMarketState.lastTrade;
   if(trade){
     const action=trade.side==="blue"?"BUY":"SELL";
-    const shortHash=trade.hash?`${trade.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
-    hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • INFANTRY VOLLEY <span class="bf-hash">${shortHash}</span>`;
+    const shortHash=trade.hash?`${trae.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
+    const combatAction=trade.xrpAmount>=250000?"WHALE AIRSTRIKE":trade.xrpAmount>=25000?"HELICOPTER STRIKE":trade.xrpAmount>=5000?"ARTILLERY + INFANTRY":"INFANTRY VOLLEY";
+    hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • ${combatAction} <span class="bf-hash">${shortHash}</span>`;
   }
 }
 
@@ -775,7 +792,197 @@ function spawnAftermath(position,now){
   });
 }
 
+
+const WARPLANE_COOLDOWN=18;
+const lastWarplaneLaunch={blue:-Infinity,red:-Infinity};
+let warplaneTemplate=null;
+
+function makeWarplane(side){
+  if(!warplaneTemplate) return null;
+
+  const color=side==="blue"?BLUE:RED;
+  const model=clone(warplaneTemplate);
+  const plane=new THREE.Group();
+  plane.add(model);
+
+  model.traverse(o=>{
+    if(!o.isMesh||!o.material) return;
+
+    const wasArray=Array.isArray(o.material);
+    const sources=wasArray?o.material:[o.material];
+    const materials=sources.map(source=>{
+      const material=source.clone();
+      if(material.color){
+        material.color.lerp(new THREE.Color(0xb7c0c8),0.32);
+        material.color.lerp(new THREE.Color(color),0.10);
+      }
+      if(material.emissive){
+        material.emissive.set(color);
+        material.emissiveIntensity=0.045;
+      }
+      if("metalness" in material) material.metalness=Math.max(material.metalness,0.68);
+      if("roughness" in material) material.roughness=0.28;
+      return material;
+    });
+
+    o.material=wasArray?materials:materials[0];
+    o.castShadow=true;
+    o.receiveShadow=true;
+  });
+
+  const markerMaterial=new THREE.MeshBasicMaterial({
+    color,
+    transparent:true,
+    opacity:0.72,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+
+  for(const z of [-1.65,1.65]){
+    const marker=new THREE.Mesh(
+      new THREE.SphereGeometry(0.13,10,8),
+      markerMaterial.clone()
+    );
+    marker.position.set(0,0.08,z);
+    plane.add(marker);
+  }
+
+  plane.userData={kind:"warplane",side};
+  return plane;
+}
+
+function chooseAirstrikeTarget(side){
+  const targets=[];
+  scene.traverse(unit=>{
+    const d=unit.userData;
+    if(!["soldier","tank"].includes(d.kind)) return;
+    if(d.side===side||d.combatState==="destroyed") return;
+    targets.push(unit.position.clone());
+  });
+  if(targets.length) return targets[Math.floor(Math.random()*targets.length)];
+  return new THREE.Vector3(side==="blue"?18:-18,0,THREE.MathUtils.randFloat(-12,12));
+}
+
+function launchWarplaneAirstrike(event,now){
+  if(now-lastWarplaneLaunch[event.side]<WARPLANE_COOLDOWN) return false;
+  lastWarplaneLaunch[event.side]=now;
+
+  const direction=event.side==="blue"?1:-1;
+  const target=chooseAirstrikeTarget(event.side);
+  const plane=makeWarplane(event.side);
+  if(!plane) return false;
+
+  const startX=-direction*82;
+  const endX=direction*82;
+  const startZ=THREE.MathUtils.randFloat(-16,6);
+  const endZ=THREE.MathUtils.randFloat(-16,6);
+  const startY=THREE.MathUtils.randFloat(18,23);
+  const endY=THREE.MathUtils.randFloat(18,23);
+
+  plane.position.set(startX,startY,startZ);
+  plane.rotation.y=direction>0?0:Math.PI;
+  plane.rotation.z=-direction*0.05;
+  scene.add(plane);
+
+  warplanes.push({
+    plane,
+    side:event.side,
+    direction,
+    target,
+    startX,
+    endX,
+    startZ,
+    endZ,
+    startY,
+    endY,
+    born:now,
+    duration:THREE.MathUtils.randFloat(3.2,4.0),
+    released:false,
+    xrpAmount:event.xrpAmount||0,
+    hash:event.hash||""
+  });
+
+  return true;
+}
+
+function releaseAirstrikeBombs(strike,now){
+  strike.released=true;
+  for(let i=0;i<3;i++){
+    const bomb=new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.24,0.72,5,8),
+      new THREE.MeshStandardMaterial({color:0x24292d,metalness:0.82,roughness:0.40})
+    );
+    bomb.rotation.z=Math.PI/2;
+    bomb.position.copy(strike.plane.position);
+    bomb.position.z+=(i-1)*2.8;
+    scene.add(bomb);
+    airstrikeEffects.push({
+      type:"bomb",
+      object:bomb,
+      side:strike.side,
+      target:strike.target.clone().add(new THREE.Vector3((i-1)*2.6,0,(i-1)*2.1)),
+      velocity:new THREE.Vector3(strike.direction*9,-3.2,0),
+      born:now,
+      delay:i*0.13
+    });
+  }
+}
+
+function applyAirstrikeDamage(position,attackerSide,now,radius){
+  const victims=[];
+  scene.traverse(unit=>{
+    const d=unit.userData;
+    if(!["soldier","tank"].includes(d.kind)) return;
+    if(d.side===attackerSide||d.combatState==="destroyed") return;
+    const distance=Math.hypot(unit.position.x-position.x,unit.position.z-position.z);
+    if(distance<=radius) victims.push({unit,distance});
+  });
+
+  victims.sort((a,b)=>a.distance-b.distance);
+  for(const {unit,distance} of victims.slice(0,9)){
+    const d=unit.userData;
+    if(d.health===undefined) d.health=d.kind==="tank"?3:1;
+    const damage=distance<radius*0.48?3:distance<radius*0.78?2:1;
+    d.health-=damage;
+    if(d.health<=0) destroyUnit(unit,now);
+  }
+}
+
+function detonateAirstrike(position,side,now){
+  const group=new THREE.Group();
+  group.position.copy(position);
+  group.position.y=0.45;
+
+  const fire=new THREE.Mesh(
+    new THREE.SphereGeometry(1.4,16,12),
+    new THREE.MeshBasicMaterial({color:0xff641c,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending})
+  );
+  const core=new THREE.Mesh(
+    new THREE.SphereGeometry(0.72,14,10),
+    new THREE.MeshBasicMaterial({color:0xfff0a1,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending})
+  );
+  const ring=new THREE.Mesh(
+    new THREE.RingGeometry(1.1,1.85,28),
+    new THREE.MeshBasicMaterial({color:0xff8b31,transparent:true,opacity:0.9,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending})
+  );
+  ring.rotation.x=-Math.PI/2;
+  group.add(fire,core,ring);
+  scene.add(group);
+  airstrikeEffects.push({type:"blast",object:group,fire,core,ring,born:now,life:1.15});
+
+  applyAirstrikeDamage(position,side,now,13.5);
+  spawnAftermath(position,now);
+  for(let i=0;i<3;i++){
+    spawnAftermath(position.clone().add(new THREE.Vector3(
+      THREE.MathUtils.randFloat(-4.5,4.5),0,THREE.MathUtils.randFloat(-4.5,4.5)
+    )),now);
+  }
+}
+
 function processBattlefieldEvent(event,now){
+  if(event.type==="warplane_airstrike"){
+    return launchWarplaneAirstrike(event,now);
+  }
   if(event.type==="reinforcement"){
     const kind=event.kind==="tank"?"tank":"soldier";
     return spawnReinforcements(event.side,kind,event.count||1)>0;
@@ -823,6 +1030,42 @@ const scene = new THREE.Scene();
 window.scene = scene;
 window.THREE = THREE;
 scene.background = null;
+
+new GLTFLoader().load(
+  "./assets/models/master-warplane.glb",
+  gltf=>{
+    const model=gltf.scene;
+    const hiddenAircraftParts=/(landing|wheel|ladder)/i;
+
+    model.traverse(object=>{
+      if(hiddenAircraftParts.test(object.name||"")){
+        object.visible=false;
+      }
+    });
+
+    const bounds=new THREE.Box3().setFromObject(model);
+    const size=bounds.getSize(new THREE.Vector3());
+    const center=bounds.getCenter(new THREE.Vector3());
+    const maximum=Math.max(size.x,size.y,size.z)||1;
+
+    model.position.sub(center);
+    model.scale.setScalar(6.2/maximum);
+    model.rotation.set(0,Math.PI/2,0);
+
+    warplaneTemplate=model;
+    window.launchTestWarplane=(side="blue")=>launchWarplaneAirstrike({
+      type:"warplane_airstrike",
+      side,
+      intensity:3,
+      xrpAmount:250000,
+      hash:"DIRECT-WARPLANE-TEST"
+    },performance.now()*0.001);
+
+    console.log("AUGUR master warplane loaded",{size,scale:6.2/maximum});
+  },
+  undefined,
+  error=>console.error("AUGUR warplane load failed",error)
+);
 
 root.style.backgroundImage = "url('./assets/textures/battlefield.webp')";
 root.style.backgroundSize = "cover";
@@ -1076,6 +1319,75 @@ function animate(){
   lastFrame=frameTime;
   const now=frameTime*0.001;
 
+
+  for(let i=warplanes.length-1;i>=0;i--){
+    const strike=warplanes[i];
+    const progress=(now-strike.born)/strike.duration;
+    strike.plane.position.x=THREE.MathUtils.lerp(strike.startX,strike.endX,progress);
+    strike.plane.position.y=
+      THREE.MathUtils.lerp(strike.startY,strike.endY,progress)+
+      Math.sin(progress*Math.PI)*1.2;
+    strike.plane.position.z=
+      THREE.MathUtils.lerp(strike.startZ,strike.endZ,progress)+
+      Math.sin(progress*Math.PI)*1.2;
+
+    if(!strike.released&&progress>=0.47) releaseAirstrikeBombs(strike,now);
+
+    if(progress>=1){
+      scene.remove(strike.plane);
+      strike.plane.traverse(o=>{
+        if(!o.isMesh) return;
+        o.geometry.dispose();
+        const materials=Array.isArray(o.material)?o.material:[o.material];
+        for(const material of materials) material.dispose();
+      });
+      warplanes.splice(i,1);
+    }
+  }
+
+  for(let i=airstrikeEffects.length-1;i>=0;i--){
+    const effect=airstrikeEffects[i];
+    if(effect.type==="bomb"){
+      const age=now-effect.born;
+      if(age<effect.delay) continue;
+      effect.velocity.y-=19*delta;
+      effect.object.position.addScaledVector(effect.velocity,delta);
+      effect.object.rotation.x+=4.2*delta;
+      effect.object.rotation.z+=2.8*delta;
+      if(effect.object.position.y<=0.65){
+        const impact=new THREE.Vector3(
+          effect.object.position.x,
+          0,
+          effect.object.position.z
+        );
+        scene.remove(effect.object);
+        effect.object.geometry.dispose();
+        effect.object.material.dispose();
+        airstrikeEffects.splice(i,1);
+        detonateAirstrike(impact,effect.side,now);
+      }
+      continue;
+    }
+
+    const age=(now-effect.born)/effect.life;
+    if(age>=1){
+      scene.remove(effect.object);
+      effect.object.traverse(o=>{
+        if(!o.isMesh) return;
+        o.geometry.dispose();
+        o.material.dispose();
+      });
+      airstrikeEffects.splice(i,1);
+      continue;
+    }
+    effect.fire.scale.setScalar(1+age*8.5);
+    effect.core.scale.setScalar(1+age*5.5);
+    effect.ring.scale.setScalar(1+age*10);
+    effect.fire.material.opacity=0.95*(1-age);
+    effect.core.material.opacity=1-Math.min(1,age*1.35);
+    effect.ring.material.opacity=0.9*(1-age);
+  }
+
   for(const heli of helicopters){
     const d=heli.userData;
     const t=now*d.speed+d.phase;
@@ -1208,6 +1520,15 @@ function animate(){
         a.userData.startZ-=nz*correction*moveA;
         b.userData.startZ+=nz*correction*moveB;
       }
+    }
+  }
+
+  // Preserve a permanent neutral corridor between both armies.
+  for(const unit of groundUnits){
+    if(unit.userData.side==="blue"){
+      unit.position.x=Math.min(unit.position.x,-4.5);
+    }else{
+      unit.position.x=Math.max(unit.position.x,4.5);
     }
   }
 
