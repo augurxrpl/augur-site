@@ -100,6 +100,7 @@ const unitTemplates={
   red:{soldier:null,tank:null}
 };
 const UNIT_CAPS={soldier:90,tank:30};
+const UNIT_FLOORS={soldier:42,tank:14};
 
 const COMBAT_EVENT_TYPES=new Set([
   "infantry_volley",
@@ -362,6 +363,18 @@ function connectedGlobalMarketFeeds(){
   return Object.values(globalMarketFeeds).filter(feed=>feed.connected).length;
 }
 
+let battlefieldHudFramePending=false;
+
+function scheduleBattlefieldHudRender(){
+  if(battlefieldHudFramePending) return;
+
+  battlefieldHudFramePending=true;
+  requestAnimationFrame(()=>{
+    battlefieldHudFramePending=false;
+    renderBattlefieldMarketHud();
+  });
+}
+
 function registerGlobalXrpTrade(source,side,xrpAmount,price,tradeId){
   const amount=Math.abs(Number(xrpAmount)||0);
   if(amount<0.01||!["blue","red"].includes(side)) return;
@@ -384,6 +397,8 @@ function registerGlobalXrpTrade(source,side,xrpAmount,price,tradeId){
     source,
     receivedAt:performance.now()*0.001
   };
+
+  scheduleBattlefieldHudRender();
 
   const intensity=THREE.MathUtils.clamp(
     0.7+Math.log10(amount+1)*0.48,
@@ -877,7 +892,7 @@ function createBattlefieldMarketHud(){
     .bf-price-row{display:flex;align-items:baseline;justify-content:center;gap:10px}.bf-price{font-size:22px;font-weight:900;letter-spacing:.03em}.bf-change{font-size:13px;font-weight:800}.bf-positive{color:#39e68a}.bf-negative{color:#ff5d57}
     .bf-status{margin-top:3px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9fb2c2}.bf-status-dot{display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:#ff554d;box-shadow:0 0 8px currentColor}.bf-online .bf-status-dot{background:#35e784}
     .bf-army{top:14px;width:245px;padding:11px 13px;border-radius:8px}.bf-blue{left:14px;border-color:rgba(37,140,255,.55)}.bf-red{right:14px;border-color:rgba(255,64,56,.55)}
-    .bf-army-title{display:flex;justify-content:space-between;font-size:12px;font-weight:900;letter-spacing:.12em}.bf-blue .bf-army-title,.bf-blue .bf-volume{color:#65adff}.bf-red .bf-army-title,.bf-red .bf-volume{color:#ff6d66}.bf-volume{margin-top:5px;font-size:17px;font-weight:900}.bf-unit-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px;font-size:10px;color:#aebdca}.bf-unit-row strong{display:block;color:#fff;font-size:13px}
+    .bf-army-title{display:flex;justify-content:space-between;font-size:12px;font-weight:900;letter-spacing:.12em}.bf-blue .bf-army-title,.bf-blue .bf-volume{color:#65adff}.bf-red .bf-army-title,.bf-red .bf-volume{color:#ff6d66}.bf-volume{margin-top:5px;font-size:17px;font-weight:900}.bf-pressure{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:9px;letter-spacing:.1em;color:#aebdca}.bf-pressure strong{font-size:15px;color:#fff}.bf-unit-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px;font-size:10px;color:#aebdca}.bf-unit-row strong{display:block;color:#fff;font-size:13px}
     .bf-ticker{bottom:14px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 150px));padding:9px 14px;border-radius:8px;text-align:center;font-size:12px;letter-spacing:.045em}.bf-ticker strong{color:#ffd56b}.bf-hash{margin-left:9px;color:#94aabc;font-family:ui-monospace,monospace}
     .bf-sound{position:absolute;right:14px;bottom:14px;pointer-events:auto;border:1px solid rgba(180,215,240,.38);border-radius:7px;padding:9px 11px;background:rgba(6,11,17,.9);color:#96a5b1;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.1em;cursor:pointer}
     .bf-sound-on{border-color:#35e784;color:#35e784;box-shadow:0 0 12px rgba(53,231,132,.24)}
@@ -891,8 +906,8 @@ function createBattlefieldMarketHud(){
   hud.id="battlefield-market-hud";
   hud.innerHTML=`
     <section class="bf-hud-panel bf-market"><div class="bf-price-row"><span class="bf-price" data-bf-price>$XRP --</span><span class="bf-change" data-bf-change>--</span></div><div class="bf-status" data-bf-status><span class="bf-status-dot"></span>XRPL CONNECTING</div></section>
-    <section class="bf-hud-panel bf-army bf-blue"><div class="bf-army-title"><span>BLUE ARMY</span><span>BUYS</span></div><div class="bf-volume" data-bf-blue-volume>0 $XRP</div><div class="bf-unit-row" data-bf-blue-units></div></section>
-    <section class="bf-hud-panel bf-army bf-red"><div class="bf-army-title"><span>RED ARMY</span><span>SELLS</span></div><div class="bf-volume" data-bf-red-volume>0 $XRP</div><div class="bf-unit-row" data-bf-red-units></div></section>
+    <section class="bf-hud-panel bf-army bf-blue"><div class="bf-army-title"><span>BLUE ARMY</span><span>BUYS</span></div><div class="bf-volume" data-bf-blue-volume>0 $XRP</div><div class="bf-pressure"><span>MARKET PRESSURE</span><strong data-bf-blue-pressure>50%</strong></div></section>
+    <section class="bf-hud-panel bf-army bf-red"><div class="bf-army-title"><span>RED ARMY</span><span>SELLS</span></div><div class="bf-volume" data-bf-red-volume>0 $XRP</div><div class="bf-pressure"><span>MARKET PRESSURE</span><strong data-bf-red-pressure>50%</strong></div></section>
     <section class="bf-hud-panel bf-ticker" data-bf-ticker>WAITING FOR VALIDATED $XRP MARKET ACTIVITY</section>
     <button class="bf-sound" type="button" data-bf-sound aria-pressed="false">SOUND OFF</button>
   `;
@@ -901,7 +916,7 @@ function createBattlefieldMarketHud(){
   updateBattlefieldSoundButton();
   renderBattlefieldMarketHud();
   refreshXrpMarketPrice();
-  setInterval(renderBattlefieldMarketHud,250);
+  setInterval(scheduleBattlefieldHudRender,1000);
   setInterval(refreshXrpMarketPrice,30000);
 }
 
@@ -912,8 +927,13 @@ function renderBattlefieldMarketHud(){
   const price=hud.querySelector("[data-bf-price]");
   const change=hud.querySelector("[data-bf-change]");
   const status=hud.querySelector("[data-bf-status]");
-  const blue=battlefieldForceCounts("blue");
-  const red=battlefieldForceCounts("red");
+  const bluePressure=globalMarketPulse.pressure.blue;
+  const redPressure=globalMarketPulse.pressure.red;
+  const totalPressure=bluePressure+redPressure;
+  const bluePressurePercent=totalPressure>0
+    ?Math.round(bluePressure/totalPressure*100)
+    :50;
+  const redPressurePercent=100-bluePressurePercent;
 
   price.textContent=xrplMarketState.xrpUsd===null?"$XRP --":`$XRP $${xrplMarketState.xrpUsd.toFixed(4)}`;
   const changeValue=xrplMarketState.xrpChange24h;
@@ -927,8 +947,8 @@ function renderBattlefieldMarketHud(){
 
   hud.querySelector("[data-bf-blue-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.blue,2)} $XRP`;
   hud.querySelector("[data-bf-red-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.red,2)} $XRP`;
-  hud.querySelector("[data-bf-blue-units]").innerHTML=`<span><strong>${blue.soldier}</strong>TROOPS</span><span><strong>${blue.tank}</strong>TANKS</span><span><strong>${blue.helicopter}</strong>COPTERS</span>`;
-  hud.querySelector("[data-bf-red-units]").innerHTML=`<span><strong>${red.soldier}</strong>TROOPS</span><span><strong>${red.tank}</strong>TANKS</span><span><strong>${red.helicopter}</strong>COPTERS</span>`;
+  hud.querySelector("[data-bf-blue-pressure]").textContent=`${bluePressurePercent}%`;
+  hud.querySelector("[data-bf-red-pressure]").textContent=`${redPressurePercent}%`;
 
   const trade=xrplMarketState.lastTrade;
   if(trade){
@@ -1941,12 +1961,44 @@ function spawnReinforcements(side,kind,requested=1){
     unit.userData.kind=kind;
     unit.userData.reinforcement=true;
     delete unit.userData.combatState;
+    delete unit.userData.health;
+    delete unit.userData.destroyedAt;
+    delete unit.userData.destroyDuration;
     addUnitHalo(unit,color,kind);
     scene.add(unit);
   }
 
   return count;
 }
+
+function maintainBattlefieldForces(){
+  let deployed=0;
+
+  for(const side of ["blue","red"]){
+    const soldiers=countActiveUnits(side,"soldier");
+    const tanks=countActiveUnits(side,"tank");
+
+    if(soldiers<UNIT_FLOORS.soldier){
+      const emergency=soldiers===0;
+      const deficit=UNIT_FLOORS.soldier-soldiers;
+      const requested=Math.min(deficit,emergency?14:7);
+      deployed+=spawnReinforcements(side,"soldier",requested);
+    }
+
+    if(tanks<UNIT_FLOORS.tank){
+      const emergency=tanks===0;
+      const deficit=UNIT_FLOORS.tank-tanks;
+      const requested=Math.min(deficit,emergency?5:3);
+      deployed+=spawnReinforcements(side,"tank",requested);
+    }
+  }
+
+  if(deployed>0){
+    scheduleBattlefieldHudRender();
+  }
+}
+
+setInterval(maintainBattlefieldForces,750);
 
 loader.load('./assets/models/master-tank.glb', (gltf) => {
   const tank = gltf.scene;
