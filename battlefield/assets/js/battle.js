@@ -743,7 +743,8 @@ const battlefieldAudio={
   enabled:localStorage.getItem("augurBattlefieldSound")==="on",
   context:null,
   master:null,
-  cooldowns:new Map()
+  cooldowns:new Map(),
+  lastInfantryProfile:-1
 };
 
 function ensureBattlefieldAudio(){
@@ -854,14 +855,118 @@ function battlefieldNoise(duration,volume,frequency,pan=0){
   source.start(now);
 }
 
+function playInfantryGunfire(pan){
+  const profiles=[
+    // 1. Sharp rifle crack
+    ()=>{
+      const pitch=THREE.MathUtils.randFloat(0.94,1.07);
+      battlefieldNoise(
+        THREE.MathUtils.randFloat(0.045,0.065),
+        THREE.MathUtils.randFloat(0.047,0.058),
+        THREE.MathUtils.randFloat(3600,4400),
+        pan
+      );
+      battlefieldTone(
+        285*pitch,
+        105*pitch,
+        THREE.MathUtils.randFloat(0.05,0.07),
+        THREE.MathUtils.randFloat(0.022,0.030),
+        "square",
+        pan
+      );
+    },
+
+    // 2. Short carbine snap
+    ()=>{
+      const pitch=THREE.MathUtils.randFloat(0.94,1.06);
+      battlefieldNoise(
+        THREE.MathUtils.randFloat(0.06,0.085),
+        THREE.MathUtils.randFloat(0.050,0.062),
+        THREE.MathUtils.randFloat(2600,3300),
+        pan
+      );
+      battlefieldTone(
+        225*pitch,
+        82*pitch,
+        THREE.MathUtils.randFloat(0.07,0.09),
+        THREE.MathUtils.randFloat(0.026,0.034),
+        "square",
+        pan
+      );
+    },
+
+    // 3. Automatic burst
+    ()=>{
+      const shots=3;
+      for(let i=0;i<shots;i++){
+        setTimeout(()=>{
+          if(!battlefieldAudio.enabled) return;
+
+          const shotPan=THREE.MathUtils.clamp(
+            pan+THREE.MathUtils.randFloat(-0.04,0.04),
+            -1,
+            1
+          );
+
+          battlefieldNoise(
+            THREE.MathUtils.randFloat(0.045,0.065),
+            THREE.MathUtils.randFloat(0.037,0.047),
+            THREE.MathUtils.randFloat(2350,3000),
+            shotPan
+          );
+
+          battlefieldTone(
+            THREE.MathUtils.randFloat(195,225),
+            THREE.MathUtils.randFloat(68,82),
+            THREE.MathUtils.randFloat(0.05,0.07),
+            THREE.MathUtils.randFloat(0.018,0.025),
+            "square",
+            shotPan
+          );
+        },i*52);
+      }
+    },
+
+    // 4. Heavy rifle / machine-gun report
+    ()=>{
+      const pitch=THREE.MathUtils.randFloat(0.93,1.05);
+      battlefieldNoise(
+        THREE.MathUtils.randFloat(0.10,0.14),
+        THREE.MathUtils.randFloat(0.064,0.078),
+        THREE.MathUtils.randFloat(1450,1950),
+        pan
+      );
+      battlefieldTone(
+        150*pitch,
+        48*pitch,
+        THREE.MathUtils.randFloat(0.11,0.15),
+        THREE.MathUtils.randFloat(0.036,0.048),
+        "sawtooth",
+        pan
+      );
+    }
+  ];
+
+  let profileIndex;
+
+  do{
+    profileIndex=Math.floor(Math.random()*profiles.length);
+  }while(
+    profiles.length>1 &&
+    profileIndex===battlefieldAudio.lastInfantryProfile
+  );
+
+  battlefieldAudio.lastInfantryProfile=profileIndex;
+  profiles[profileIndex]();
+}
+
 function playBattlefieldSound(kind,side="blue"){
   if(!battlefieldAudio.enabled) return;
 
   const pan=side==="blue"?-0.35:0.35;
 
   if(kind==="infantry"&&battlefieldSoundAllowed("infantry",90)){
-    battlefieldNoise(0.08,0.055,2800,pan);
-    battlefieldTone(180,75,0.08,0.025,"square",pan);
+    playInfantryGunfire(pan);
   }else if(kind==="tank"&&battlefieldSoundAllowed("tank",240)){
     battlefieldNoise(0.45,0.16,720,pan);
     battlefieldTone(95,32,0.5,0.13,"sine",pan);

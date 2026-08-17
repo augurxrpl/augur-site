@@ -41,14 +41,21 @@
       z-index:10000;
       align-items:center;
       justify-content:center;
-      padding:28px;
+      padding:
+        max(20px,env(safe-area-inset-top))
+        max(20px,env(safe-area-inset-right))
+        max(20px,env(safe-area-inset-bottom))
+        max(20px,env(safe-area-inset-left));
       background:
         radial-gradient(circle at center,rgba(24,55,82,.97),rgba(2,7,12,.99));
       text-align:center;
+      overflow:hidden;
     }
     .rotate-card{
-      width:min(390px,90vw);
-      padding:32px 24px;
+      width:min(430px,92vw);
+      max-height:calc(100dvh - 40px);
+      overflow:auto;
+      padding:28px 22px;
       border:1px solid rgba(87,169,255,.7);
       border-radius:16px;
       background:rgba(5,12,20,.94);
@@ -56,8 +63,8 @@
     }
     .rotate-phone{
       display:block;
-      margin-bottom:18px;
-      font-size:58px;
+      margin-bottom:14px;
+      font-size:54px;
       animation:rotate-phone 1.8s ease-in-out infinite;
     }
     .rotate-card strong{
@@ -72,6 +79,15 @@
       color:#b7c7d6;
       font-size:14px;
       line-height:1.5;
+    }
+    .rotate-card .browser-note{
+      margin-top:16px;
+      padding-top:14px;
+      border-top:1px solid rgba(87,169,255,.22);
+      color:#d9e7f3;
+    }
+    .rotate-card .browser-note b{
+      color:#fff;
     }
     @keyframes rotate-phone{
       0%,100%{transform:rotate(0deg)}
@@ -88,7 +104,8 @@
     <div class="rotate-card">
       <span class="rotate-phone">📱</span>
       <strong>ROTATE YOUR PHONE</strong>
-      <span>AUGUR BATTLEFIELD is designed for landscape combat view.</span>
+      <span>AUGUR BATTLEFIELD is designed for landscape mode.</span>
+      <span class="browser-note">For the full experience, open this page in <b>Safari, Chrome, or another regular browser</b>. The browser inside 𝕏 or another social-media app may not display or control the Battlefield correctly.</span>
     </div>
   </div>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
