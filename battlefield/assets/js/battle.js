@@ -254,8 +254,46 @@ function dispatchValidatedXrpTrade(side,xrpAmount,hash){
   renderBattlefieldMarketHud();
 }
 
+let lastAmbientLedgerEvent=0;
+let ambientLedgerCount=0;
+
+function ambientLedgerSide(tx,hash){
+  const identity=hash||tx.Account||tx.Destination||String(ambientLedgerCount);
+  let seed=0;
+
+  for(let i=0;i<identity.length;i++){
+    seed=(seed*31+identity.charCodeAt(i))|0;
+  }
+
+  return Math.abs(seed)%2===0?"blue":"red";
+}
+
+function dispatchValidatedLedgerActivity(tx,hash){
+  const now=performance.now();
+
+  // Keep the battlefield active without allowing ledger volume
+  // to overwhelm mobile rendering.
+  if(now-lastAmbientLedgerEvent<160) return;
+
+  lastAmbientLedgerEvent=now;
+  ambientLedgerCount+=1;
+
+  const side=ambientLedgerSide(tx,hash);
+  const payment=tx.TransactionType==="Payment";
+
+  queueBattlefieldEvent({
+    type:"infantry_volley",
+    side,
+    intensity:payment?0.55:0.35,
+    xrpAmount:0,
+    source:"xrpl_ambient",
+    hash
+  });
+}
+
 function handleXrplMarketMessage(message){
   let payload;
+
   try{
     payload=JSON.parse(message.data);
   }catch(error){
@@ -266,14 +304,22 @@ function handleXrplMarketMessage(message){
 
   const tx=payload.tx_json||payload.transaction;
   const meta=payload.meta||payload.metaData;
+
   if(!tx||!meta||meta.TransactionResult!=="tesSUCCESS") return;
-  if(!isExecutedXrpMarketTransaction(tx)) return;
 
-  const xrpDelta=sourceAccountXrpDelta(tx,meta);
-  if(Math.abs(xrpDelta)<0.01) return;
+  const hash=tx.hash||payload.hash||"";
 
-  const side=xrpDelta>0?"blue":"red";
-  dispatchValidatedXrpTrade(side,Math.abs(xrpDelta),tx.hash||payload.hash||"");
+  if(isExecutedXrpMarketTransaction(tx)){
+    const xrpDelta=sourceAccountXrpDelta(tx,meta);
+
+    if(Math.abs(xrpDelta)>=0.01){
+      const side=xrpDelta>0?"blue":"red";
+      dispatchValidatedXrpTrade(side,Math.abs(xrpDelta),hash);
+      return;
+    }
+  }
+
+  dispatchValidatedLedgerActivity(tx,hash);
 }
 
 function connectXrplMarketStream(){
@@ -1250,6 +1296,75 @@ renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
 
 root.replaceChildren(renderer.domElement);
+
+/* Bounded battlefield pinch zoom */
+const BATTLEFIELD_DEFAULT_FOV=55;
+const BATTLEFIELD_MIN_FOV=38;
+let pinchStartDistance=0;
+let pinchStartFov=BATTLEFIELD_DEFAULT_FOV;
+let lastBattlefieldTap=0;
+
+function battlefieldTouchDistance(touches){
+  if(touches.length<2) return 0;
+
+  return Math.hypot(
+    touches[0].clientX-touches[1].clientX,
+    touches[0].clientY-touches[1].clientY
+  );
+}
+
+function setBattlefieldZoom(fov){
+  camera.fov=THREE.MathUtils.clamp(
+    fov,
+    BATTLEFIELD_MIN_FOV,
+    BATTLEFIELD_DEFAULT_FOV
+  );
+  camera.updateProjectionMatrix();
+}
+
+renderer.domElement.addEventListener("touchstart",event=>{
+  if(event.touches.length===2){
+    event.preventDefault();
+    pinchStartDistance=battlefieldTouchDistance(event.touches);
+    pinchStartFov=camera.fov;
+    return;
+  }
+
+  if(event.touches.length===1){
+    const now=performance.now();
+
+    if(now-lastBattlefieldTap<300){
+      event.preventDefault();
+      setBattlefieldZoom(BATTLEFIELD_DEFAULT_FOV);
+      lastBattlefieldTap=0;
+    }else{
+      lastBattlefieldTap=now;
+    }
+  }
+},{passive:false});
+
+renderer.domElement.addEventListener("touchmove",event=>{
+  if(event.touches.length!==2||pinchStartDistance<=0) return;
+
+  event.preventDefault();
+
+  const distance=battlefieldTouchDistance(event.touches);
+  if(distance<=0) return;
+
+  setBattlefieldZoom(
+    pinchStartFov*(pinchStartDistance/distance)
+  );
+},{passive:false});
+
+renderer.domElement.addEventListener("touchend",event=>{
+  if(event.touches.length<2){
+    pinchStartDistance=0;
+  }
+},{passive:true});
+
+renderer.domElement.addEventListener("touchcancel",()=>{
+  pinchStartDistance=0;
+},{passive:true});
 
 function resizeBattlefieldViewport(){
   const viewport=window.visualViewport;
