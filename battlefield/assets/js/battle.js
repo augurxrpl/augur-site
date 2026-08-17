@@ -344,6 +344,310 @@ function dispatchValidatedLedgerActivity(tx,hash){
   }
 }
 
+
+const globalMarketFeeds={
+  coinbase:{connected:false,retry:1000,timer:null,socket:null},
+  kraken:{connected:false,retry:1000,timer:null,socket:null},
+  binance:{connected:false,retry:1000,timer:null,socket:null}
+};
+
+const globalMarketPulse={
+  pendingVolume:{blue:0,red:0},
+  pendingTrades:{blue:0,red:0},
+  pressure:{blue:0,red:0},
+  ticks:0
+};
+
+function connectedGlobalMarketFeeds(){
+  return Object.values(globalMarketFeeds).filter(feed=>feed.connected).length;
+}
+
+function registerGlobalXrpTrade(source,side,xrpAmount,price,tradeId){
+  const amount=Math.abs(Number(xrpAmount)||0);
+  if(amount<0.01||!["blue","red"].includes(side)) return;
+
+  globalMarketPulse.pendingVolume[side]+=amount;
+  globalMarketPulse.pendingTrades[side]+=1;
+
+  xrplMarketState.sessionVolume[side]+=amount;
+  xrplMarketState.tradeCount[side]+=1;
+
+  const numericPrice=Number(price);
+  if(Number.isFinite(numericPrice)&&numericPrice>0){
+    xrplMarketState.xrpUsd=numericPrice;
+  }
+
+  xrplMarketState.lastTrade={
+    side,
+    xrpAmount:amount,
+    hash:`${source.toUpperCase()}-${tradeId||Date.now()}`,
+    source,
+    receivedAt:performance.now()*0.001
+  };
+
+  const intensity=THREE.MathUtils.clamp(
+    0.7+Math.log10(amount+1)*0.48,
+    0.7,
+    3
+  );
+
+  if(amount>=250000){
+    queueBattlefieldEvent({
+      type:"warplane_airstrike",
+      side,
+      intensity:3,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }else if(amount>=25000){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }else if(amount>=5000){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }
+}
+
+function runGlobalMarketPulse(){
+  for(const side of ["blue","red"]){
+    const trades=globalMarketPulse.pendingTrades[side];
+    const volume=globalMarketPulse.pendingVolume[side];
+
+    const incoming=
+      trades*0.34+
+      Math.log10(volume+1)*0.72;
+
+    globalMarketPulse.pressure[side]=THREE.MathUtils.clamp(
+      globalMarketPulse.pressure[side]*0.94+incoming,
+      0,
+      70
+    );
+
+    globalMarketPulse.pendingTrades[side]=0;
+    globalMarketPulse.pendingVolume[side]=0;
+  }
+
+  const blue=globalMarketPulse.pressure.blue;
+  const red=globalMarketPulse.pressure.red;
+  const total=blue+red;
+
+  if(total<0.35) return;
+
+  globalMarketPulse.ticks+=1;
+
+  const side=Math.random()*total<blue?"blue":"red";
+  const intensity=THREE.MathUtils.clamp(0.75+total*0.035,0.75,2.8);
+
+  queueBattlefieldEvent({
+    type:"infantry_volley",
+    side,
+    intensity,
+    source:"global_market"
+  });
+
+  if(globalMarketPulse.ticks%4===0&&total>5){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity,
+      source:"global_market"
+    });
+  }
+
+  if(globalMarketPulse.ticks%11===0&&total>12){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity,
+      source:"global_market"
+    });
+  }
+
+  if(globalMarketPulse.ticks%18===0&&total>18){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:Math.random()<0.78?"soldier":"tank",
+      count:Math.random()<0.78?2:1,
+      intensity,
+      source:"global_market"
+    });
+  }
+}
+
+setInterval(runGlobalMarketPulse,250);
+
+function connectGlobalFeed(name,url,onOpen,onMessage){
+  const state=globalMarketFeeds[name];
+
+  clearTimeout(state.timer);
+
+  let socket;
+  try{
+    socket=new WebSocket(url);
+  }catch(error){
+    console.warn(`AUGUR ${name} feed creation failed`,error);
+    state.timer=setTimeout(
+      ()=>connectGlobalFeed(name,url,onOpen,onMessage),
+      state.retry
+    );
+    return;
+  }
+
+  state.socket=socket;
+
+  socket.addEventListener("open",()=>{
+    state.connected=true;
+    state.retry=1000;
+    try{
+      onOpen(socket);
+    }catch(error){
+      console.warn(`AUGUR ${name} subscription failed`,error);
+    }
+    renderBattlefieldMarketHud();
+  });
+
+  socket.addEventListener("message",event=>{
+    try{
+      const message=JSON.parse(event.data);
+      onMessage(message);
+    }catch(error){
+      console.warn(`AUGUR ${name} message rejected`,error);
+    }
+  });
+
+  socket.addEventListener("close",()=>{
+    state.connected=false;
+    state.socket=null;
+    renderBattlefieldMarketHud();
+
+    state.timer=setTimeout(
+      ()=>connectGlobalFeed(name,url,onOpen,onMessage),
+      state.retry
+    );
+
+    state.retry=Math.min(state.retry*1.8,30000);
+  });
+
+  socket.addEventListener("error",()=>{
+    try{
+      socket.close();
+    }catch(error){}
+  });
+}
+
+function connectCoinbaseXrpFeed(){
+  connectGlobalFeed(
+    "coinbase",
+    "wss://advanced-trade-ws.coinbase.com",
+    socket=>{
+      socket.send(JSON.stringify({
+        type:"subscribe",
+        product_ids:["XRP-USD"],
+        channel:"market_trades"
+      }));
+
+      socket.send(JSON.stringify({
+        type:"subscribe",
+        product_ids:["XRP-USD"],
+        channel:"heartbeats"
+      }));
+    },
+    message=>{
+      if(message.channel!=="market_trades") return;
+
+      for(const event of message.events||[]){
+        if(event.type!=="update") continue;
+
+        for(const trade of event.trades||[]){
+          const makerSide=String(trade.side||"").toUpperCase();
+          const side=makerSide==="BUY"?"red":"blue";
+
+          registerGlobalXrpTrade(
+            "coinbase",
+            side,
+            trade.size,
+            trade.price,
+            trade.trade_id
+          );
+        }
+      }
+    }
+  );
+}
+
+function connectKrakenXrpFeed(){
+  connectGlobalFeed(
+    "kraken",
+    "wss://ws.kraken.com/v2",
+    socket=>{
+      socket.send(JSON.stringify({
+        method:"subscribe",
+        params:{
+          channel:"trade",
+          symbol:["XRP/USD"],
+          snapshot:false
+        }
+      }));
+    },
+    message=>{
+      if(message.channel!=="trade"||!Array.isArray(message.data)) return;
+
+      for(const trade of message.data){
+        const side=String(trade.side||"").toLowerCase()==="buy"
+          ?"blue"
+          :"red";
+
+        registerGlobalXrpTrade(
+          "kraken",
+          side,
+          trade.qty,
+          trade.price,
+          trade.trade_id
+        );
+      }
+    }
+  );
+}
+
+function connectBinanceXrpFeed(){
+  connectGlobalFeed(
+    "binance",
+    "wss://stream.binance.com:9443/ws/xrpusdt@aggTrade",
+    ()=>{},
+    trade=>{
+      if(trade.e!=="aggTrade") return;
+
+      registerGlobalXrpTrade(
+        "binance",
+        trade.m?"red":"blue",
+        trade.q,
+        trade.p,
+        trade.a
+      );
+    }
+  );
+}
+
+function connectGlobalXrpMarketFeeds(){
+  connectCoinbaseXrpFeed();
+  connectKrakenXrpFeed();
+  connectBinanceXrpFeed();
+}
+
 function handleXrplMarketMessage(message){
   let payload;
 
@@ -615,8 +919,11 @@ function renderBattlefieldMarketHud(){
   const changeValue=xrplMarketState.xrpChange24h;
   change.textContent=changeValue===null?"--":`${changeValue>=0?"+":""}${changeValue.toFixed(2)}%`;
   change.className=`bf-change ${changeValue>=0?"bf-positive":"bf-negative"}`;
-  status.className=`bf-status ${xrplMarketState.connected?"bf-online":""}`;
-  status.innerHTML=`<span class="bf-status-dot"></span>${xrplMarketState.connected?"XRPL LIVE":"XRPL RECONNECTING"}`;
+  const globalFeedCount=connectedGlobalMarketFeeds();
+  const totalFeedCount=globalFeedCount+(xrplMarketState.connected?1:0);
+  const marketOnline=totalFeedCount>0;
+  status.className=`bf-status ${marketOnline?"bf-online":""}`;
+  status.innerHTML=`<span class="bf-status-dot"></span>${marketOnline?`GLOBAL $XRP LIVE • ${totalFeedCount} FEEDS`:"MARKET RECONNECTING"}`;
 
   hud.querySelector("[data-bf-blue-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.blue,2)} $XRP`;
   hud.querySelector("[data-bf-red-volume]").textContent=`${formatHudNumber(xrplMarketState.sessionVolume.red,2)} $XRP`;
@@ -647,6 +954,7 @@ async function refreshXrpMarketPrice(){
 
 createBattlefieldMarketHud();
 connectXrplMarketStream();
+connectGlobalXrpMarketFeeds();
 
 function accentHelicopter(root,color){
   root.traverse(o=>{
