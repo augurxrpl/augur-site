@@ -648,6 +648,64 @@
             </div>
           </div>
 
+          <div style="margin-top:18px;">
+            <div class="card-header">
+              <div>
+                <h3 style="margin:0;font-size:16px;">Hourly DEX Whale Activity</h3>
+                <div class="subhead">Executed XRP DEX trades at or above 5,000 $XRP</div>
+              </div>
+              <span class="badge blue">LIVE</span>
+            </div>
+
+            <div class="grid" style="margin-top:14px;">
+              <div class="mini-card">
+                <div class="mini-label">Large Buys</div>
+                <div id="whaleActivityBuyCount" class="mini-value">-</div>
+                <div class="mini-sub">Executed buy trades</div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-label">Large Sells</div>
+                <div id="whaleActivitySellCount" class="mini-value">-</div>
+                <div class="mini-sub">Executed sell trades</div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-label">Buy $XRP</div>
+                <div id="whaleActivityBuyXrp" class="mini-value">-</div>
+                <div class="mini-sub">Total XRP acquired</div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-label">Sell $XRP</div>
+                <div id="whaleActivitySellXrp" class="mini-value">-</div>
+                <div class="mini-sub">Total XRP sold</div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-label">Largest Buy</div>
+                <div id="whaleActivityLargestBuy" class="mini-value">-</div>
+                <div class="mini-sub">Largest executed buy</div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-label">Largest Sell</div>
+                <div id="whaleActivityLargestSell" class="mini-value">-</div>
+                <div class="mini-sub">Largest executed sell</div>
+              </div>
+            </div>
+
+            <div class="whale-watch-meta-huds">
+              <span id="whaleActivityWindowHud" class="whale-watch-hud">Activity Window —</span>
+              <span id="whaleActivityLedgerHud" class="whale-watch-hud">Validated Ledger —</span>
+              <span class="whale-watch-hud">≥ 5,000 $XRP</span>
+            </div>
+
+            <div class="note" style="margin-top:14px;">
+              Executed OfferCreate XRP DEX activity only. Updated from validated XRPL ledgers. AMM and path-payment activity are not included in this layer yet.
+            </div>
+          </div>
+
           <div class="whale-watch-meta-huds">
             <span id="whaleWatchSnapshotHud" class="whale-watch-hud">Snapshot —</span>
             <span id="whaleWatchLedgerHud" class="whale-watch-hud">Ledger —</span>
@@ -954,21 +1012,50 @@
     }
 
     async function loadWhaleActivityFreshness(){
+      const setActivityValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+
       try {
         const res = await fetch(`${API_BASE}/api/whales/activity-latest`);
         const data = await res.json();
 
         const activityFreshness = document.getElementById("activityFreshness");
-        if (!activityFreshness) return;
 
         if (!res.ok || !data.ok || !data.snapshot) {
-          activityFreshness.textContent = "Whale Activity Updated: unavailable";
+          if (activityFreshness) {
+            activityFreshness.textContent = "Whale Activity Updated: unavailable";
+          }
           return;
         }
 
         const snap = data.snapshot;
-        activityFreshness.textContent =
-          `Whale Activity Updated: ${fmtDate(snap.window_end)} • Validated Ledger #${snap.ledger_index || "-"}`;
+
+        if (activityFreshness) {
+          activityFreshness.textContent =
+            `Whale Activity Updated: ${fmtDate(snap.window_end)} • Validated Ledger #${snap.ledger_index || "-"}`;
+        }
+
+        setActivityValue("whaleActivityBuyCount", fmtNum(snap.large_buy_count));
+        setActivityValue("whaleActivitySellCount", fmtNum(snap.large_sell_count));
+        setActivityValue("whaleActivityBuyXrp", `${fmtNum(Number(snap.large_buy_xrp || 0))} $XRP`);
+        setActivityValue("whaleActivitySellXrp", `${fmtNum(Number(snap.large_sell_xrp || 0))} $XRP`);
+        setActivityValue("whaleActivityLargestBuy", `${fmtNum(Number(snap.largest_buy_xrp || 0))} $XRP`);
+        setActivityValue("whaleActivityLargestSell", `${fmtNum(Number(snap.largest_sell_xrp || 0))} $XRP`);
+
+        const windowHud = document.getElementById("whaleActivityWindowHud");
+        const ledgerHud = document.getElementById("whaleActivityLedgerHud");
+
+        if (windowHud) {
+          windowHud.textContent =
+            `Activity Window ${fmtDate(snap.window_start)} → ${fmtDate(snap.window_end)}`;
+        }
+
+        if (ledgerHud) {
+          ledgerHud.textContent =
+            `Validated Ledger ${fmtNum(snap.ledger_index)}`;
+        }
       } catch (err) {
         const activityFreshness = document.getElementById("activityFreshness");
         if (activityFreshness) {
