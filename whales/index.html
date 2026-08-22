@@ -593,7 +593,8 @@
             Real wallet distribution and wallet rank lookup pulled from AUGUR whale data.
           </p>
           <div class="note" style="margin-top:14px;">
-            Latest full snapshot scanned 7,783,339 funded XRPL wallets, counted 66,629,970,937.42343 XRP, and was anchored to validated ledger 103571871. AUGUR refreshes this full snapshot once per day so whale distribution stays current without trying to crawl the full ledger inside a live page request.
+            <div id="distributionFreshness">Full XRPL Distribution Snapshot: loading...</div>
+            <div id="activityFreshness" style="margin-top:4px;">Whale Activity Updated: loading...</div>
           </div>
 
           <div class="mini-grid">
@@ -834,7 +835,16 @@
       if (!value) return "-";
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return String(value);
-      return d.toLocaleString();
+
+      return d.toLocaleString("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZoneName: "short"
+      });
     }
 
     function setRankPill(text, tone){
@@ -943,6 +953,30 @@
       }
     }
 
+    async function loadWhaleActivityFreshness(){
+      try {
+        const res = await fetch(`${API_BASE}/api/whales/activity-latest`);
+        const data = await res.json();
+
+        const activityFreshness = document.getElementById("activityFreshness");
+        if (!activityFreshness) return;
+
+        if (!res.ok || !data.ok || !data.snapshot) {
+          activityFreshness.textContent = "Whale Activity Updated: unavailable";
+          return;
+        }
+
+        const snap = data.snapshot;
+        activityFreshness.textContent =
+          `Whale Activity Updated: ${fmtDate(snap.window_end)} • Validated Ledger #${snap.ledger_index || "-"}`;
+      } catch (err) {
+        const activityFreshness = document.getElementById("activityFreshness");
+        if (activityFreshness) {
+          activityFreshness.textContent = "Whale Activity Updated: unavailable";
+        }
+      }
+    }
+
     async function loadSnapshot(){
       bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
       thresholdList.innerHTML = '<div class="empty">Loading thresholds...</div>';
@@ -959,6 +993,12 @@
       walletCountValue.textContent = fmtNum(snap.funded_wallet_count);
       snapshotTimeValue.textContent = fmtDate(snap.snapshot_time);
       ledgerIndexValue.textContent = String(snap.ledger_index || "-");
+
+      const distributionFreshness = document.getElementById("distributionFreshness");
+      if (distributionFreshness) {
+        distributionFreshness.textContent =
+          `Full XRPL Distribution Snapshot: ${fmtDate(snap.snapshot_time)} • Validated Ledger #${snap.ledger_index || "-"}`;
+      }
 
       const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
       renderWhaleWatch(buckets, snap);
@@ -1277,6 +1317,8 @@
     });
 
     setTimeout(refreshWhaleSession, 0);
+
+    loadWhaleActivityFreshness();
 
     loadSnapshot().catch((err) => {
       bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
