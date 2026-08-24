@@ -389,6 +389,81 @@
       display:block;
     }
 
+    .bucket-icon{
+      cursor:pointer;
+      padding:0;
+    }
+
+    .band-lightbox{
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(2,7,14,.82);
+      backdrop-filter:blur(10px);
+    }
+
+    .band-lightbox.open{
+      display:flex;
+    }
+
+    .band-lightbox-card{
+      position:relative;
+      width:min(760px, 96vw);
+      max-height:92vh;
+      overflow:auto;
+      border:1px solid rgba(118,156,228,.28);
+      border-radius:22px;
+      padding:18px;
+      background:linear-gradient(180deg,rgba(16,24,40,.98),rgba(7,13,24,.99));
+      box-shadow:0 30px 100px rgba(0,0,0,.65);
+    }
+
+    .band-lightbox-image{
+      width:100%;
+      max-height:68vh;
+      object-fit:contain;
+      display:block;
+      border-radius:16px;
+    }
+
+    .band-lightbox-copy{
+      margin-top:14px;
+      text-align:center;
+    }
+
+    .band-lightbox-name{
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .band-lightbox-range{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .band-lightbox-close{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:40px;
+      height:40px;
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:999px;
+      background:rgba(5,10,18,.82);
+      color:#fff;
+      font-size:24px;
+      line-height:1;
+      cursor:pointer;
+      z-index:2;
+    }
+
     .bucket-band-name{
       font-weight:900;
       letter-spacing:-.02em;
@@ -898,6 +973,16 @@
       </div>
     </section>
 
+    <div id="bandLightbox" class="band-lightbox" aria-hidden="true">
+      <div class="band-lightbox-card" role="dialog" aria-modal="true" aria-labelledby="bandLightboxName">
+        <button id="bandLightboxClose" class="band-lightbox-close" type="button" aria-label="Close">×</button>
+        <img id="bandLightboxImage" class="band-lightbox-image" src="" alt="">
+        <div class="band-lightbox-copy">
+          <div id="bandLightboxName" class="band-lightbox-name"></div>
+          <div id="bandLightboxRange" class="band-lightbox-range"></div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer class="footer">
@@ -1495,6 +1580,51 @@
     });
 
     window.addEventListener("augur-session-changed", refreshWhaleSession);
+
+    const bandLightbox = document.getElementById("bandLightbox");
+    const bandLightboxImage = document.getElementById("bandLightboxImage");
+    const bandLightboxName = document.getElementById("bandLightboxName");
+    const bandLightboxRange = document.getElementById("bandLightboxRange");
+    const bandLightboxClose = document.getElementById("bandLightboxClose");
+
+    function closeBandLightbox(){
+      bandLightbox?.classList.remove("open");
+      bandLightbox?.setAttribute("aria-hidden", "true");
+      if (bandLightboxImage) bandLightboxImage.src = "";
+    }
+
+    bucketList.addEventListener("click", (e) => {
+      const icon = e.target.closest(".bucket-icon");
+      if (!icon) return;
+
+      const row = icon.closest(".bucket-row");
+      const img = icon.querySelector("img");
+      if (!row || !img) return;
+
+      const name = row.querySelector(".bucket-band-name")?.textContent?.trim() || "";
+      const range = row.querySelector(".bucket-label")?.textContent?.trim() || "";
+
+      if (bandLightboxImage) {
+        bandLightboxImage.src = img.src;
+        bandLightboxImage.alt = name;
+      }
+
+      if (bandLightboxName) bandLightboxName.textContent = name;
+      if (bandLightboxRange) bandLightboxRange.textContent = range;
+
+      bandLightbox?.classList.add("open");
+      bandLightbox?.setAttribute("aria-hidden", "false");
+    });
+
+    bandLightboxClose?.addEventListener("click", closeBandLightbox);
+
+    bandLightbox?.addEventListener("click", (e) => {
+      if (e.target === bandLightbox) closeBandLightbox();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeBandLightbox();
+    });
 
     rankBtn.addEventListener("click", runRank);
     walletInput.addEventListener("keydown", (e) => {
