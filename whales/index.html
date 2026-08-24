@@ -394,6 +394,23 @@
       padding:0;
     }
 
+    .bucket-icon-wrap{
+      display:grid;
+      justify-items:center;
+      gap:3px;
+      flex:0 0 auto;
+    }
+
+    .bucket-tap-hint{
+      color:var(--soft);
+      font-size:8px;
+      font-weight:900;
+      letter-spacing:.12em;
+      line-height:1;
+      text-transform:uppercase;
+      opacity:.8;
+    }
+
     .band-lightbox{
       position:fixed;
       inset:0;
@@ -1272,8 +1289,11 @@
           <div class="bucket-row">
             <div class="bucket-top">
               <div class="bucket-identity">
-                <div class="bucket-icon" aria-hidden="true">
-                  ${WHALE_BAND_ICONS[b.key] ? `<img src="${WHALE_BAND_ICONS[b.key]}" alt="" loading="lazy">` : ""}
+                <div class="bucket-icon-wrap">
+                  <div class="bucket-tap-hint">Tap to view</div>
+                  <div class="bucket-icon" aria-hidden="true">
+                    ${WHALE_BAND_ICONS[b.key] ? `<img src="${WHALE_BAND_ICONS[b.key]}" alt="" loading="lazy">` : ""}
+                  </div>
                 </div>
                 <div>
                   <div class="bucket-band-name">${b.bandName || b.label}</div>
