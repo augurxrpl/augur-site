@@ -351,9 +351,49 @@
       gap:12px;
     }
 
-    .bucket-label{
-      font-weight:800;
+    .bucket-identity{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .bucket-icon{
+      width:52px;
+      height:52px;
+      flex:0 0 52px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      background:rgba(255,255,255,.025);
+      border:1px solid rgba(118,156,228,.10);
+    }
+
+    .bucket-icon:empty{
+      display:none;
+    }
+
+    .bucket-icon img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+    }
+
+    .bucket-band-name{
+      font-weight:900;
       letter-spacing:-.02em;
+      font-size:16px;
+      line-height:1.15;
+    }
+
+    .bucket-label{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.02em;
     }
 
     .bucket-meta{
@@ -486,6 +526,26 @@
       .brand-copy span{font-size:18px}
       .rank-row{display:grid;grid-template-columns:1fr;gap:6px}
       .rank-row span{max-width:100%;text-align:left}
+
+      .bucket-top{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+        align-items:start;
+      }
+
+      .bucket-identity{
+        width:100%;
+        min-width:0;
+      }
+
+      .bucket-band-name{
+        overflow-wrap:anywhere;
+      }
+
+      .bucket-top > .bucket-meta{
+        text-align:left;
+      }
     }
 
     .whale-watch-huds{
@@ -927,8 +987,10 @@
       return "gray";
     }
 
-    function whaleBucketFloor(label){
-      const v = String(label || "").toUpperCase().trim();
+    function whaleBucketFloor(bucket){
+      const min = Number(bucket?.min);
+      if (Number.isFinite(min)) return min;
+      const v = String(bucket?.label || "").toUpperCase().trim();
       if (v.startsWith("1M+")) return 1000000;
       if (v.startsWith("500K")) return 500000;
       if (v.startsWith("100K")) return 100000;
@@ -952,7 +1014,7 @@
         const el = document.getElementById(id);
         if (!el) return;
         const count = rows
-          .filter((bucket) => whaleBucketFloor(bucket.label) >= min)
+          .filter((bucket) => whaleBucketFloor(bucket) >= min)
           .reduce((sum, bucket) => sum + Number(bucket.walletCount || 0), 0);
         el.textContent = count ? fmtNum(count) : "-";
       });
@@ -1103,7 +1165,13 @@
         return `
           <div class="bucket-row">
             <div class="bucket-top">
-              <div class="bucket-label">${b.label}</div>
+              <div class="bucket-identity">
+                <div class="bucket-icon" aria-hidden="true"></div>
+                <div>
+                  <div class="bucket-band-name">${b.bandName || b.label}</div>
+                  <div class="bucket-label">${b.label}</div>
+                </div>
+              </div>
               <div class="bucket-meta">${fmtNum(b.walletCount)} wallets • ${fmtPct(b.walletPct)}</div>
             </div>
             <div class="bucket-bar"><div class="bucket-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
