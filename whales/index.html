@@ -179,6 +179,14 @@
       gap:16px;
     }
 
+    .hero-wide{
+      grid-column:1 / -1;
+    }
+
+    .whale-bands-inline{
+      grid-column:1 / -1;
+    }
+
     .card{
       background:linear-gradient(180deg, rgba(16,24,40,.96) 0%, rgba(10,16,29,.98) 100%);
       border:1px solid var(--line);
@@ -654,7 +662,7 @@
   <main class="wrap">
     <section class="hero">
       <div class="hero-grid">
-        <div class="card">
+        <div class="card hero-wide">
                     <h1>XRPL Whale Distribution</h1>
           <p class="lede">
             Real wallet distribution and wallet rank lookup pulled from AUGUR whale data.
@@ -687,6 +695,42 @@
             </div>
           </div>
         </div>
+
+        <section class="section whale-bands-inline">
+          <div class="section-head">
+            <div>
+              <h2>Whale Bands</h2>
+              <p>Bucket distribution by XRP holdings from the latest saved whale snapshot.</p>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 style="margin:0;">Distribution Bands</h3>
+                  <div class="subhead">Wallet count by bucket</div>
+                </div>
+                <span class="badge blue">Live API</span>
+              </div>
+              <div id="bucketList" class="bucket-list">
+                <div class="empty">Loading whale bands...</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 style="margin:0;">Whale Distribution Ladder</h3>
+                  <div class="subhead">% of sampled wallets by band</div>
+                </div>
+              </div>
+              <div id="thresholdList" class="threshold-list">
+                <div class="empty">Loading thresholds...</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div class="card" id="augurWhaleWatch">
           <div class="card-header">
@@ -854,41 +898,6 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>Whale Bands</h2>
-          <p>Bucket distribution by XRP holdings from the latest saved whale snapshot.</p>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3 style="margin:0;">Distribution Bands</h3>
-              <div class="subhead">Wallet count by bucket</div>
-            </div>
-            <span class="badge blue">Live API</span>
-          </div>
-          <div id="bucketList" class="bucket-list">
-            <div class="empty">Loading whale bands...</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3 style="margin:0;">Whale Distribution Ladder</h3>
-              <div class="subhead">% of sampled wallets by band</div>
-            </div>
-          </div>
-          <div id="thresholdList" class="threshold-list">
-            <div class="empty">Loading thresholds...</div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="footer">
@@ -1133,6 +1142,18 @@
       }
     }
 
+    const WHALE_BAND_ICONS = {
+      "0-500": "/assets/whale-bands/minnow.webp",
+      "500-2000": "/assets/whale-bands/fish.webp",
+      "2000-10000": "/assets/whale-bands/dolphin.webp",
+      "10000-20000": "/assets/whale-bands/barracuda.webp",
+      "20000-50000": "/assets/whale-bands/shark.webp",
+      "50000-100000": "/assets/whale-bands/great-white.webp",
+      "100000-500000": "/assets/whale-bands/orca.webp",
+      "500000-1000000": "/assets/whale-bands/whale.webp",
+      "1000000+": "/assets/whale-bands/blue-whale.webp",
+    };
+
     async function loadSnapshot(){
       bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
       thresholdList.innerHTML = '<div class="empty">Loading thresholds...</div>';
@@ -1166,7 +1187,9 @@
           <div class="bucket-row">
             <div class="bucket-top">
               <div class="bucket-identity">
-                <div class="bucket-icon" aria-hidden="true"></div>
+                <div class="bucket-icon" aria-hidden="true">
+                  ${WHALE_BAND_ICONS[b.key] ? `<img src="${WHALE_BAND_ICONS[b.key]}" alt="" loading="lazy">` : ""}
+                </div>
                 <div>
                   <div class="bucket-band-name">${b.bandName || b.label}</div>
                   <div class="bucket-label">${b.label}</div>
