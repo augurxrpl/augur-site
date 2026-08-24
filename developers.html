@@ -461,6 +461,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/augur/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="AUGUR" />
   <meta name="application-name" content="AUGUR" />
+  <link rel="stylesheet" href="/assets/css/augur.css">
 </head>
 <body>
   <div class="topbar">
@@ -483,6 +484,7 @@
           <a class="nav-link" href="/account/">Account</a>
 </div>
 
+      <button class="mobile-nav-toggle" type="button" aria-expanded="false">Menu ▾</button>
 <div class="mobile-nav">
         <a href="/">Dashboard</a>
         <a href="/wallet/">Wallet Search</a>
@@ -490,6 +492,7 @@
         <a class="active" href="/developers.html">Developers</a>
         <a href="/whales/">Whales</a>
         <a href="/account/">Account</a>
+        <a class="battlefield-link" href="/battlefield/">Battlefield</a>
 </div>
       </div>
     </div>
@@ -670,5 +673,14 @@ utils/
     </div>
   </footer>
   <script src="/assets/session.js"></script>
+<script>
+const mobileNavToggle=document.querySelector(".mobile-nav-toggle");
+const mobileNav=document.querySelector(".mobile-nav");
+mobileNavToggle?.addEventListener("click",()=>{
+  const open=mobileNav.classList.toggle("open");
+  mobileNavToggle.setAttribute("aria-expanded",String(open));
+  mobileNavToggle.textContent=open?"Menu ▴":"Menu ▾";
+});
+</script>
 </body>
 </html>
