@@ -102,3 +102,17 @@ button,input,select,textarea{
     max-width:100%;
   }
 }
+@media (max-width:760px){
+  .mobile-nav-toggle{
+    margin-bottom:10px;
+  }
+
+  .mobile-nav.open + *{
+    margin-top:0;
+  }
+}
+@media (max-width:760px){
+  .mobile-nav-toggle[aria-expanded="true"]{
+    margin-bottom:0;
+  }
+}
