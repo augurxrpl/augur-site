@@ -86,3 +86,19 @@ button,input,select,textarea{
     border-color:rgba(255,153,70,.72);
   }
 }
+@media (max-width:760px){
+  html,body{
+    overflow-x:hidden;
+  }
+
+  body{
+    width:100%;
+  }
+
+  main,
+  section,
+  .card{
+    min-width:0;
+    max-width:100%;
+  }
+}
