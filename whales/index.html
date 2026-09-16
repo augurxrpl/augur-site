@@ -1291,11 +1291,36 @@
             "Full XRPL Distribution: REBUILDING • Live distribution temporarily unavailable";
         }
 
-        bucketList.innerHTML =
-          '<div class="empty">Full XRPL wallet distribution is rebuilding from validated ledger data. Stale snapshot data is not being displayed.</div>';
+        const staleBuckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
 
-        thresholdList.innerHTML =
-          '<div class="empty">Whale thresholds will return when the current distribution baseline is complete.</div>';
+        bucketList.innerHTML = staleBuckets.map((b) => `
+          <div class="bucket-row">
+            <div class="bucket-top">
+              <div class="bucket-identity">
+                <div class="bucket-icon-wrap">
+                  <div class="bucket-tap-hint">Tap to view</div>
+                  <div class="bucket-icon" aria-hidden="true">
+                    ${WHALE_BAND_ICONS[b.key] ? `<img src="${WHALE_BAND_ICONS[b.key]}" alt="" loading="lazy">` : ""}
+                  </div>
+                </div>
+                <div>
+                  <div class="bucket-band-name">${b.bandName || b.label}</div>
+                  <div class="bucket-label">${b.label}</div>
+                </div>
+              </div>
+              <div class="bucket-meta">REBUILDING</div>
+            </div>
+            <div class="bucket-bar"><div class="bucket-fill" style="width:0%"></div></div>
+            <div class="bucket-meta">Current wallet count and $XRP totals temporarily unavailable</div>
+          </div>
+        `).join("");
+
+        thresholdList.innerHTML = staleBuckets.map((b) => `
+          <div class="threshold-row">
+            <strong>${b.label}</strong>
+            <span>REBUILDING</span>
+          </div>
+        `).join("");
 
         return;
       }
