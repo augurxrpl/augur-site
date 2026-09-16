@@ -1271,12 +1271,40 @@
       }
 
       const snap = data.snapshot;
+      const snapshotMs = new Date(snap.snapshot_time).getTime();
+      const snapshotAgeMs = Date.now() - snapshotMs;
+      const staleAfterMs = 2 * 60 * 60 * 1000;
+      const snapshotIsStale =
+        !Number.isFinite(snapshotMs) ||
+        snapshotAgeMs > staleAfterMs;
+
+      const distributionFreshness = document.getElementById("distributionFreshness");
+
+      if (snapshotIsStale) {
+        modeValue.textContent = "rebuilding";
+        walletCountValue.textContent = "-";
+        snapshotTimeValue.textContent = "REBUILDING";
+        ledgerIndexValue.textContent = "-";
+
+        if (distributionFreshness) {
+          distributionFreshness.textContent =
+            "Full XRPL Distribution: REBUILDING • Live distribution temporarily unavailable";
+        }
+
+        bucketList.innerHTML =
+          '<div class="empty">Full XRPL wallet distribution is rebuilding from validated ledger data. Stale snapshot data is not being displayed.</div>';
+
+        thresholdList.innerHTML =
+          '<div class="empty">Whale thresholds will return when the current distribution baseline is complete.</div>';
+
+        return;
+      }
+
       modeValue.textContent = data.mode || MODE;
       walletCountValue.textContent = fmtNum(snap.funded_wallet_count);
       snapshotTimeValue.textContent = fmtDate(snap.snapshot_time);
       ledgerIndexValue.textContent = String(snap.ledger_index || "-");
 
-      const distributionFreshness = document.getElementById("distributionFreshness");
       if (distributionFreshness) {
         distributionFreshness.textContent =
           `Full XRPL Distribution Snapshot: ${fmtDate(snap.snapshot_time)} • Validated Ledger #${snap.ledger_index || "-"}`;
