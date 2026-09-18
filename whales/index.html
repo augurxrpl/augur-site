@@ -248,6 +248,34 @@
     .badge.purple{background:rgba(88,66,160,.24);border-color:rgba(170,140,255,.22)}
     .badge.gray{background:rgba(90,102,128,.20);border-color:rgba(159,176,208,.18)}
 
+    .whale-health-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .whale-health-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:currentColor;
+    }
+
+    .whale-health-active .whale-health-dot{
+      animation:whaleHealthPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes whaleHealthPulse{
+      0%,100%{opacity:1;transform:scale(1)}
+      50%{opacity:.4;transform:scale(.7)}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      .whale-health-active .whale-health-dot{animation:none}
+    }
+
     .mini-grid{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
@@ -833,7 +861,13 @@
               <h3 style="margin:0;">AUGUR Whale Watch</h3>
               <div class="subhead">Holder bracket intelligence from validated XRPL ledger activity</div>
             </div>
-            <span class="badge blue">V2 Layer</span>
+            <div class="whale-health-wrap">
+              <span class="badge blue">V2 Layer</span>
+              <span id="whaleHealthBadge" class="badge gray">
+                <span class="whale-health-dot"></span>
+                <span id="whaleHealthLabel">CHECKING</span>
+              </span>
+            </div>
           </div>
 
           <div class="grid" style="margin-top:14px;">
@@ -1028,6 +1062,8 @@
     const walletCountValue = document.getElementById("walletCountValue");
     const snapshotTimeValue = document.getElementById("snapshotTimeValue");
     const ledgerIndexValue = document.getElementById("ledgerIndexValue");
+    const whaleHealthBadge = document.getElementById("whaleHealthBadge");
+    const whaleHealthLabel = document.getElementById("whaleHealthLabel");
     const bucketList = document.getElementById("bucketList");
     const thresholdList = document.getElementById("thresholdList");
     const walletInput = document.getElementById("walletInput");
@@ -1258,6 +1294,48 @@
       "500000-1000000": "/assets/whale-bands/whale.webp",
       "1000000+": "/assets/whale-bands/blue-whale.webp",
     };
+
+    async function loadWhaleHealth(){
+      if (!whaleHealthBadge || !whaleHealthLabel) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/whales/health`, { cache:"no-store" });
+        const data = await res.json().catch(() => ({}));
+
+        whaleHealthBadge.classList.remove(
+          "green","amber","red","gray","whale-health-active"
+        );
+
+        if (!res.ok || !data.ok) {
+          whaleHealthBadge.classList.add("red");
+          whaleHealthLabel.textContent = "OFFLINE";
+          whaleHealthBadge.title =
+            data.message || "Live Whale Distribution status is temporarily unavailable";
+          return;
+        }
+
+        if (data.health === "active") {
+          whaleHealthBadge.classList.add("green","whale-health-active");
+        } else if (data.health === "syncing") {
+          whaleHealthBadge.classList.add("amber");
+        } else if (data.health === "delayed") {
+          whaleHealthBadge.classList.add("red");
+        } else {
+          whaleHealthBadge.classList.add("gray");
+        }
+
+        whaleHealthLabel.textContent = data.label || "UNKNOWN";
+        whaleHealthBadge.title = data.message || "Whale Watch status";
+      } catch {
+        whaleHealthBadge.classList.remove(
+          "green","amber","gray","whale-health-active"
+        );
+        whaleHealthBadge.classList.add("red");
+        whaleHealthLabel.textContent = "OFFLINE";
+        whaleHealthBadge.title =
+          "Live Whale Distribution status is temporarily unavailable";
+      }
+    }
 
     async function loadSnapshot(){
       bucketList.innerHTML = '<div class="empty">Loading whale bands...</div>';
@@ -1710,6 +1788,8 @@
     setTimeout(refreshWhaleSession, 0);
 
     loadWhaleActivityFreshness();
+    loadWhaleHealth();
+    setInterval(loadWhaleHealth, 15000);
 
     loadSnapshot().catch((err) => {
       bucketList.innerHTML = `<div class="note">${err.message || "Failed to load whale bands."}</div>`;
