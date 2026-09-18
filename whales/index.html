@@ -834,7 +834,10 @@
                   <h3 style="margin:0;">Distribution Bands</h3>
                   <div class="subhead">Wallet count by bucket</div>
                 </div>
-                <span class="badge blue">Live API</span>
+                <span id="distributionHealthBadge" class="badge gray">
+                  <span class="whale-health-dot"></span>
+                  <span id="distributionHealthLabel">CHECKING</span>
+                </span>
               </div>
               <div id="bucketList" class="bucket-list">
                 <div class="empty">Loading whale bands...</div>
@@ -1064,6 +1067,8 @@
     const ledgerIndexValue = document.getElementById("ledgerIndexValue");
     const whaleHealthBadge = document.getElementById("whaleHealthBadge");
     const whaleHealthLabel = document.getElementById("whaleHealthLabel");
+    const distributionHealthBadge = document.getElementById("distributionHealthBadge");
+    const distributionHealthLabel = document.getElementById("distributionHealthLabel");
     const bucketList = document.getElementById("bucketList");
     const thresholdList = document.getElementById("thresholdList");
     const walletInput = document.getElementById("walletInput");
@@ -1296,44 +1301,56 @@
     };
 
     async function loadWhaleHealth(){
-      if (!whaleHealthBadge || !whaleHealthLabel) return;
+      const healthBadges = [
+        [whaleHealthBadge, whaleHealthLabel],
+        [distributionHealthBadge, distributionHealthLabel]
+      ].filter(([badge, label]) => badge && label);
+
+      if (!healthBadges.length) return;
 
       try {
         const res = await fetch(`${API_BASE}/api/whales/health`, { cache:"no-store" });
         const data = await res.json().catch(() => ({}));
 
-        whaleHealthBadge.classList.remove(
-          "green","amber","red","gray","whale-health-active"
-        );
+        for (const [badge, label] of healthBadges) {
+          badge.classList.remove(
+            "green","amber","red","gray","whale-health-active"
+          );
 
-        if (!res.ok || !data.ok) {
-          whaleHealthBadge.classList.add("red");
-          whaleHealthLabel.textContent = "OFFLINE";
-          whaleHealthBadge.title =
-            data.message || "Live Whale Distribution status is temporarily unavailable";
-          return;
+          if (!res.ok || !data.ok) {
+            badge.classList.add("red");
+            label.textContent = "OFFLINE";
+            badge.title =
+              data.message || "Live Whale Distribution status is temporarily unavailable";
+            continue;
+          }
+
+          if (data.health === "active") {
+            badge.classList.add("green","whale-health-active");
+            label.textContent = badge === distributionHealthBadge ? "LIVE" : "ACTIVE";
+          } else if (data.health === "syncing") {
+            badge.classList.add("amber");
+            label.textContent = "SYNCING";
+          } else if (data.health === "delayed") {
+            badge.classList.add("red");
+            label.textContent = "DATA DELAYED";
+          } else {
+            badge.classList.add("gray");
+            label.textContent = data.label || "UNKNOWN";
+          }
+
+          badge.title = data.message || "Whale Watch status";
         }
-
-        if (data.health === "active") {
-          whaleHealthBadge.classList.add("green","whale-health-active");
-        } else if (data.health === "syncing") {
-          whaleHealthBadge.classList.add("amber");
-        } else if (data.health === "delayed") {
-          whaleHealthBadge.classList.add("red");
-        } else {
-          whaleHealthBadge.classList.add("gray");
-        }
-
-        whaleHealthLabel.textContent = data.label || "UNKNOWN";
-        whaleHealthBadge.title = data.message || "Whale Watch status";
       } catch {
-        whaleHealthBadge.classList.remove(
-          "green","amber","gray","whale-health-active"
-        );
-        whaleHealthBadge.classList.add("red");
-        whaleHealthLabel.textContent = "OFFLINE";
-        whaleHealthBadge.title =
-          "Live Whale Distribution status is temporarily unavailable";
+        for (const [badge, label] of healthBadges) {
+          badge.classList.remove(
+            "green","amber","gray","whale-health-active"
+          );
+          badge.classList.add("red");
+          label.textContent = "OFFLINE";
+          badge.title =
+            "Live Whale Distribution status is temporarily unavailable";
+        }
       }
     }
 
