@@ -763,7 +763,7 @@
             Real wallet distribution and wallet rank lookup pulled from AUGUR whale data.
           </p>
           <div class="note" style="margin-top:14px;">
-            <div id="distributionFreshness">Full XRPL Distribution Snapshot: loading...</div>
+            <div id="distributionFreshness">Live XRPL Distribution: loading...</div>
             <div id="activityFreshness" style="margin-top:4px;">Whale Activity Updated: loading...</div>
           </div>
 
@@ -776,12 +776,12 @@
             <div class="mini-card">
               <div class="mini-label">Wallets</div>
               <div id="walletCountValue" class="mini-value">-</div>
-              <div class="mini-sub">Funded wallets in current snapshot</div>
+              <div class="mini-sub">Funded wallets in the live distribution</div>
             </div>
             <div class="mini-card">
-              <div class="mini-label">Snapshot</div>
+              <div class="mini-label">Updated</div>
               <div id="snapshotTimeValue" class="mini-value" style="font-size:18px;">-</div>
-              <div class="mini-sub">Latest saved whale snapshot</div>
+              <div class="mini-sub">Continuously updated from validated XRPL ledgers</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">Ledger Marker</div>
@@ -795,7 +795,7 @@
           <div class="section-head">
             <div>
               <h2>Whale Bands</h2>
-              <p>Bucket distribution by XRP holdings from the latest saved whale snapshot.</p>
+              <p>Live wallet distribution by XRP holdings from validated XRPL ledgers.</p>
             </div>
           </div>
 
@@ -831,7 +831,7 @@
           <div class="card-header">
             <div>
               <h3 style="margin:0;">AUGUR Whale Watch</h3>
-              <div class="subhead">Holder bracket intelligence from saved XRPL snapshots</div>
+              <div class="subhead">Holder bracket intelligence from validated XRPL ledger activity</div>
             </div>
             <span class="badge blue">V2 Layer</span>
           </div>
@@ -913,11 +913,11 @@
           </div>
 
           <div class="whale-watch-meta-huds">
-            <span id="whaleWatchSnapshotHud" class="whale-watch-hud">Snapshot —</span>
+            <span id="whaleWatchSnapshotHud" class="whale-watch-hud">Updated —</span>
             <span id="whaleWatchLedgerHud" class="whale-watch-hud">Ledger —</span>
-            <span class="whale-watch-hud">Full Snapshot</span>
+            <span class="whale-watch-hud">Live Distribution</span>
           </div>
-          <div class="note" style="margin-top:14px;">Snapshot-backed bracket movement. 30D activates when enough full snapshots exist.</div>
+          <div class="note" style="margin-top:14px;">Live holder distribution from validated XRPL ledgers. Historical comparisons activate when enough checkpoints exist.</div>
         </div>
 
         <div class="card" id="proMultiWalletCard">
@@ -1014,7 +1014,7 @@
           <a href="/">Dashboard</a>
           <a href="/wallet/">Wallet Search</a>
           <a href="/pricing.html">Pricing</a>
-          <a href="https://api.augurxrpl.com/api/whales/latest?mode=sample" target="_blank" rel="noopener">Whales API</a>
+          <a href="https://api.augurxrpl.com/api/whales/latest?mode=full" target="_blank" rel="noopener">Whales API</a>
         </div>
       </div>
     </div>
@@ -1135,7 +1135,7 @@
 
       const snapshotHud = document.getElementById("whaleWatchSnapshotHud");
       const ledgerHud = document.getElementById("whaleWatchLedgerHud");
-      if (snapshotHud) snapshotHud.textContent = `Snapshot ${fmtDate(snap?.snapshot_time).split(",")[0]}`;
+      if (snapshotHud) snapshotHud.textContent = `Updated ${fmtDate(snap?.snapshot_time)}`;
       if (ledgerHud) ledgerHud.textContent = `Ledger ${fmtNum(snap?.ledger_index)}`;
     }
 
@@ -1281,14 +1281,14 @@
       const distributionFreshness = document.getElementById("distributionFreshness");
 
       if (snapshotIsStale) {
-        modeValue.textContent = "rebuilding";
+        modeValue.textContent = "syncing";
         walletCountValue.textContent = "-";
-        snapshotTimeValue.textContent = "REBUILDING";
+        snapshotTimeValue.textContent = "SYNCING";
         ledgerIndexValue.textContent = "-";
 
         if (distributionFreshness) {
           distributionFreshness.textContent =
-            "Full XRPL Distribution: REBUILDING • Live distribution temporarily unavailable";
+            "Live XRPL Distribution: SYNCING • Waiting for fresh validated-ledger data";
         }
 
         const staleBuckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
@@ -1308,17 +1308,17 @@
                   <div class="bucket-label">${b.label}</div>
                 </div>
               </div>
-              <div class="bucket-meta">REBUILDING</div>
+              <div class="bucket-meta">SYNCING</div>
             </div>
             <div class="bucket-bar"><div class="bucket-fill" style="width:0%"></div></div>
-            <div class="bucket-meta">Current wallet count and $XRP totals temporarily unavailable</div>
+            <div class="bucket-meta">Current wallet count and $XRP totals are temporarily syncing</div>
           </div>
         `).join("");
 
         thresholdList.innerHTML = staleBuckets.map((b) => `
           <div class="threshold-row">
             <strong>${b.label}</strong>
-            <span>REBUILDING</span>
+            <span>SYNCING</span>
           </div>
         `).join("");
 
@@ -1332,7 +1332,7 @@
 
       if (distributionFreshness) {
         distributionFreshness.textContent =
-          `Full XRPL Distribution Snapshot: ${fmtDate(snap.snapshot_time)} • Validated Ledger #${snap.ledger_index || "-"}`;
+          `Live XRPL Distribution: ${fmtDate(snap.snapshot_time)} • Validated Ledger #${snap.ledger_index || "-"}`;
       }
 
       const buckets = Array.isArray(snap.bucket_data) ? snap.bucket_data : [];
@@ -1634,7 +1634,7 @@
           <span>${data.percentileLabel || "-"}</span>
         </div>
         <div class="rank-row">
-          <strong>Snapshot Time</strong>
+          <strong>Distribution Updated</strong>
           <span>${fmtDate(data.snapshot?.snapshotTime)}</span>
         </div>
       `;
