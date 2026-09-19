@@ -895,7 +895,7 @@
             <div class="card-header">
               <div>
                 <h3 style="margin:0;font-size:16px;">Hourly DEX Whale Activity</h3>
-                <div class="subhead">Executed XRPL DEX activity at or above 5,000 $XRP</div>
+                <div id="whaleActivityThresholdText" class="subhead">Executed XRPL DEX Whale activity at or above 500,000 $XRP</div>
               </div>
               <span class="badge blue">LIVE</span>
             </div>
@@ -941,11 +941,11 @@
             <div class="whale-watch-meta-huds">
               <span id="whaleActivityWindowHud" class="whale-watch-hud">Activity Window —</span>
               <span id="whaleActivityLedgerHud" class="whale-watch-hud">Validated Ledger —</span>
-              <span class="whale-watch-hud">≥ 5,000 $XRP</span>
+              <span id="whaleActivityThresholdHud" class="whale-watch-hud">≥ 500,000 $XRP</span>
             </div>
 
             <div class="note" style="margin-top:14px;">
-              Executed XRPL DEX activity from validated OfferCreate and cross-currency Payment transactions, including execution routed through XRPL liquidity paths and AMMs.
+              Executed XRPL DEX activity from validated OfferCreate and cross-currency Payment transactions, including execution routed through XRPL liquidity paths and AMMs. Whale Activity begins at the AUGUR Whale band threshold of 500,000 $XRP.
             </div>
           </div>
 
@@ -1255,6 +1255,20 @@
         }
 
         const snap = data.snapshot;
+        const thresholdXrp = Number(snap.activity_data?.thresholdXrp || 500000);
+        const thresholdFormatted = fmtNum(thresholdXrp);
+
+        const thresholdText = document.getElementById("whaleActivityThresholdText");
+        const thresholdHud = document.getElementById("whaleActivityThresholdHud");
+
+        if (thresholdText) {
+          thresholdText.textContent =
+            `Executed XRPL DEX Whale activity at or above ${thresholdFormatted} $XRP`;
+        }
+
+        if (thresholdHud) {
+          thresholdHud.textContent = `≥ ${thresholdFormatted} $XRP`;
+        }
 
         if (activityFreshness) {
           activityFreshness.textContent =
