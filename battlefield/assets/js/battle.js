@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
-import { createMarketRuntime } from './v2/market-runtime.js';
-import { connectOrderBooks } from './v2/orderbook-feeds.js';
-import { createLiquidityView } from './v2/liquidity-view.js';
 const BLUE=0x258cff, RED=0xff4038;
 const UNIT_METAL=0x60717e;
 const accentTank=(r,c)=>r.traverse(o=>{if(o.isMesh&&["Tank_Turret_2","Tank_body_4","Tank_body_5","Tank_Gun","Tank_Gun_1"].includes(o.name)){o.material=o.material.clone();o.material.color.set(c);if(o.material.emissive){o.material.emissive.set(c);o.material.emissiveIntensity=.20;}}});
@@ -118,7 +115,6 @@ function queueBattlefieldEvent(event){
   if(!["blue","red"].includes(event.side)) return false;
 
   battlefieldEventQueue.push({
-    marketEvent:event.marketEvent,
     type:event.type,
     side:event.side,
     intensity:THREE.MathUtils.clamp(Number(event.intensity)||1,0.25,3),
@@ -195,50 +191,172 @@ function sourceAccountXrpDelta(tx,meta){
   return 0;
 }
 
-// All combat severity is selected once by the verified V2 trade rules.
-let liquidityView = null;
-const marketRuntime = createMarketRuntime({
-  queue:queueBattlefieldEvent,
-  onTrade(event){
-    const side=event.side==="buy"?"blue":"red";
-    xrplMarketState.sessionVolume[side]+=event.xrp;
-    xrplMarketState.tradeCount[side]+=1;
-    // Preserve existing XRPL trade-funded reinforcements after deduplication.
-    if(event.source==="xrpl"){
-      xrplMarketState.growthCredit[side]+=Math.min(2.5,Math.sqrt(event.xrp)/60);
-      while(xrplMarketState.growthCredit[side]>=1){
-        queueBattlefieldEvent({type:"reinforcement",side,kind:"soldier",count:1,
-          source:event.source,hash:event.evidence.txHash,marketEvent:event});
-        xrplMarketState.growthCredit[side]-=1;
-      }
-      if(event.xrp>=100000) queueBattlefieldEvent({type:"reinforcement",side,kind:"tank",count:1,
-        source:event.source,hash:event.evidence.txHash,marketEvent:event});
-    }
-    if(event.price>0&&event.meta.quote==="USD"){
-      xrplMarketState.xrpUsd=event.price;
-      liquidityView?.price(event.price);
-    }
-    xrplMarketState.lastTrade={side,xrpAmount:event.xrp,
-      hash:event.evidence.txHash||event.evidence.tradeId||event.id,
-      source:event.source,receivedAt:Date.now()};
-    scheduleBattlefieldHudRender();
-  },
-  onBook(action){
-    liquidityView?.book(action);
-    if(action.event.meta.quote==="USD") liquidityView?.price(action.event.price);
-  }
-});
-window.augurBattlefieldV2={snapshot:()=>marketRuntime.engine.snapshot()};
-
 function dispatchValidatedXrpTrade(side,xrpAmount,hash){
-  return marketRuntime.trade({source:"xrpl",side,xrp:xrpAmount,txHash:hash,
-    category:"xrpl_dex"});
+  const amount=Math.abs(Number(xrpAmount)||0);
+  if(amount<0.01) return;
+
+  const intensity=THREE.MathUtils.clamp(0.55+Math.log10(amount+1)*0.55,0.55,3);
+
+  queueBattlefieldEvent({
+    type:"infantry_volley",
+    side,
+    intensity,
+    source:"xrpl",
+    hash
+  });
+
+  xrplMarketState.growthCredit[side]+=Math.min(2.5,Math.sqrt(amount)/60);
+
+  while(xrplMarketState.growthCredit[side]>=1){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"soldier",
+      count:1,
+      source:"xrpl",
+      hash
+    });
+    xrplMarketState.growthCredit[side]-=1;
+  }
+
+  if(amount>=5000){
+    queueBattlefieldEvent({type:"tank_artillery",side,intensity,source:"xrpl",hash});
+  }
+
+  if(amount>=25000){
+    queueBattlefieldEvent({type:"helicopter_strike",side,intensity,source:"xrpl",hash});
+  }
+
+  if(amount>=100000){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"tank",
+      count:1,
+      source:"xrpl",
+      hash
+    });
+  }
+
+  if(amount>=250000){
+    queueBattlefieldEvent({
+      type:"warplane_airstrike",
+      side,
+      intensity,
+      xrpAmount:amount,
+      source:"xrpl",
+      hash
+    });
+  }
+
+  xrplMarketState.sessionVolume[side]+=amount;
+  xrplMarketState.tradeCount[side]+=1;
+
+  const tradeSequence=xrplMarketState.tradeCount[side];
+
+  if(amount<5000&&tradeSequence%5===0){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity:0.9,
+      source:"xrpl_trade_cycle",
+      hash
+    });
+  }
+
+  if(amount<25000&&tradeSequence%15===0){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity:1,
+      source:"xrpl_trade_cycle",
+      hash
+    });
+  }
+
+  xrplMarketState.lastTrade={side,xrpAmount:amount,hash,receivedAt:Date.now()};
+  renderBattlefieldMarketHud();
 }
+
+let lastAmbientLedgerEvent=0;
+let ambientLedgerCount=0;
+
+function ambientLedgerSide(tx,hash){
+  const identity=hash||tx.Account||tx.Destination||String(ambientLedgerCount);
+  let seed=0;
+
+  for(let i=0;i<identity.length;i++){
+    seed=(seed*31+identity.charCodeAt(i))|0;
+  }
+
+  return Math.abs(seed)%2===0?"blue":"red";
+}
+
+function dispatchValidatedLedgerActivity(tx,hash){
+  const now=performance.now();
+
+  // Convert the live validated XRPL stream into visible ambient warfare.
+  // Major attacks and army volume remain reserved for proven market trades.
+  if(now-lastAmbientLedgerEvent<90) return;
+
+  lastAmbientLedgerEvent=now;
+  ambientLedgerCount+=1;
+
+  const side=ambientLedgerSide(tx,hash);
+  const helicopterStrike=ambientLedgerCount%12===0;
+  const artilleryStrike=!helicopterStrike&&ambientLedgerCount%4===0;
+
+  queueBattlefieldEvent({
+    type:helicopterStrike
+      ?"helicopter_strike"
+      :artilleryStrike
+        ?"tank_artillery"
+        :"infantry_volley",
+    side,
+    intensity:helicopterStrike?0.75:artilleryStrike?0.85:1.15,
+    xrpAmount:0,
+    source:"xrpl_ambient",
+    hash
+  });
+
+  // Payments get a second opposing volley to make ledger movement
+  // visually cross the battlefield instead of flashing on one side.
+  if(tx.TransactionType==="Payment"){
+    queueBattlefieldEvent({
+      type:"infantry_volley",
+      side:side==="blue"?"red":"blue",
+      intensity:0.7,
+      xrpAmount:0,
+      source:"xrpl_ambient_response",
+      hash
+    });
+  }
+
+  if(ambientLedgerCount%10===0){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:"soldier",
+      count:1,
+      xrpAmount:0,
+      source:"xrpl_ambient_reinforcement",
+      hash
+    });
+  }
+}
+
 
 const globalMarketFeeds={
   coinbase:{connected:false,retry:1000,timer:null,socket:null},
   kraken:{connected:false,retry:1000,timer:null,socket:null},
   binance:{connected:false,retry:1000,timer:null,socket:null}
+};
+
+const globalMarketPulse={
+  pendingVolume:{blue:0,red:0},
+  pendingTrades:{blue:0,red:0},
+  pressure:{blue:0,red:0},
+  ticks:0
 };
 
 function connectedGlobalMarketFeeds(){
@@ -258,12 +376,134 @@ function scheduleBattlefieldHudRender(){
 }
 
 function registerGlobalXrpTrade(source,side,xrpAmount,price,tradeId){
-  return marketRuntime.trade({source,side,xrp:xrpAmount,price,tradeId,
-    quote:source==="binance"?"USDT":"USD"});
+  const amount=Math.abs(Number(xrpAmount)||0);
+  if(amount<0.01||!["blue","red"].includes(side)) return;
+
+  globalMarketPulse.pendingVolume[side]+=amount;
+  globalMarketPulse.pendingTrades[side]+=1;
+
+  xrplMarketState.sessionVolume[side]+=amount;
+  xrplMarketState.tradeCount[side]+=1;
+
+  const numericPrice=Number(price);
+  if(Number.isFinite(numericPrice)&&numericPrice>0){
+    xrplMarketState.xrpUsd=numericPrice;
+  }
+
+  xrplMarketState.lastTrade={
+    side,
+    xrpAmount:amount,
+    hash:`${source.toUpperCase()}-${tradeId||Date.now()}`,
+    source,
+    receivedAt:performance.now()*0.001
+  };
+
+  scheduleBattlefieldHudRender();
+
+  const intensity=THREE.MathUtils.clamp(
+    0.7+Math.log10(amount+1)*0.48,
+    0.7,
+    3
+  );
+
+  if(amount>=250000){
+    queueBattlefieldEvent({
+      type:"warplane_airstrike",
+      side,
+      intensity:3,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }else if(amount>=25000){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }else if(amount>=5000){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity,
+      source,
+      xrpAmount:amount,
+      hash:tradeId||""
+    });
+  }
 }
 
-// Pressure decays with elapsed time even when no trades arrive; it does not manufacture attacks.
-setInterval(scheduleBattlefieldHudRender,250);
+function runGlobalMarketPulse(){
+  for(const side of ["blue","red"]){
+    const trades=globalMarketPulse.pendingTrades[side];
+    const volume=globalMarketPulse.pendingVolume[side];
+
+    const incoming=
+      trades*0.34+
+      Math.log10(volume+1)*0.72;
+
+    globalMarketPulse.pressure[side]=THREE.MathUtils.clamp(
+      globalMarketPulse.pressure[side]*0.94+incoming,
+      0,
+      70
+    );
+
+    globalMarketPulse.pendingTrades[side]=0;
+    globalMarketPulse.pendingVolume[side]=0;
+  }
+
+  const blue=globalMarketPulse.pressure.blue;
+  const red=globalMarketPulse.pressure.red;
+  const total=blue+red;
+
+  if(total<0.35) return;
+
+  globalMarketPulse.ticks+=1;
+
+  const side=Math.random()*total<blue?"blue":"red";
+  const intensity=THREE.MathUtils.clamp(0.75+total*0.035,0.75,2.8);
+
+  queueBattlefieldEvent({
+    type:"infantry_volley",
+    side,
+    intensity,
+    source:"global_market"
+  });
+
+  if(globalMarketPulse.ticks%4===0&&total>5){
+    queueBattlefieldEvent({
+      type:"tank_artillery",
+      side,
+      intensity,
+      source:"global_market"
+    });
+  }
+
+  if(globalMarketPulse.ticks%11===0&&total>12){
+    queueBattlefieldEvent({
+      type:"helicopter_strike",
+      side,
+      intensity,
+      source:"global_market"
+    });
+  }
+
+  if(globalMarketPulse.ticks%18===0&&total>18){
+    queueBattlefieldEvent({
+      type:"reinforcement",
+      side,
+      kind:Math.random()<0.78?"soldier":"tank",
+      count:Math.random()<0.78?2:1,
+      intensity,
+      source:"global_market"
+    });
+  }
+}
+
+setInterval(runGlobalMarketPulse,250);
 
 function connectGlobalFeed(name,url,onOpen,onMessage){
   const state=globalMarketFeeds[name];
@@ -349,7 +589,6 @@ function connectCoinbaseXrpFeed(){
 
         for(const trade of event.trades||[]){
           const makerSide=String(trade.side||"").toUpperCase();
-          if(trade.product_id!=="XRP-USD"||!["BUY","SELL"].includes(makerSide)) continue;
           const side=makerSide==="BUY"?"red":"blue";
 
           registerGlobalXrpTrade(
@@ -382,9 +621,7 @@ function connectKrakenXrpFeed(){
     message=>{
       if(message.channel!=="trade"||!Array.isArray(message.data)) return;
 
-      if(message.type!=="update") return;
       for(const trade of message.data){
-        if(trade.symbol!=="XRP/USD"||!["buy","sell"].includes(trade.side)) continue;
         const side=String(trade.side||"").toLowerCase()==="buy"
           ?"blue"
           :"red";
@@ -407,7 +644,7 @@ function connectBinanceXrpFeed(){
     "wss://stream.binance.com:9443/ws/xrpusdt@aggTrade",
     ()=>{},
     trade=>{
-      if(trade.e!=="aggTrade"||trade.s!=="XRPUSDT"||typeof trade.m!=="boolean") return;
+      if(trade.e!=="aggTrade") return;
 
       registerGlobalXrpTrade(
         "binance",
@@ -454,7 +691,7 @@ function handleXrplMarketMessage(message){
     }
   }
 
-  marketRuntime.ledger({hash,type:tx.TransactionType});
+  dispatchValidatedLedgerActivity(tx,hash);
 }
 
 function connectXrplMarketStream(){
@@ -795,9 +1032,8 @@ function renderBattlefieldMarketHud(){
   const price=hud.querySelector("[data-bf-price]");
   const change=hud.querySelector("[data-bf-change]");
   const status=hud.querySelector("[data-bf-status]");
-  const pressure=marketRuntime.engine.snapshot();
-  const bluePressure=pressure.buyPressure;
-  const redPressure=pressure.sellPressure;
+  const bluePressure=globalMarketPulse.pressure.blue;
+  const redPressure=globalMarketPulse.pressure.red;
   const totalPressure=bluePressure+redPressure;
   const bluePressurePercent=totalPressure>0
     ?Math.round(bluePressure/totalPressure*100)
@@ -823,7 +1059,7 @@ function renderBattlefieldMarketHud(){
   if(trade){
     const action=trade.side==="blue"?"BUY":"SELL";
     const shortHash=trade.hash?`${trade.hash.slice(0,8)}...${trade.hash.slice(-6)}`:"VALIDATED";
-    const combatAction=trade.xrpAmount>=250000?"WHALE AIRSTRIKE":trade.xrpAmount>=25000?"HELICOPTER STRIKE":trade.xrpAmount>=5000?"TANK ARTILLERY":"INFANTRY VOLLEY";
+    const combatAction=trade.xrpAmount>=250000?"WHALE AIRSTRIKE":trade.xrpAmount>=25000?"HELICOPTER STRIKE":trade.xrpAmount>=5000?"ARTILLERY + INFANTRY":"INFANTRY VOLLEY";
     const source=trade.source?`${trade.source.toUpperCase()} • `:"XRPL • ";
     hud.querySelector("[data-bf-ticker]").innerHTML=`<strong>${source}${action} • ${formatHudNumber(trade.xrpAmount,2)} $XRP</strong> • ${combatAction} <span class="bf-hash">${shortHash}</span>`;
   }
@@ -1541,12 +1777,6 @@ const scene = new THREE.Scene();
 window.scene = scene;
 window.THREE = THREE;
 scene.background = null;
-liquidityView=createLiquidityView({THREE,scene,document});
-const stopOrderBooks=connectOrderBooks({
-  onBook:event=>marketRuntime.book(event),
-  onStatus:(source,status)=>liquidityView.status(source,status)
-});
-window.addEventListener("pagehide",stopOrderBooks,{once:true});
 
 new GLTFLoader().load(
   "./assets/models/master-warplane.glb",
@@ -1965,7 +2195,6 @@ loader.load('./assets/models/master-helicopter.glb',(gltf)=>{
       scene.add(heli);
     }
   }
-  liquidityView.update();
   renderer.render(scene,camera);
 },undefined,(error)=>{
   console.error("AUGUR helicopter load failed",error);
@@ -2278,7 +2507,6 @@ function animate(){
     processBattlefieldEvent(event,now);
   }
 
-  liquidityView.update();
   renderer.render(scene,camera);
 }
 
